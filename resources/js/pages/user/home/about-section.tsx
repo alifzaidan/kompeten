@@ -1,164 +1,120 @@
-import { Cursor } from '@/components/ui/cursor';
-import { Tilt } from '@/components/ui/tilt';
-import { Link } from '@inertiajs/react';
-import { SVGProps } from 'react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from '@/components/ui/carousel';
+import { useEffect, useState } from 'react';
 
-const MouseIcon = (props: SVGProps<SVGSVGElement>) => {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width={26} height={31} fill="none" {...props}>
-            <g clipPath="url(#a)">
-                <path
-                    fill={'#FF7F3E'} // Ubah warna di sini
-                    fillRule="evenodd"
-                    stroke={'#fff'}
-                    strokeLinecap="square"
-                    strokeWidth={2}
-                    d="M21.993 14.425 2.549 2.935l4.444 23.108 4.653-10.002z"
-                    clipRule="evenodd"
-                />
-            </g>
-            <defs>
-                <clipPath id="a">
-                    <path fill={'#FF7F3E'} d="M0 0h26v31H0z" />
-                </clipPath>
-            </defs>
-        </svg>
-    );
-};
+interface Product {
+    title: string;
+    description: string;
+    gradient: string;
+    icon?: string;
+}
 
 export default function AboutSection() {
-    return (
-        <section className="relative mx-auto w-full max-w-7xl px-4 py-8">
-            <div className="bg-primary absolute bottom-50 -left-25 h-[200px] w-[100px] rounded-full blur-3xl xl:bottom-20 xl:-left-42"></div>
-            <div className="bg-secondary absolute top-25 -right-25 h-[200px] w-[100px] blur-3xl xl:top-0 xl:-right-42"></div>
-            <div className="mx-auto text-center">
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                    <div>
-                        <Cursor
-                            attachToParent
-                            variants={{
-                                initial: { scale: 0.3, opacity: 0 },
-                                animate: { scale: 1, opacity: 1 },
-                                exit: { scale: 0.3, opacity: 0 },
-                            }}
-                            transition={{
-                                ease: 'easeInOut',
-                                duration: 0.15,
-                            }}
-                            className="top-4 left-12"
-                        >
-                            <div>
-                                <MouseIcon className="h-6 w-6" />
-                                <div className="bg-secondary mt-1 ml-4 rounded-[4px] px-2 py-0.5 text-neutral-50">Web & App Development</div>
-                            </div>
-                        </Cursor>
-                        <Tilt rotationFactor={10} isRevese>
-                            <Link
-                                href="/"
-                                className="hover:border-secondary relative flex w-full cursor-none flex-col items-center justify-center rounded-xl border-2 border-gray-300 p-4 shadow-lg backdrop-blur-md transition duration-200 ease-in dark:border-zinc-100/20 dark:bg-zinc-800/20"
-                            >
-                                <img src="/assets/images/web-app-icon.webp" loading="lazy" alt="Web Development" className="mx-auto mb-4" />
-                                <h2 className="mb-1 text-lg font-semibold">Web & App Development</h2>
-                                <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                                    Membangun aplikasi web dan mobile yang responsif dan efisien
-                                </p>
-                            </Link>
-                        </Tilt>
-                    </div>
-                    <div>
-                        <Cursor
-                            attachToParent
-                            variants={{
-                                initial: { scale: 0.3, opacity: 0 },
-                                animate: { scale: 1, opacity: 1 },
-                                exit: { scale: 0.3, opacity: 0 },
-                            }}
-                            transition={{
-                                ease: 'easeInOut',
-                                duration: 0.15,
-                            }}
-                            className="top-4 left-12"
-                        >
-                            <div>
-                                <MouseIcon className="h-6 w-6" />
-                                <div className="bg-secondary mt-1 ml-4 rounded-[4px] px-2 py-0.5 text-neutral-50">Data Science</div>
-                            </div>
-                        </Cursor>
-                        <Tilt rotationFactor={10} isRevese>
-                            <Link
-                                href="/"
-                                className="hover:border-secondary relative flex w-full cursor-none flex-col items-center justify-center rounded-xl border-2 border-gray-300 p-4 shadow-lg backdrop-blur-md transition duration-200 ease-in dark:border-zinc-100/20 dark:bg-zinc-800/20"
-                            >
-                                <img src="/assets/images/data-science-icon.webp" loading="lazy" alt="Data Science" className="mx-auto mb-4" />
-                                <h2 className="mb-1 text-lg font-semibold">Data Science</h2>
-                                <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                                    Menganalisis data untuk mendapatkan wawasan yang berharga
-                                </p>
-                            </Link>
-                        </Tilt>
-                    </div>
-                    <div>
-                        <Cursor
-                            attachToParent
-                            variants={{
-                                initial: { scale: 0.3, opacity: 0 },
-                                animate: { scale: 1, opacity: 1 },
-                                exit: { scale: 0.3, opacity: 0 },
-                            }}
-                            transition={{
-                                ease: 'easeInOut',
-                                duration: 0.15,
-                            }}
-                            className="top-4 left-12"
-                        >
-                            <div>
-                                <MouseIcon className="h-6 w-6" />
-                                <div className="bg-secondary mt-1 ml-4 rounded-[4px] px-2 py-0.5 text-neutral-50">Graphic Design</div>
-                            </div>
-                        </Cursor>
+    const products: Product[] = [
+        {
+            title: 'Certification',
+            description: 'Tingkatkan skill dan kantongi sertifikat resmi yang bikin CV-mu makin standout!',
+            gradient: 'bg-gradient-to-br from-blue-400 via-teal-400 to-green-400',
+        },
+        {
+            title: 'Bootcamp',
+            description: 'Belajar intensif, praktik langsung, dan upgrade skill dengan cara yang seru dan cepat!',
+            gradient: 'bg-gradient-to-br from-blue-500 via-cyan-400 to-yellow-300',
+        },
+        {
+            title: 'Webinar',
+            description: 'Ikuti sesi belajar online yang ringan tapi penuh insight bareng mentor berpengalaman!',
+            gradient: 'bg-gradient-to-br from-purple-900 via-purple-700 to-pink-500',
+        },
+        {
+            title: 'Kelas Online',
+            description: 'Belajar dengan video pembelajaran terstruktur yang bisa kamu akses kapan saja dan di mana saja.',
+            gradient: 'bg-gradient-to-br from-orange-400 via-pink-400 to-purple-500',
+        },
+        {
+            title: 'Paket Bundling',
+            description: 'Belajar lebih banyak, bayar lebih hemat—semua materi favoritmu ada dalam satu paket lengkap!',
+            gradient: 'bg-gradient-to-br from-green-400 via-emerald-400 to-teal-500',
+        },
+    ];
 
-                        <Tilt rotationFactor={10} isRevese>
-                            <Link
-                                href="/"
-                                className="hover:border-secondary relative flex w-full cursor-none flex-col items-center justify-center rounded-xl border-2 border-gray-300 p-4 shadow-lg backdrop-blur-md transition duration-200 ease-in dark:border-zinc-100/20 dark:bg-zinc-800/20"
-                            >
-                                <img src="/assets/images/graphic-design-icon.webp" loading="lazy" alt="Graphic Design" className="mx-auto mb-4" />
-                                <h2 className="mb-1 text-lg font-semibold">Graphic Design</h2>
-                                <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Mendesain antarmuka yang menarik dan fungsional</p>
-                            </Link>
-                        </Tilt>
-                    </div>
-                    <div>
-                        <Cursor
-                            attachToParent
-                            variants={{
-                                initial: { scale: 0.3, opacity: 0 },
-                                animate: { scale: 1, opacity: 1 },
-                                exit: { scale: 0.3, opacity: 0 },
-                            }}
-                            transition={{
-                                ease: 'easeInOut',
-                                duration: 0.15,
-                            }}
-                            className="top-4 left-12"
-                        >
-                            <div>
-                                <MouseIcon className="h-6 w-6" />
-                                <div className="bg-secondary mt-1 ml-4 rounded-[4px] px-2 py-0.5 text-neutral-50">Accounting</div>
-                            </div>
-                        </Cursor>
-                        <Tilt rotationFactor={10} isRevese>
-                            <Link
-                                href="/"
-                                className="hover:border-secondary relative flex w-full cursor-none flex-col items-center justify-center rounded-xl border-2 border-gray-300 p-4 shadow-lg backdrop-blur-md transition duration-200 ease-in dark:border-zinc-100/20 dark:bg-zinc-800/20"
-                            >
-                                <img src="/assets/images/accounting-tax-icon.webp" loading="lazy" alt="Accounting" className="mx-auto mb-4" />
-                                <h2 className="mb-1 text-lg font-semibold">Accounting, Finance, & Tax</h2>
-                                <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Membantu mengelola keuangan dan laporan keuangan</p>
-                            </Link>
-                        </Tilt>
-                    </div>
-                </div>
+    const [index, setIndex] = useState(0);
+    const TOTAL_ITEMS = products.length;
+
+    const infiniteProducts = [...products, ...products, ...products];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => {
+                const next = prev + 1;
+                if (next >= TOTAL_ITEMS * 2) {
+                    return TOTAL_ITEMS;
+                }
+                return next;
+            });
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [TOTAL_ITEMS]);
+
+    useEffect(() => {
+        setIndex(TOTAL_ITEMS);
+    }, [TOTAL_ITEMS]);
+
+    const handleIndexChange = (newIndex: number) => {
+        if (newIndex < 0) {
+            setIndex(TOTAL_ITEMS * 2 - 1);
+        } else if (newIndex >= TOTAL_ITEMS * 3) {
+            setIndex(TOTAL_ITEMS);
+        } else {
+            setIndex(newIndex);
+        }
+    };
+
+    return (
+        <section className="mx-auto w-full max-w-7xl px-4 pt-16">
+            <div className="mb-4 text-center">
+                <h2 className="mb-4 text-3xl font-semibold text-gray-900 md:text-4xl dark:text-white">Apa yang Kami Tawarkan</h2>
+                <p className="text-muted-foreground mx-auto max-w-2xl">
+                    Temukan berbagai program pelatihan dan sertifikasi yang dirancang untuk mengembangkan skill Anda
+                </p>
+            </div>
+
+            <div className="relative">
+                <div className="from-background pointer-events-none absolute top-0 left-0 z-10 h-full w-16 bg-gradient-to-r to-transparent" />
+                <div className="from-background pointer-events-none absolute top-0 right-0 z-10 h-full w-16 bg-gradient-to-l to-transparent" />
+
+                <Carousel index={index} onIndexChange={handleIndexChange} disableDrag className="relative">
+                    <CarouselContent>
+                        {infiniteProducts.map((product, idx) => (
+                            <CarouselItem key={`product-${idx}`} className="p-2 md:basis-1/2 md:p-6 lg:basis-1/3 lg:p-12">
+                                <div className="group flex h-full justify-center">
+                                    <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white shadow transition-all duration-300 hover:shadow-xl dark:bg-gray-800">
+                                        {/* Gradient Header */}
+                                        <div
+                                            className={`relative h-48 w-full ${product.gradient} transition-transform duration-500 group-hover:scale-105`}
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
+                                        </div>
+
+                                        {/* Content */}
+                                        <div className="flex flex-1 flex-col p-6">
+                                            <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">{product.title}</h3>
+                                            <p className="mb-6 flex-1 text-justify text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                                                {product.description}
+                                            </p>
+
+                                            {/* Footer */}
+                                            <div className="flex items-center justify-between pt-4">
+                                                <span className="text-primary text-lg font-bold">Kompeten</span>
+                                                <img src="/assets/images/logo-primary.png" alt="Kompeten Logo" className="h-6 w-6 object-contain" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselNavigation />
+                </Carousel>
             </div>
         </section>
     );

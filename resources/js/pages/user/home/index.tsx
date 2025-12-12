@@ -1,13 +1,14 @@
-import FakeNotifications from '@/components/fake-notifications';
 import PromotionPopup from '@/components/promotion-popup';
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
+import { MessageCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import AboutSection from './about-section';
-import CtaSection from './cta-section';
 import FaqSection from './faq-section';
-import CarouselSection from './hero-section';
+import GallerySection from './gallery-section';
+import HeroSection from './hero-section';
 import LatestProductsSection from './latest-products-section';
+import MentorSection from './mentor-section';
 import TestimonySection from './testimony-section';
 import ToolsSection from './tools-section';
 
@@ -78,7 +79,7 @@ interface HomeProps {
     referralInfo: ReferralInfo;
 }
 
-export default function Home({ tools, latestProducts, myProductIds, allProducts, activePromotion, referralInfo }: HomeProps) {
+export default function Home({ tools, latestProducts, myProductIds, activePromotion, referralInfo }: HomeProps) {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
@@ -96,24 +97,25 @@ export default function Home({ tools, latestProducts, myProductIds, allProducts,
 
             {activePromotion && <PromotionPopup promotion={activePromotion} suppressDuration={3} />}
 
-            <CarouselSection />
+            <HeroSection />
             <AboutSection />
             <ToolsSection tools={tools} />
             <LatestProductsSection latestProducts={latestProducts} myProductIds={myProductIds} />
+            <MentorSection />
             <TestimonySection />
+            <GallerySection />
             <FaqSection />
-            <CtaSection />
 
-            {typeof window !== 'undefined' && window.innerWidth >= 1024 && <FakeNotifications products={allProducts} />}
+            {/* {typeof window !== 'undefined' && window.innerWidth >= 1024 && <FakeNotifications products={allProducts} />} */}
 
             <a
                 href="https://wa.me/+6289528514480?text=Halo%20Admin%Kompeten,%20saya%20ingin%20bertanya%20tentang%20kelas%20online."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="fixed right-4 bottom-18 z-50 flex h-12 w-12 animate-bounce items-center justify-center rounded-full bg-green-100 shadow-lg transition duration-1000 hover:bg-green-200 md:right-10 md:h-16 md:w-16 lg:bottom-6"
+                className="bg-secondary hover:bg-primary/80 fixed right-4 bottom-18 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition duration-1000 md:right-8 lg:bottom-6"
                 aria-label="Chat WhatsApp"
             >
-                <img src="/assets/images/icon-wa.svg" alt="WhatsApp" className="h-8 w-8 md:h-12 md:w-12" />
+                <MessageCircle className="text-primary-foreground h-6 w-6" />
             </a>
         </UserLayout>
     );

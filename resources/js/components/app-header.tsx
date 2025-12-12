@@ -18,7 +18,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, Search, User } from 'lucide-react';
+import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { SearchCommand } from './search-command';
 
@@ -43,7 +43,7 @@ const serviceItems = [
     },
 ];
 
-const activeItemStyles = 'text-primary bg-primary/10 dark:text-white dark:bg-primary/50';
+const activeItemStyles = 'text-primary-foreground bg-secondary';
 
 interface AppHeaderProps {
     breadcrumbs?: BreadcrumbItem[];
@@ -109,22 +109,24 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     return (
         <>
             <div className="border-sidebar-border/80 bg-background fixed top-0 right-0 left-0 z-40">
-                <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
+                <div className="mx-auto flex h-16 items-center justify-between px-4 md:max-w-7xl">
+                    {/* Logo - Left */}
                     <Link href="/" prefetch className="flex items-center space-x-2">
                         <img src="/assets/images/logo-primary.png" alt="Kompeten" className="block w-10 fill-current dark:hidden" />
                         <img src="/assets/images/logo-secondary.png" alt="Kompeten" className="hidden w-10 fill-current dark:block" />
                     </Link>
 
-                    <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
-                        <NavigationMenu className="flex h-full items-stretch">
-                            <NavigationMenuList className="flex h-full items-stretch space-x-2">
+                    {/* Navigation Menu - Center */}
+                    <div className="absolute left-1/2 hidden h-full -translate-x-1/2 items-center lg:flex">
+                        <NavigationMenu className="flex items-stretch rounded-full border-2 border-neutral-200 p-1">
+                            <NavigationMenuList className="flex items-stretch space-x-2">
                                 {/* Beranda */}
-                                <NavigationMenuItem className="relative flex h-full items-center">
+                                <NavigationMenuItem className="relative flex items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                                         <Link
                                             href="/"
                                             className={cn(
-                                                'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
+                                                'hover:bg-secondary/50 hover:text-primary-foreground h-9 cursor-pointer px-3',
                                                 isHomepage && activeItemStyles,
                                             )}
                                         >
@@ -132,15 +134,15 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             Beranda
                                         </Link>
                                     </NavigationMenuLink>
-                                    {isHomepage && (
-                                        <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
-                                    )}
                                 </NavigationMenuItem>
 
                                 {/* Layanan Mega Menu */}
-                                <NavigationMenuItem className="relative flex h-full items-center">
+                                <NavigationMenuItem className="relative flex items-center">
                                     <NavigationMenuTrigger
-                                        className={cn('hover:bg-primary/5 dark:hover:bg-primary/40 h-9 px-3', isServicesActive && activeItemStyles)}
+                                        className={cn(
+                                            'hover:bg-secondary/50 hover:text-primary-foreground h-9 px-3',
+                                            isServicesActive && activeItemStyles,
+                                        )}
                                     >
                                         Program & Layanan
                                     </NavigationMenuTrigger>
@@ -177,18 +179,15 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             </ListItem>
                                         </ul>
                                     </NavigationMenuContent>
-                                    {isServicesActive && (
-                                        <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
-                                    )}
                                 </NavigationMenuItem>
 
                                 {/* Sertifikasi */}
-                                <NavigationMenuItem className="relative flex h-full items-center">
+                                <NavigationMenuItem className="relative flex items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                                         <Link
                                             href="/certification"
                                             className={cn(
-                                                'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
+                                                'hover:bg-secondary/50 hover:text-primary-foreground h-9 cursor-pointer px-3',
                                                 page.url.startsWith('/certification') && activeItemStyles,
                                             )}
                                         >
@@ -196,18 +195,15 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             Sertifikasi
                                         </Link>
                                     </NavigationMenuLink>
-                                    {page.url.startsWith('/certification') && (
-                                        <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
-                                    )}
                                 </NavigationMenuItem>
 
                                 {/* Artikel */}
-                                <NavigationMenuItem className="relative flex h-full items-center">
+                                <NavigationMenuItem className="relative flex items-center">
                                     <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                                         <Link
                                             href="/article"
                                             className={cn(
-                                                'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
+                                                'hover:bg-secondary/50 hover:text-primary-foreground h-9 cursor-pointer px-3',
                                                 page.url.startsWith('/article') && activeItemStyles,
                                             )}
                                         >
@@ -215,9 +211,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             Artikel
                                         </Link>
                                     </NavigationMenuLink>
-                                    {page.url.startsWith('/article') && (
-                                        <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
-                                    )}
                                 </NavigationMenuItem>
 
                                 {/* Profil Saya (if logged in) */}
@@ -227,38 +220,20 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                             <Link
                                                 href="/profile"
                                                 className={cn(
-                                                    'hover:bg-primary/5 dark:hover:bg-primary/40 h-9 cursor-pointer px-3',
+                                                    'hover:bg-secondary/50 hover:text-primary-foreground h-9 cursor-pointer px-3',
                                                     page.url.startsWith('/profile') && activeItemStyles,
                                                 )}
                                             >
                                                 Profil Saya
                                             </Link>
                                         </NavigationMenuLink>
-                                        {page.url.startsWith('/profile') && (
-                                            <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full translate-y-px dark:bg-white"></div>
-                                        )}
                                     </NavigationMenuItem>
                                 )}
                             </NavigationMenuList>
                         </NavigationMenu>
                     </div>
 
-                    <div className="ml-auto flex items-center space-x-2">
-                        <div className="relative flex items-center space-x-1">
-                            <Button variant="outline" onClick={() => setSearchOpen(true)}>
-                                <Search className="!size-5 opacity-80 group-hover:opacity-100" />
-                                <p className="mr-4 hidden lg:block">Cari Produk...</p>
-                                <div className="hidden lg:block">
-                                    <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
-                                        <span className="text-xs">⌘</span>K
-                                    </kbd>{' '}
-                                    /{' '}
-                                    <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 select-none">
-                                        <span className="text-xs">Ctrl</span>K
-                                    </kbd>
-                                </div>
-                            </Button>
-                        </div>
+                    <div className="flex items-center space-x-2">
                         {auth.user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

@@ -27,15 +27,13 @@ class HomeController extends Controller
 
         $tools = Tool::all();
 
-        // Ambil promotion yang aktif
         $activePromotion = Promotion::where('is_active', true)
             ->where('start_date', '<=', now())
             ->where('end_date', '>=', now())
             ->latest()
             ->first();
 
-        // Ambil data dari ketiga model
-        $courses = Course::with(['category'])
+        $courses = Course::with(['category', 'user'])
             ->where('status', 'published')
             ->orderBy('created_at', 'desc')
             ->take(6)
@@ -50,12 +48,16 @@ class HomeController extends Controller
                     'price' => $course->price,
                     'level' => $course->level,
                     'category' => $course->category,
+                    'mentor' => [
+                        'name' => $course->user->name,
+                        'avatar' => $course->user->avatar,
+                    ],
                     'type' => 'course',
                     'created_at' => $course->created_at,
                 ];
             });
 
-        $bootcamps = Bootcamp::with(['category'])
+        $bootcamps = Bootcamp::with(['category', 'user'])
             ->where('status', 'published')
             ->where('start_date', '>=', now())
             ->orderBy('created_at', 'desc')
@@ -72,12 +74,16 @@ class HomeController extends Controller
                     'start_date' => $bootcamp->start_date,
                     'end_date' => $bootcamp->end_date,
                     'category' => $bootcamp->category,
+                    'mentor' => [
+                        'name' => $bootcamp->user->name,
+                        'avatar' => $bootcamp->user->avatar,
+                    ],
                     'type' => 'bootcamp',
                     'created_at' => $bootcamp->created_at,
                 ];
             });
 
-        $webinars = Webinar::with(['category'])
+        $webinars = Webinar::with(['category', 'user'])
             ->where('status', 'published')
             ->where('start_time', '>=', now())
             ->orderBy('created_at', 'desc')
@@ -93,12 +99,15 @@ class HomeController extends Controller
                     'price' => $webinar->price,
                     'start_time' => $webinar->start_time,
                     'category' => $webinar->category,
+                    'mentor' => [
+                        'name' => $webinar->user->name,
+                        'avatar' => $webinar->user->avatar,
+                    ],
                     'type' => 'webinar',
                     'created_at' => $webinar->created_at,
                 ];
             });
 
-        // ✅ Add Bundles - Filter expired registration deadlines
         $bundles = Bundle::with(['user', 'bundleItems'])
             ->where('status', 'published')
             ->where(function ($query) {
@@ -109,7 +118,6 @@ class HomeController extends Controller
             ->take(6)
             ->get()
             ->map(function ($bundle) {
-                // Calculate total price from bundle items
                 $totalItemsPrice = $bundle->bundleItems->sum('price');
 
                 return [
@@ -117,18 +125,20 @@ class HomeController extends Controller
                     'title' => $bundle->title,
                     'thumbnail' => $bundle->thumbnail,
                     'slug' => $bundle->slug,
-                    // ✅ Use manual strikethrough if > 0, else use total items price
                     'strikethrough_price' => ($bundle->strikethrough_price > 0)
                         ? $bundle->strikethrough_price
                         : $totalItemsPrice,
                     'price' => $bundle->price,
                     'registration_deadline' => $bundle->registration_deadline,
+                    'mentor' => [
+                        'name' => $bundle->user->name,
+                        'avatar' => $bundle->user->avatar,
+                    ],
                     'type' => 'bundle',
                     'created_at' => $bundle->created_at,
                 ];
             });
 
-        // ✅ Add Partnership Products
         $partnershipProducts = PartnershipProduct::with(['category'])
             ->where('status', 'published')
             ->orderBy('created_at', 'desc')

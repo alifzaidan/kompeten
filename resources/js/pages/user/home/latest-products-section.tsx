@@ -1,12 +1,15 @@
 import { Badge } from '@/components/ui/badge';
-import { Spotlight } from '@/components/ui/spotlight';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from '@inertiajs/react';
 import { Calendar, Clock, Package, Percent } from 'lucide-react';
 
 interface Category {
     id: string;
     name: string;
+}
+
+interface Mentor {
+    name: string;
+    avatar?: string;
 }
 
 interface Product {
@@ -23,6 +26,7 @@ interface Product {
     registration_deadline?: string;
     duration_days?: number;
     category?: Category;
+    mentor?: Mentor;
     type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'partnership';
     created_at: string;
 }
@@ -198,10 +202,8 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
 
         if (product.category) {
             return (
-                <div className="mt-2 flex items-center gap-2">
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                        {product.category.name}
-                    </span>
+                <div className="mb-1 inline-block">
+                    <Badge>{product.category.name}</Badge>
                 </div>
             );
         }
@@ -215,7 +217,9 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8">
             <div className="mx-auto text-center">
-                <h2 className="mx-auto mb-12 max-w-2xl text-center text-3xl font-semibold md:text-4xl">Our Featured Training Program</h2>
+                <h2 className="mx-auto mb-12 max-w-2xl text-center text-3xl leading-snug font-semibold md:text-4xl">
+                    Temukan program terbaru Kompeten yang siap leveling up skill-mu
+                </h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {(() => {
                         if (safeLatestProducts.length === 0) {
@@ -238,13 +242,11 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
 
                         return availableProducts.map((product) => {
                             const productUrl = getProductUrl(product);
-                            // ✅ Calculate discount for each product
                             const discount = calculateDiscount(product.strikethrough_price, product.price);
 
                             return (
                                 <Link key={product.id} href={productUrl} className="h-full">
                                     <div className="relative h-full overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] dark:bg-zinc-700/30">
-                                        <Spotlight className="bg-primary blur-2xl" size={284} />
                                         <div className="bg-sidebar relative flex h-full w-full flex-col rounded-lg dark:bg-zinc-800">
                                             <div className="w-full flex-shrink-0 overflow-hidden rounded-t-lg">
                                                 <div className="relative">
@@ -255,7 +257,6 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                     />
                                                     {getProductBadge(product.type)}
 
-                                                    {/* ✅ Discount Badge - Top Right (from bundling-section.tsx) */}
                                                     {discount > 0 && (
                                                         <div className="absolute top-2 right-2">
                                                             <Badge className="bg-red-500 text-white shadow-lg">
@@ -268,54 +269,49 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                 <h2 className="mx-4 mt-2 line-clamp-2 text-left text-lg font-semibold">{product.title}</h2>
                                             </div>
                                             <div className="mt-auto w-full p-4 text-left">
-                                                {product.price === 0 ? (
-                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
-                                                ) : (
-                                                    <div className="">
-                                                        {product.strikethrough_price > 0 && product.strikethrough_price > product.price && (
-                                                            <p className="text-sm text-gray-500 line-through dark:text-gray-400">
-                                                                Rp {product.strikethrough_price.toLocaleString('id-ID')}
+                                                <div className="flex items-end justify-between">
+                                                    {product.price === 0 ? (
+                                                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                    ) : (
+                                                        <div className="">
+                                                            {product.strikethrough_price > 0 && product.strikethrough_price > product.price && (
+                                                                <p className="text-sm text-red-500 line-through">
+                                                                    Rp {product.strikethrough_price.toLocaleString('id-ID')}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                                                Rp {product.price.toLocaleString('id-ID')}
                                                             </p>
-                                                        )}
-                                                        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                                            Rp {product.price.toLocaleString('id-ID')}
-                                                        </p>
-                                                    </div>
-                                                )}
+                                                        </div>
+                                                    )}
+                                                    {getCategoryDisplay(product)}
+                                                </div>
 
                                                 {getDateDisplay(product)}
-                                                {getCategoryDisplay(product)}
 
-                                                <div className="mt-4 flex justify-between">
-                                                    {product.type === 'course' && product.level && (
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <div
-                                                                    className={
-                                                                        product.level === 'beginner'
-                                                                            ? 'rounded-full border border-green-300 bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-zinc-800 dark:text-green-300'
-                                                                            : product.level === 'intermediate'
-                                                                              ? 'rounded-full border border-yellow-300 bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-zinc-800 dark:text-yellow-300'
-                                                                              : 'rounded-full border border-red-300 bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:bg-zinc-800 dark:text-red-300'
-                                                                    }
-                                                                >
-                                                                    <p>
-                                                                        {product.level === 'beginner'
-                                                                            ? '1'
-                                                                            : product.level === 'intermediate'
-                                                                              ? '2'
-                                                                              : '3'}
-                                                                    </p>
+                                                {product.mentor && (
+                                                    <div className="mt-2 flex items-center gap-3 border-t-2 border-neutral-200 pt-3 dark:border-gray-700">
+                                                        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
+                                                            {product.mentor.avatar ? (
+                                                                <img
+                                                                    src={`/storage/${product.mentor.avatar}`}
+                                                                    alt={product.mentor.name}
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="from-primary flex h-full w-full items-center justify-center bg-gradient-to-br to-orange-500 text-sm font-semibold text-white">
+                                                                    {product.mentor.name.charAt(0).toUpperCase()}
                                                                 </div>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>
-                                                                {product.level === 'beginner' && <p>Level Beginner</p>}
-                                                                {product.level === 'intermediate' && <p>Level Intermediate</p>}
-                                                                {product.level === 'advanced' && <p>Level Advanced</p>}
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    )}
-                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                                {product.mentor.name}
+                                                            </p>
+                                                            <p className="text-primary text-xs">Mentor Akuntansi</p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

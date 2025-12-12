@@ -8,10 +8,12 @@ export default function HeroSection() {
 
     return (
         <section className="relative mx-auto w-full max-w-7xl px-4 py-6 md:py-10">
-            <div className="flex flex-col items-center py-6 md:py-12">
-                <h1 className="mb-6 text-center text-4xl font-semibold sm:text-5xl md:text-6xl">Lorem ipsum dolor consectetur.</h1>
-                <p className="mb-10 max-w-2xl text-center text-lg sm:text-xl md:mb-16 md:text-2xl">
-                    Lorem ipsum viverra sit dolor blandit sit amet consectetur. Varius mauris blandit viverra lectus.
+            <div className="mx-auto flex max-w-4xl flex-col items-center py-6 md:py-12">
+                <h1 className="mb-6 text-center text-4xl leading-snug font-semibold sm:text-5xl md:text-6xl">
+                    Solusi cerdas untuk mengembangkan skill-mu
+                </h1>
+                <p className="mb-8 text-center text-base sm:text-lg md:mb-16 md:text-xl">
+                    Dirancang secara matang agar kamu bisa memahami materi lebih cepat, tanpa rumit, dan langsung bisa dipraktikkan.
                 </p>
                 <Button
                     variant="outline"
@@ -21,16 +23,16 @@ export default function HeroSection() {
                     <Search className="!size-5 opacity-80 group-hover:opacity-100" />
                     <p className="min-w-xs text-left">Cari Kelas...</p>
                 </Button>
-                <p className="text-muted-foreground">Lorem ipsum dolor blandit sit amet.</p>
+                <p className="text-muted-foreground">Belajar dan naik level jadi lebih mudah—semuanya ada di sini.</p>
             </div>
 
             <div className="relative">
                 {/* <ResponsiveSVG /> */}
 
                 <div className="absolute left-1/2 z-20 flex -translate-x-1/2 gap-2 pt-3 sm:top-4">
-                    <Button size="lg">Our Services</Button>
+                    <Button size="lg">Layanan Kami</Button>
                     <Button size="lg" variant="outline">
-                        Contact Us
+                        Hubungi Kami
                     </Button>
                 </div>
 
@@ -48,7 +50,7 @@ export default function HeroSection() {
 
                     <div className="absolute top-auto right-6 bottom-4 z-10 flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 shadow-xl backdrop-blur-lg sm:top-6 sm:bottom-auto">
                         <span className="md:text-xl">⭐</span>
-                        <span className="text-sm font-semibold text-white drop-shadow-lg md:text-base">4500+ (User)</span>
+                        <span className="text-sm font-semibold text-white drop-shadow-lg md:text-base">4500+ Pengguna</span>
                     </div>
                 </div>
             </div>

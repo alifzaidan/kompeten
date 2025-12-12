@@ -1,143 +1,274 @@
-import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from '@/components/ui/carousel';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
-import { Link } from '@inertiajs/react';
-import { User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface Mentor {
+    id: number;
+    name: string;
+    role: string;
+    image: string;
+    bgColor: string;
+}
+
+interface Testimony {
+    name: string;
+    role: string;
+    avatar: string;
+    text: string;
+}
 
 export default function TestimonySection() {
+    const mentors: Mentor[] = [
+        {
+            id: 1,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-yellow-400',
+        },
+        {
+            id: 2,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-pink-300',
+        },
+        {
+            id: 3,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-gray-300',
+        },
+        {
+            id: 4,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-blue-300',
+        },
+        {
+            id: 5,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-purple-300',
+        },
+        {
+            id: 6,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-yellow-400',
+        },
+        {
+            id: 7,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-pink-300',
+        },
+        {
+            id: 8,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-gray-300',
+        },
+        {
+            id: 9,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-blue-300',
+        },
+        {
+            id: 10,
+            name: 'Muchammad Alif Zaidan',
+            role: 'Fullstack Web Developer',
+            image: '/assets/images/mentor-1.png',
+            bgColor: 'bg-purple-300',
+        },
+    ];
+
+    const testimonies: Testimony[] = [
+        {
+            name: 'Nihayatul Maulasari',
+            role: 'Mentor Akuntan',
+            avatar: '/assets/images/mentor-dummy.jpg',
+            text: 'Lorem ipsum dolor amet consectetur. Et aliquam in morbi duis sit mi bibendum lobortis turpis. Est aliquet amet malesuada dui sed. Aliquam vitae aliquam porta lectus. Id purus ultricies commodo et dui leo nisl viverra.',
+        },
+        {
+            name: 'Budi Santoso',
+            role: 'Konsultan Pajak',
+            avatar: '/assets/images/mentor-dummy.jpg',
+            text: 'Program pelatihan yang sangat membantu dalam pengembangan karir saya di bidang perpajakan. Materi yang diberikan sangat applicable dan mentor sangat berpengalaman.',
+        },
+        {
+            name: 'Rina Kartika',
+            role: 'Tax Specialist',
+            avatar: '/assets/images/mentor-dummy.jpg',
+            text: 'Sekolah Pajak memberikan pembelajaran yang komprehensif dan mudah dipahami. Sangat recommended untuk yang ingin mendalami ilmu perpajakan secara profesional.',
+        },
+        {
+            name: 'Ahmad Rizky',
+            role: 'Financial Advisor',
+            avatar: '/assets/images/mentor-dummy.jpg',
+            text: 'Kualitas pengajaran yang luar biasa dengan praktik langsung yang sangat membantu pemahaman. Investasi terbaik untuk karir di bidang keuangan dan perpajakan.',
+        },
+        {
+            name: 'Maya Sari',
+            role: 'Accounting Manager',
+            avatar: '/assets/images/mentor-dummy.jpg',
+            text: 'Instruktur yang profesional dan materi yang up to date dengan regulasi terbaru. Sangat puas dengan hasil pembelajaran yang didapat dari Sekolah Pajak.',
+        },
+    ];
+
+    const [index, setIndex] = useState(0);
+    const TOTAL_ITEMS = testimonies.length;
+
+    const infiniteTestimonies = [...testimonies, ...testimonies, ...testimonies];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => {
+                const next = prev + 1;
+                if (next >= TOTAL_ITEMS * 2) {
+                    return TOTAL_ITEMS;
+                }
+                return next;
+            });
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [TOTAL_ITEMS]);
+
+    useEffect(() => {
+        setIndex(TOTAL_ITEMS);
+    }, [TOTAL_ITEMS]);
+
+    const handleIndexChange = (newIndex: number) => {
+        if (newIndex < 0) {
+            setIndex(TOTAL_ITEMS * 2 - 1);
+        } else if (newIndex >= TOTAL_ITEMS * 3) {
+            setIndex(TOTAL_ITEMS);
+        } else {
+            setIndex(newIndex);
+        }
+    };
+
     return (
-        <section className="to-primary my-8 hidden w-full bg-gradient-to-tl from-black lg:block">
-            <div className="mx-auto flex w-full max-w-7xl items-center gap-8 md:gap-12">
-                <div className="mx-4">
-                    <p className="text-secondary mx-auto mb-2 font-medium md:text-lg">Terpercaya lebih dari 1000+ alumni</p>
-                    <h2 className="mx-auto mb-4 text-3xl font-bold text-white italic md:text-4xl">Bergabung bersama komunitas supportif kami 💪</h2>
-                    <p className="mx-auto text-zinc-200">
-                        Kompeten menyediakan komunitas belajar berbagai disiplin ilmu untuk pemula ke mahir. Dapatkan dukungan, berbagi pengalaman,
-                        dan tumbuh bersama dalam perjalanan belajar Anda.
-                    </p>
-                    <Button variant="secondary" className="mt-4" asChild>
-                        <Link href="/course">Gabung Sekarang</Link>
-                    </Button>
+        <section className="bg-background w-full px-4 py-8" id="testimony-section">
+            <div className="mx-auto max-w-4xl">
+                <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">
+                    Biar nggak cuma katanya—buktinya ada di sini.
+                </h2>
+                <p className="text-muted-foreground mx-auto mb-12 max-w-xl text-center">
+                    Simak testimoni peserta yang udah merasakan perubahan nyata setelah ikut kelas di Kompeten
+                </p>
+
+                <div className="relative">
+                    <div className="from-background pointer-events-none absolute top-0 left-0 z-10 h-full w-32 bg-gradient-to-r to-transparent md:w-64" />
+                    <div className="from-background pointer-events-none absolute top-0 right-0 z-10 h-full w-32 bg-gradient-to-l to-transparent md:w-64" />
+
+                    <InfiniteSlider speed={50} speedOnHover={20} gap={24} className="p-4">
+                        {mentors.map((mentor) => (
+                            <div
+                                key={mentor.id}
+                                className="group h-20 w-20 flex-shrink-0 overflow-hidden rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-lg md:h-24 md:w-24"
+                            >
+                                <img
+                                    src={mentor.image}
+                                    alt={mentor.name}
+                                    className="h-full w-full object-cover object-center transition-all duration-500"
+                                />
+                            </div>
+                        ))}
+                    </InfiniteSlider>
                 </div>
-                <div className="flex h-[500px]">
-                    <InfiniteSlider direction="vertical" speed={50} speedOnHover={20} gap={24} className="p-4">
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-blue-100 p-2">
-                                    <User className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Sarah Wijaya</h3>
-                                    <p className="text-xs text-gray-500">UI/UX Designer</p>
-                                </div>
+            </div>
+
+            {/* Testimony Section */}
+            <div className="relative mt-8">
+                <div className="from-background pointer-events-none absolute top-0 left-0 z-10 h-full w-32 bg-gradient-to-r to-transparent md:w-72" />
+                <div className="from-background pointer-events-none absolute top-0 right-0 z-10 h-full w-32 bg-gradient-to-l to-transparent md:w-72" />
+
+                <div className="mx-auto w-full">
+                    <Carousel index={index} onIndexChange={handleIndexChange} disableDrag className="relative">
+                        <CarouselContent>
+                            {infiniteTestimonies.map((testimony, idx) => (
+                                <CarouselItem key={`testimony-${idx}`} className="px-4 md:basis-1/2 lg:basis-1/3">
+                                    <div className="flex justify-center">
+                                        <div className="bg-card flex min-h-[300px] w-full flex-col rounded-2xl border-2 p-5">
+                                            <div className="grid h-full grid-cols-3 justify-between gap-2">
+                                                <div className="col-span-1 flex flex-col gap-2">
+                                                    <h3 className="text-lg font-semibold">Bikin Website Gratis</h3>
+                                                    <div className="mt-auto flex flex-wrap gap-2">
+                                                        <Badge>AI</Badge>
+                                                        <Badge>Frontend</Badge>
+                                                        <Badge>Lovable</Badge>
+                                                    </div>
+                                                </div>
+                                                <div className="col-span-2 flex flex-col rounded-lg bg-neutral-100 p-3 inset-shadow-sm inset-shadow-neutral-400">
+                                                    <div className="flex items-center gap-3">
+                                                        <img
+                                                            src={testimony.avatar}
+                                                            alt={testimony.name}
+                                                            className="h-10 w-10 rounded-full object-cover"
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.src =
+                                                                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"%3E%3Ccircle cx="12" cy="8" r="4"/%3E%3Cpath d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/%3E%3C/svg%3E';
+                                                            }}
+                                                        />
+                                                        <div>
+                                                            <h3 className="font-semibold text-gray-900 dark:text-white">{testimony.name}</h3>
+                                                            <p className="text-sm text-gray-500 dark:text-gray-400">{testimony.role}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-auto space-y-2">
+                                                        <div className="mt-3 flex items-center gap-2">
+                                                            <div className="flex gap-1">
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <svg
+                                                                        key={i}
+                                                                        className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                                    </svg>
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-gray-900 dark:text-white">5.0</span>
+                                                        </div>
+                                                        <p className="line-clamp-6 flex-grow text-justify text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                                                            {testimony.text}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselNavigation />
+                        <div className="mx-auto mt-8 max-w-7xl px-4">
+                            <div className="flex justify-center gap-2">
+                                {testimonies.map((_, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setIndex(TOTAL_ITEMS + idx)}
+                                        className={`h-2 rounded-full transition-all ${
+                                            index % TOTAL_ITEMS === idx ? 'bg-primary w-8' : 'bg-primary/30 hover:bg-primary/50 w-2'
+                                        }`}
+                                        aria-label={`Go to slide ${idx + 1}`}
+                                    />
+                                ))}
                             </div>
-                            <p className="text-sm text-gray-500">
-                                "Materi bootcamp UI/UX di Kompeten sangat komprehensif. Sekarang saya sudah bekerja di startup unicorn. Terima kasih
-                                Kompeten!"
-                            </p>
                         </div>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-green-100 p-2">
-                                    <User className="h-4 w-4 text-green-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Budi Santoso</h3>
-                                    <p className="text-xs text-gray-500">Full Stack Developer</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Dari nol sampai bisa bikin aplikasi web kompleks. Mentor di Kompeten sangat sabar dan supportif. Worth it banget!"
-                            </p>
-                        </div>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-purple-100 p-2">
-                                    <User className="h-4 w-4 text-purple-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Rina Kartika</h3>
-                                    <p className="text-xs text-gray-500">Digital Marketer</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Kelas digital marketing-nya game changer! Bisnis online saya sekarang omzetnya naik 300% dalam 6 bulan."
-                            </p>
-                        </div>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-orange-100 p-2">
-                                    <User className="h-4 w-4 text-orange-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Ahmad Rizky</h3>
-                                    <p className="text-xs text-gray-500">Data Analyst</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Transisi karir dari accounting ke data analyst jadi lebih mudah berkat bootcamp di Kompeten. Materinya sangat
-                                aplikatif!"
-                            </p>
-                        </div>
-                    </InfiniteSlider>
-                    <InfiniteSlider direction="vertical" speed={50} speedOnHover={20} gap={24} className="p-4" reverse>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-pink-100 p-2">
-                                    <User className="h-4 w-4 text-pink-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Maya Sari</h3>
-                                    <p className="text-xs text-gray-500">Product Manager</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Webinar product management-nya eye opening banget! Sekarang saya lebih percaya diri memimpin tim produk di
-                                perusahaan."
-                            </p>
-                        </div>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-cyan-100 p-2">
-                                    <User className="h-4 w-4 text-cyan-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Denny Pratama</h3>
-                                    <p className="text-xs text-gray-500">DevOps Engineer</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Kelas DevOps-nya sangat detail dan praktis. Dari basic Docker sampai Kubernetes semua dijelaskan dengan baik."
-                            </p>
-                        </div>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-indigo-100 p-2">
-                                    <User className="h-4 w-4 text-indigo-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Lisa Anggraini</h3>
-                                    <p className="text-xs text-gray-500">Content Creator</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Belajar video editing dan content strategy di Kompeten bikin channel YouTube saya tembus 100k subscriber!"
-                            </p>
-                        </div>
-                        <div className="max-w-sm space-y-2 rounded-lg bg-white p-4 shadow-md">
-                            <div className="flex items-center gap-2">
-                                <div className="rounded-full bg-yellow-100 p-2">
-                                    <User className="h-4 w-4 text-yellow-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900">Fajar Ramadhan</h3>
-                                    <p className="text-xs text-gray-500">Mobile Developer</p>
-                                </div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                                "Bootcamp Flutter-nya recommended banget! Sekarang saya bisa develop aplikasi mobile untuk iOS dan Android."
-                            </p>
-                        </div>
-                    </InfiniteSlider>
+                    </Carousel>
                 </div>
             </div>
         </section>
