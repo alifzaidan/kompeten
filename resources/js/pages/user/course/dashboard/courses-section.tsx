@@ -81,13 +81,12 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
     const visibleCourses = filteredCourses.slice(0, visibleCount);
 
     return (
-        <section className="mx-auto w-full max-w-7xl px-4" id="course">
-            <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Ratusan Skill Impian Kini Dalam Genggamanmu
-            </h2>
-            <p className="mx-auto mb-8 text-center text-gray-600 dark:text-gray-400">
-                Eksplorasi materi-materi unggulan dari rancangan experts yang akan selalu update setiap bulan.
+        <section className="mx-auto w-full max-w-7xl px-4 py-8" id="course">
+            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">Tingkatkan Kemampuanmu Bersama Para Ahli</h2>
+            <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">
+                Akses berbagai materi pembelajaran berkualitas yang dirancang oleh para expert dan diperbarui secara berkala setiap bulannya.
             </p>
+
             <div className="mb-4 flex justify-between gap-2">
                 <Input type="search" placeholder="Cari kelas..." value={search} onChange={(e) => setSearch(e.target.value)} />
                 <DropdownMenu>
@@ -121,7 +120,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                         onClick={() => setSelectedCategory(null)}
                         className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${
                             selectedCategory === null
-                                ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
+                                ? 'bg-primary-foreground text-secondary'
                                 : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                         } `}
                     >
@@ -134,7 +133,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                             onClick={() => setSelectedCategory(category.id)}
                             className={`rounded-xl border px-4 py-2 text-sm transition hover:cursor-pointer ${
                                 selectedCategory === category.id
-                                    ? 'to-primary text-primary-foreground border-primary bg-gradient-to-br from-black'
+                                    ? 'bg-primary-foreground text-secondary'
                                     : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                             } `}
                         >

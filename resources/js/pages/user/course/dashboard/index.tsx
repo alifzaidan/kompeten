@@ -1,8 +1,6 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
 import CoursesSection from './courses-section';
-import FeatureSection from './feature-section';
-import HeroSection from './hero-section';
 
 type Category = {
     id: string;
@@ -32,8 +30,8 @@ export default function Course({ categories, courses, myCourseIds }: CourseProps
         <UserLayout>
             <Head title="Kelas Online" />
 
-            <HeroSection />
-            <FeatureSection />
+            {/* <HeroSection /> */}
+            {/* <FeatureSection /> */}
             <CoursesSection categories={categories} courses={courses} myCourseIds={myCourseIds} />
         </UserLayout>
     );

@@ -63,7 +63,7 @@ export default function AppFooter() {
                     <div className="bg-primary/30 border-primary/10 rounded-3xl border p-8 shadow-xl backdrop-blur-md">
                         <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
                             <div className="max-w-2xl text-center lg:text-left">
-                                <h2 className="mb-2 text-2xl font-bold text-gray-900 lg:text-3xl">Wujudkan Karir Impian, Mulai dari Sini! ✨</h2>
+                                <h2 className="mb-2 text-2xl font-semibold text-gray-900 lg:text-3xl">Wujudkan Karir Impian, Mulai dari Sini! ✨</h2>
                                 <p className="text-sm text-gray-800 md:text-base">
                                     Bergabunglah dengan ribuan profesional yang telah mengakselerasi karir mereka bersama Kompeten
                                 </p>
@@ -84,7 +84,7 @@ export default function AppFooter() {
 
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
-                        <h4 className="mb-4 text-lg font-bold text-gray-900">Produk</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">Produk</h4>
                         <ul className="space-y-2">
                             {productItems.map((item) => (
                                 <li key={item.title}>
@@ -97,7 +97,7 @@ export default function AppFooter() {
                     </div>
 
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
-                        <h4 className="mb-4 text-lg font-bold text-gray-900">Layanan</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">Layanan</h4>
                         <ul className="space-y-2">
                             {serviceItems.map((item) => (
                                 <li key={item.title}>
@@ -115,7 +115,7 @@ export default function AppFooter() {
                     </div>
 
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
-                        <h4 className="mb-4 text-lg font-bold text-gray-900">Lainnya</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">Lainnya</h4>
                         <ul className="space-y-2">
                             {otherItems.map((item) => (
                                 <li key={item.title}>
@@ -129,7 +129,7 @@ export default function AppFooter() {
 
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
                         <img src="/assets/images/logo-primary.png" alt="Kompeten Logo" className="mb-4 h-16 w-auto" />
-                        <h5 className="mb-4 font-bold text-gray-900">Kompeten</h5>
+                        <h5 className="mb-4 font-semibold text-gray-900">Kompeten</h5>
                         <p className="text-sm text-gray-800">
                             Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324
                         </p>
@@ -137,7 +137,7 @@ export default function AppFooter() {
                 </div>
 
                 <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-                    <div className="text-xl font-bold text-gray-900">Kompeten</div>
+                    <div className="text-xl font-semibold text-gray-900">Kompeten</div>
                     <div className="text-sm text-gray-800">© 2025 Kompeten. All rights reserved.</div>
                     <div className="flex items-center gap-3">
                         <a

@@ -1,8 +1,6 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
 import BootcampSection from './bootcamp-section';
-import FeatureSection from './feature-section';
-import HeroSection from './hero-section';
 
 type Category = {
     id: string;
@@ -33,8 +31,8 @@ export default function Bootcamp({ categories, bootcamps, myBootcampIds }: Bootc
         <UserLayout>
             <Head title="Bootcamp" />
 
-            <HeroSection />
-            <FeatureSection />
+            {/* <HeroSection /> */}
+            {/* <FeatureSection /> */}
             <BootcampSection categories={categories} bootcamps={bootcamps} myBootcampIds={myBootcampIds} />
         </UserLayout>
     );

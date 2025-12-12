@@ -1,7 +1,5 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
-import FeatureSection from './feature-section';
-import HeroSection from './hero-section';
 import WebinarSection from './webinar-section';
 
 type Category = {
@@ -32,8 +30,8 @@ export default function Webinar({ categories, webinars, myWebinarIds }: WebinarP
         <UserLayout>
             <Head title="Webinar" />
 
-            <HeroSection />
-            <FeatureSection />
+            {/* <HeroSection /> */}
+            {/* <FeatureSection /> */}
             <WebinarSection categories={categories} webinars={webinars} myWebinarIds={myWebinarIds} />
         </UserLayout>
     );
