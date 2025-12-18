@@ -1,13 +1,12 @@
-import UserLayout from '@/layouts/user-layout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Head } from '@inertiajs/react';
-import { useEffect } from 'react';
-import AboutSection from './about-section';
+import { BookOpen, Info, Lightbulb, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import HeroSection from './hero-section';
+import KeyPointSection from './key-point-section';
+import MentorSection from './mentor-section';
 import ModulesSection from './modules-section';
 import RegisterSection from './register-section';
-import RelatedProduct from './related-product';
-import ToolsSection from './tools-section';
-import VideoSection from './video-section';
 
 interface Course {
     id: string;
@@ -43,35 +42,14 @@ interface Course {
     }[];
 }
 
-interface RelatedCourse {
-    id: string;
-    title: string;
-    slug: string;
-    thumbnail?: string | null;
-    price: number;
-    strikethrough_price: number;
-    level: 'beginner' | 'intermediate' | 'advanced';
-    category?: {
-        name: string;
-    };
-}
-
 interface ReferralInfo {
     code?: string;
     hasActive: boolean;
 }
 
-export default function DetailCourse({
-    course,
-    relatedCourses,
-    myCourseIds,
-    referralInfo,
-}: {
-    course: Course;
-    relatedCourses: RelatedCourse[];
-    myCourseIds: string[];
-    referralInfo: ReferralInfo;
-}) {
+export default function DetailCourse({ course, referralInfo }: { course: Course; referralInfo: ReferralInfo }) {
+    const [activeTab, setActiveTab] = useState('materi');
+
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
@@ -83,45 +61,71 @@ export default function DetailCourse({
         }
     }, [referralInfo]);
 
+    const handleRegisterClick = () => {
+        setActiveTab('informasi_program');
+        setTimeout(() => {
+            const tabsElement = document.querySelector('[role="tablist"]');
+            if (tabsElement) {
+                tabsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+    };
+
     return (
-        <UserLayout>
+        <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
             <Head title={`${course.title} - Kelas Online`} />
+            <HeroSection course={course} onRegisterClick={handleRegisterClick} />
 
-            <HeroSection course={course} />
-            <VideoSection course={course} />
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mx-auto w-full max-w-7xl gap-0 px-4 pb-8">
+                <div className="overflow-x-auto">
+                    <TabsList className="mb-0 flex h-auto w-full min-w-max justify-start gap-0 rounded-none border-b-0 bg-transparent p-0">
+                        <TabsTrigger
+                            value="materi"
+                            className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
+                        >
+                            <BookOpen className="h-5 w-5" />
+                            Materi
+                        </TabsTrigger>
 
-            <div className="mx-auto mt-8 mb-4 flex w-full max-w-7xl justify-center gap-2 px-4">
-                <a
-                    href="#about"
-                    className="bg-background hover:bg-accent dark:hover:bg-primary/10 rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-800 transition hover:cursor-pointer dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100"
-                >
-                    Informasi Kelas
-                </a>
-                <a
-                    href="#modules"
-                    className="bg-background hover:bg-accent dark:hover:bg-primary/10 rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-800 transition hover:cursor-pointer dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100"
-                >
-                    Modul
-                </a>
-                <a
-                    href="#tools"
-                    className="bg-background hover:bg-accent dark:hover:bg-primary/10 rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-800 transition hover:cursor-pointer dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100"
-                >
-                    Tools
-                </a>
-                <a
-                    href="#related"
-                    className="bg-background hover:bg-accent dark:hover:bg-primary/10 rounded-xl border border-gray-300 px-4 py-2 text-sm text-gray-800 transition hover:cursor-pointer dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100"
-                >
-                    Kelas Serupa
-                </a>
-            </div>
+                        <TabsTrigger
+                            value="point_utama"
+                            className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
+                        >
+                            <Lightbulb className="h-5 w-5" />
+                            Benefit
+                        </TabsTrigger>
 
-            <AboutSection course={course} />
-            <ModulesSection course={course} />
-            <ToolsSection course={course} />
-            <RegisterSection course={course} />
-            <RelatedProduct relatedCourses={relatedCourses} myCourseIds={myCourseIds} />
-        </UserLayout>
+                        <TabsTrigger
+                            value="mentor"
+                            className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
+                        >
+                            <User className="h-5 w-5" />
+                            Mentor
+                        </TabsTrigger>
+
+                        <TabsTrigger
+                            value="informasi_program"
+                            className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
+                        >
+                            <Info className="h-5 w-5" />
+                            Informasi Program
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
+
+                <TabsContent value="materi" className="mt-0 rounded-b-3xl bg-white p-6 shadow-lg">
+                    <ModulesSection course={course} />
+                </TabsContent>
+                <TabsContent value="point_utama" className="mt-0 rounded-b-3xl bg-white p-6 shadow-lg">
+                    <KeyPointSection course={course} />
+                </TabsContent>
+                <TabsContent value="mentor" className="mt-0 rounded-b-3xl bg-white p-6 shadow-lg">
+                    <MentorSection course={course} />
+                </TabsContent>
+                <TabsContent value="informasi_program" className="mt-0 rounded-b-3xl bg-white p-6 shadow-lg">
+                    <RegisterSection course={course} />
+                </TabsContent>
+            </Tabs>
+        </div>
     );
 }

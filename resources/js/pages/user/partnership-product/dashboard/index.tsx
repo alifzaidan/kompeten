@@ -1,6 +1,5 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
-import FeatureSection from './feature-section';
 import HeroSection from './hero-section';
 import PartnershipProductSection from './partnership-product-section';
 
@@ -34,7 +33,7 @@ export default function PartnershipProductPage({ categories, partnershipProducts
             <Head title="Sertifikasi Kerjasama" />
 
             <HeroSection />
-            <FeatureSection />
+            {/* <FeatureSection /> */}
             <PartnershipProductSection categories={categories} partnershipProducts={partnershipProducts} />
         </UserLayout>
     );

@@ -64,12 +64,10 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-12" id="bundles">
-            <div className="mb-8 text-center">
-                <h2 className="dark:text-primary-foreground mx-auto mb-4 max-w-3xl text-3xl font-bold text-gray-900 italic md:text-4xl">
-                    Pilih Paket Bundling Terbaik Untukmu
-                </h2>
-                <p className="mx-auto text-gray-600 dark:text-gray-400">Hemat lebih banyak dengan membeli paket bundling program pembelajaran.</p>
-            </div>
+            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">Pilih Paket Bundling Terbaik Untukmu</h2>
+            <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">
+                Hemat lebih banyak dengan membeli paket bundling program pembelajaran.
+            </p>
 
             <div className="mb-6">
                 <Input

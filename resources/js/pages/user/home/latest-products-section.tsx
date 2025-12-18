@@ -215,7 +215,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
     const availableProducts = safeLatestProducts.filter((product) => !hasAccess(product));
 
     return (
-        <section className="mx-auto w-full max-w-7xl px-4 py-8">
+        <section className="mx-auto w-full max-w-7xl px-4 py-8" id="products">
             <div className="mx-auto text-center">
                 <h2 className="mx-auto mb-12 max-w-2xl text-center text-3xl leading-snug font-semibold md:text-4xl">
                     Temukan program terbaru Kompeten yang siap leveling up skill-mu
