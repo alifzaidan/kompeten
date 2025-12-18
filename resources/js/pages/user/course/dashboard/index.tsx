@@ -17,6 +17,11 @@ interface Course {
     price: number;
     level: 'beginner' | 'intermediate' | 'advanced';
     category: Category;
+    user?: {
+        name: string;
+        avatar?: string;
+        bio?: string;
+    };
 }
 
 interface CourseProps {

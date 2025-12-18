@@ -90,6 +90,34 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
         }
     };
 
+    // ✅ Get level badge (from courses-section.tsx)
+    const getLevelBadge = (level?: string) => {
+        if (!level) return null;
+
+        switch (level) {
+            case 'beginner':
+                return (
+                    <Badge className="border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        Beginner
+                    </Badge>
+                );
+            case 'intermediate':
+                return (
+                    <Badge className="border-yellow-300 bg-yellow-100 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                        Intermediate
+                    </Badge>
+                );
+            case 'advanced':
+                return (
+                    <Badge className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        Advanced
+                    </Badge>
+                );
+            default:
+                return null;
+        }
+    };
+
     // ✅ Calculate discount percentage (from bundling-section.tsx)
     const calculateDiscount = (original: number, discounted: number) => {
         if (original === 0) return 0;
@@ -201,11 +229,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
         }
 
         if (product.category) {
-            return (
-                <div className="mb-1 inline-block">
-                    <Badge>{product.category.name}</Badge>
-                </div>
-            );
+            return <Badge>{product.category.name}</Badge>;
         }
 
         return null;
@@ -284,7 +308,12 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                             </p>
                                                         </div>
                                                     )}
-                                                    {getCategoryDisplay(product)}
+
+                                                    {/* Category & Level Badge */}
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {getCategoryDisplay(product)}
+                                                        {getLevelBadge(product.level)}
+                                                    </div>
                                                 </div>
 
                                                 {getDateDisplay(product)}
@@ -308,7 +337,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
                                                                 {product.mentor.name}
                                                             </p>
-                                                            <p className="text-primary text-xs">Mentor Akuntansi</p>
+                                                            <p className="text-primary text-xs">Mentor</p>
                                                         </div>
                                                     </div>
                                                 )}

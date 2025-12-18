@@ -15,7 +15,7 @@ class CourseController extends Controller
     public function index()
     {
         $categories = Category::all();
-        $courses = Course::with(['category'])
+        $courses = Course::with(['category', 'user'])
             ->where('status', 'published')
             ->orderBy('created_at', 'desc')
             ->get();

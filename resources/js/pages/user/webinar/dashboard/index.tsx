@@ -17,6 +17,11 @@ interface Webinar {
     price: number;
     start_time: string;
     category: Category;
+    user?: {
+        name: string;
+        avatar?: string;
+        bio?: string;
+    };
 }
 
 interface WebinarProps {

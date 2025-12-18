@@ -15,7 +15,7 @@ class WebinarController extends Controller
     public function index()
     {
         $categories = Category::all();
-        $webinars = Webinar::with(['category'])
+        $webinars = Webinar::with(['category', 'user'])
             ->where('status', 'published')
             ->where('registration_deadline', '>=', now())
             ->orderBy('start_time', 'asc')

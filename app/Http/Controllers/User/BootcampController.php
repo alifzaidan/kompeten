@@ -15,7 +15,7 @@ class BootcampController extends Controller
     public function index()
     {
         $categories = Category::all();
-        $bootcamps = Bootcamp::with(['category'])
+        $bootcamps = Bootcamp::with(['category', 'user'])
             ->where('status', 'published')
             ->where('registration_deadline', '>=', now())
             ->orderBy('start_date', 'asc')

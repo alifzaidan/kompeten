@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -10,10 +11,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Magnetic } from '@/components/ui/magnetic';
-import { Spotlight } from '@/components/ui/spotlight';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from '@inertiajs/react';
-import { GalleryVerticalEnd, Star } from 'lucide-react';
+import { GalleryVerticalEnd, Percent } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 type Category = {
@@ -31,6 +30,11 @@ interface Course {
     price: number;
     level: 'beginner' | 'intermediate' | 'advanced';
     category: Category;
+    user?: {
+        name: string;
+        avatar?: string;
+        bio?: string;
+    };
 }
 
 interface CourseProps {
@@ -67,8 +71,40 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
         if (!isDragging.current || !categoryRef.current) return;
         e.preventDefault();
         const x = e.pageX - categoryRef.current.offsetLeft;
-        const walk = (x - startX.current) * 1.5; // scroll speed
+        const walk = (x - startX.current) * 1.5;
         categoryRef.current.scrollLeft = scrollLeft.current - walk;
+    };
+
+    // Calculate discount percentage
+    const calculateDiscount = (original: number, discounted: number) => {
+        if (original === 0) return 0;
+        return Math.round(((original - discounted) / original) * 100);
+    };
+
+    // Get level badge
+    const getLevelBadge = (courseLevel: string) => {
+        switch (courseLevel) {
+            case 'beginner':
+                return (
+                    <Badge className="border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        Beginner
+                    </Badge>
+                );
+            case 'intermediate':
+                return (
+                    <Badge className="border-yellow-300 bg-yellow-100 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                        Intermediate
+                    </Badge>
+                );
+            case 'advanced':
+                return (
+                    <Badge className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        Advanced
+                    </Badge>
+                );
+            default:
+                return null;
+        }
     };
 
     const filteredCourses = courses.filter((course) => {
@@ -105,6 +141,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
             <div
                 className="mb-4 overflow-x-auto"
                 ref={categoryRef}
@@ -142,6 +179,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                     ))}
                 </div>
             </div>
+
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleCourses.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
@@ -151,72 +189,101 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                 ) : (
                     visibleCourses.map((course) => {
                         const hasAccess = myCourseIds.includes(course.id);
+                        const discount = calculateDiscount(course.strikethrough_price, course.price);
 
                         return (
                             <Link
                                 key={course.id}
                                 href={hasAccess ? `profile/my-courses/${course.slug}` : `/course/${course.slug}`}
-                                className="relative overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] dark:bg-zinc-700/30"
+                                className="h-full"
                             >
-                                <Spotlight className="bg-primary blur-2xl" size={284} />
-                                <div
-                                    className={`relative flex h-full w-full flex-col items-center justify-between rounded-lg transition-colors ${
-                                        hasAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'
-                                    }`}
-                                >
-                                    <div className="w-full overflow-hidden rounded-t-lg">
-                                        <img
-                                            src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
-                                            alt={course.title}
-                                            className="h-48 w-full rounded-t-lg object-cover"
-                                        />
-                                        <h2 className="mx-4 mt-2 text-lg font-semibold">{course.title}</h2>
-                                    </div>
-                                    <div className="w-full p-4 text-left">
-                                        {hasAccess ? (
-                                            <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
-                                        ) : course.price === 0 ? (
-                                            <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
-                                        ) : (
-                                            <div className="">
-                                                {course.strikethrough_price > 0 && (
-                                                    <p className="text-sm text-red-500 line-through">
-                                                        Rp {course.strikethrough_price.toLocaleString('id-ID')}
-                                                    </p>
-                                                )}
-                                                <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                                    Rp {course.price.toLocaleString('id-ID')}
-                                                </p>
-                                            </div>
-                                        )}
-                                        <div className="mt-4 flex justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                                <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                                <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                                <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                                <Star size={18} className="text-yellow-500" fill="currentColor" />
-                                            </div>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div
-                                                        className={
-                                                            course.level === 'beginner'
-                                                                ? 'rounded-full border border-green-300 bg-green-100 px-3 py-1 text-sm font-medium text-green-700 dark:bg-zinc-800 dark:text-green-300'
-                                                                : course.level === 'intermediate'
-                                                                  ? 'rounded-full border border-yellow-300 bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-zinc-800 dark:text-yellow-300'
-                                                                  : 'rounded-full border border-red-300 bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:bg-zinc-800 dark:text-red-300'
-                                                        }
-                                                    >
-                                                        <p>{course.level === 'beginner' ? '1' : course.level === 'intermediate' ? '2' : '3'}</p>
+                                <div className="relative h-full overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] dark:bg-zinc-700/30">
+                                    <div
+                                        className={`relative flex h-full w-full flex-col rounded-lg ${
+                                            hasAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'
+                                        }`}
+                                    >
+                                        <div className="w-full flex-shrink-0 overflow-hidden rounded-t-lg">
+                                            <div className="relative">
+                                                <img
+                                                    src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
+                                                    alt={course.title}
+                                                    className="h-48 w-full rounded-t-lg object-cover"
+                                                />
+
+                                                {/* Course Badge */}
+                                                <span className="absolute top-2 left-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                                    Kelas
+                                                </span>
+
+                                                {/* Discount Badge */}
+                                                {!hasAccess && discount > 0 && (
+                                                    <div className="absolute top-2 right-2">
+                                                        <Badge className="bg-red-500 text-white shadow-lg">
+                                                            <Percent size={12} className="mr-1" />
+                                                            Hemat {discount}%
+                                                        </Badge>
                                                     </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    {course.level === 'beginner' && <p>Level Beginner</p>}
-                                                    {course.level === 'intermediate' && <p>Level Intermediate</p>}
-                                                    {course.level === 'advanced' && <p>Level Advanced</p>}
-                                                </TooltipContent>
-                                            </Tooltip>
+                                                )}
+
+                                                {/* Access Badge */}
+                                                {hasAccess && (
+                                                    <div className="absolute top-2 right-2">
+                                                        <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <h2 className="mx-4 mt-2 line-clamp-2 text-left text-lg font-semibold">{course.title}</h2>
+                                        </div>
+
+                                        <div className="mt-auto w-full p-4 text-left">
+                                            <div className="flex items-end justify-between">
+                                                {hasAccess ? (
+                                                    <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                                ) : course.price === 0 ? (
+                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                ) : (
+                                                    <div className="">
+                                                        {course.strikethrough_price > 0 && course.strikethrough_price > course.price && (
+                                                            <p className="text-sm text-red-500 line-through">
+                                                                Rp {course.strikethrough_price.toLocaleString('id-ID')}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                                                            Rp {course.price.toLocaleString('id-ID')}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {/* Category & Level Badge */}
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <Badge>{course.category.name}</Badge>
+                                                    {getLevelBadge(course.level)}
+                                                </div>
+                                            </div>
+
+                                            {/* Mentor Info - Fixed conditional rendering */}
+                                            {course.user && (
+                                                <div className="mt-2 flex items-center gap-3 border-t-2 border-neutral-200 pt-3 dark:border-gray-700">
+                                                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
+                                                        {course.user.avatar ? (
+                                                            <img
+                                                                src={`/storage/${course.user.avatar}`}
+                                                                alt={course.user.name}
+                                                                className="h-full w-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="from-primary flex h-full w-full items-center justify-center bg-gradient-to-br to-orange-500 text-sm font-semibold text-white">
+                                                                {course.user.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{course.user.name}</p>
+                                                        <p className="text-primary text-xs">{course.user.bio}</p>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -225,6 +292,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                     })
                 )}
             </div>
+
             {visibleCount < filteredCourses.length && (
                 <div className="mb-8 flex justify-center">
                     <Magnetic>
