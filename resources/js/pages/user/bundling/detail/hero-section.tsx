@@ -1,78 +1,85 @@
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Package, Sparkles } from 'lucide-react';
+import { Package } from 'lucide-react';
 
 interface Bundle {
     title: string;
-    thumbnail?: string | null;
     short_description?: string | null;
     registration_deadline?: string | null;
     bundle_items_count: number;
+    price: number;
+    strikethrough_price: number;
 }
 
 interface HeroSectionProps {
     bundle: Bundle;
     discountPercentage: number;
+    onRegisterClick: () => void;
 }
 
-export default function HeroSection({ bundle, discountPercentage }: HeroSectionProps) {
+export default function HeroSection({ bundle, discountPercentage, onRegisterClick }: HeroSectionProps) {
     const deadlineDate = bundle.registration_deadline ? new Date(bundle.registration_deadline) : null;
 
     return (
-        <section className="to-background from-background via-primary/5 dark:via-primary/10 relative bg-gradient-to-b py-20 text-gray-900 dark:text-white">
-            <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
-                <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
-                <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
-            </div>
-
-            <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-3">
+        <section className="relative py-12 text-gray-900">
+            <div className="relative mx-auto max-w-7xl px-4">
                 <div className="col-span-2">
-                    <div className="mb-4 flex flex-wrap items-center gap-3">
-                        <span className="text-primary border-primary bg-background mb-4 inline-flex w-fit items-center gap-2 rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                            <Sparkles size={14} className="mr-1" />
-                            Paket Bundling
-                        </span>
-                        <span className="text-secondary border-secondary bg-background mb-4 inline-flex w-fit items-center rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
-                            {discountPercentage > 0 && `Hemat ${discountPercentage}%`}
-                        </span>
-                        <span className="text-primary border-primary bg-background mb-4 inline-flex w-fit items-center gap-2 rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                            <Package size={14} className="mr-1" />
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link href="/">Beranda</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link href="/bundle">Paket Bundling</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>{bundle.title}</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+
+                    <div className="mt-8 mb-4 flex flex-wrap items-center gap-3">
+                        <span className="border-primary-foreground bg-secondary text-primary-foreground rounded-full border px-4 py-1 text-sm font-medium">
+                            <Package className="mr-1 inline-block h-4 w-4" />
                             {bundle.bundle_items_count} Program
                         </span>
+                        {discountPercentage > 0 && (
+                            <span className="rounded-full border border-red-300 bg-red-100 px-4 py-1 text-sm font-medium text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                Hemat {discountPercentage}%
+                            </span>
+                        )}
                     </div>
 
-                    <h1 className="mb-4 text-4xl leading-tight font-bold italic sm:text-5xl">{bundle.title}</h1>
+                    <h1 className="mb-4 max-w-2xl text-4xl leading-tight font-semibold sm:text-5xl">{bundle.title}</h1>
 
                     {bundle.short_description && <p className="mb-4 text-lg text-gray-600 dark:text-gray-400">{bundle.short_description}</p>}
 
                     {deadlineDate && (
-                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
                             ⏰ Daftar sebelum: {format(deadlineDate, 'dd MMMM yyyy, HH:mm', { locale: id })} WIB
                         </div>
                     )}
 
-                    <div className="flex flex-wrap gap-4">
-                        <a href="#register">
-                            <Button size="lg">
-                                <Package className="mr-2 h-4 w-4" />
-                                Daftar Sekarang
-                            </Button>
-                        </a>
-                        <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
-                            <Button size="lg" variant="outline">
+                    <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <Button onClick={onRegisterClick}>
+                            <Package className="mr-2 h-4 w-4" />
+                            Daftar Sekarang
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
                                 Hubungi Kami
-                            </Button>
-                        </a>
+                            </a>
+                        </Button>
                     </div>
-                </div>
-
-                <div className="col-span-1 hidden lg:block">
-                    <img
-                        src={bundle.thumbnail ? `/storage/${bundle.thumbnail}` : '/assets/images/placeholder.png'}
-                        alt={bundle.title}
-                        className="rounded-xl shadow-lg"
-                    />
                 </div>
             </div>
         </section>

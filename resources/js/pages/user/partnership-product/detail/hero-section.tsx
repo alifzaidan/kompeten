@@ -1,62 +1,99 @@
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { Award, Calendar } from 'lucide-react';
 
 interface PartnershipProduct {
     title: string;
     category?: { name: string };
-    thumbnail?: string | null;
     short_description?: string | null;
-    description?: string | null;
     registration_deadline: string;
+    duration_days: number;
+    price: number;
+    strikethrough_price: number;
 }
 
-export default function HeroSection({ partnershipProduct }: { partnershipProduct: PartnershipProduct }) {
+interface HeroSectionProps {
+    partnershipProduct: PartnershipProduct;
+    onRegisterClick: () => void;
+}
+
+export default function HeroSection({ partnershipProduct, onRegisterClick }: HeroSectionProps) {
     const deadlineDate = new Date(partnershipProduct.registration_deadline);
+    const discountPercentage =
+        partnershipProduct.strikethrough_price > 0
+            ? Math.round(((partnershipProduct.strikethrough_price - partnershipProduct.price) / partnershipProduct.strikethrough_price) * 100)
+            : 0;
 
     return (
-        <section className="to-background from-background via-tertiary dark:via-background dark:to-background relative bg-gradient-to-b py-20 text-gray-900 dark:text-white">
-            <div className="pointer-events-none absolute top-1/2 left-1/2 z-0 flex -translate-x-1/2 -translate-y-1/2 animate-spin items-center gap-8 duration-[10s]">
-                <div className="bg-primary h-[300px] w-[300px] rounded-full blur-[200px]" />
-                <div className="bg-secondary h-[300px] w-[300px] rounded-full blur-[200px]" />
-            </div>
-            <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 lg:grid-cols-3">
+        <section className="relative py-12 text-gray-900">
+            <div className="relative mx-auto max-w-7xl px-4">
                 <div className="col-span-2">
-                    {partnershipProduct.category && (
-                        <span className="text-secondary border-secondary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#FED6AD] to-white px-3 py-1 text-sm font-medium shadow-xs hover:text-[#FF925B]">
-                            {' '}
-                            {partnershipProduct.category.name}
-                        </span>
-                    )}
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link href="/">Beranda</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link href="/certification">Sertifikasi Kerjasama</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>{partnershipProduct.title}</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
 
-                    <h1 className="mb-4 text-4xl leading-tight font-bold italic sm:text-5xl">{partnershipProduct.title}</h1>
+                    <div className="mt-8 mb-4 flex flex-wrap items-center gap-3">
+                        {partnershipProduct.category && (
+                            <span className="border-primary-foreground bg-secondary text-primary-foreground rounded-full border px-4 py-1 text-sm font-medium">
+                                {partnershipProduct.category.name}
+                            </span>
+                        )}
+                        <span className="rounded-full border border-blue-300 bg-blue-100 px-4 py-1 text-sm font-medium text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            <Calendar className="mr-1 inline-block h-4 w-4" />
+                            {partnershipProduct.duration_days} Hari
+                        </span>
+                        {discountPercentage > 0 && (
+                            <span className="rounded-full border border-red-300 bg-red-100 px-4 py-1 text-sm font-medium text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                Hemat {discountPercentage}%
+                            </span>
+                        )}
+                    </div>
+
+                    <h1 className="mb-4 max-w-2xl text-4xl leading-tight font-semibold sm:text-5xl">{partnershipProduct.title}</h1>
 
                     {partnershipProduct.short_description && (
                         <p className="mb-4 text-lg text-gray-600 dark:text-gray-400">{partnershipProduct.short_description}</p>
                     )}
 
-                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
                         ⏰ Daftar sebelum: {format(deadlineDate, 'dd MMMM yyyy, HH:mm', { locale: id })} WIB
                     </div>
 
-                    <div className="flex flex-wrap gap-4">
-                        <a href="#register">
-                            <Button>Daftar Sekarang</Button>
-                        </a>
-                        <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Hubungi Kami</Button>
-                        </a>
-                        <a href="https://ppppmi.id" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Terafiliasi dengan P4MI</Button>
-                        </a>
+                    <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <Button onClick={onRegisterClick}>
+                            <Award className="mr-2 h-4 w-4" />
+                            Daftar Sekarang
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
+                                Hubungi Kami
+                            </a>
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <a href="https://ppppmi.id" target="_blank" rel="noopener noreferrer">
+                                Terafiliasi dengan P4MI
+                            </a>
+                        </Button>
                     </div>
-                </div>
-                <div className="col-span-1 hidden lg:block">
-                    <img
-                        src={partnershipProduct.thumbnail ? `/storage/${partnershipProduct.thumbnail}` : '/assets/images/placeholder.png'}
-                        alt={partnershipProduct.title}
-                        className="rounded-xl shadow-lg"
-                    />
                 </div>
             </div>
         </section>

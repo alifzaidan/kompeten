@@ -105,7 +105,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mb-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg"
+                            className="bg-primary-foreground mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg"
                         >
                             <BookOpen className="h-4 w-4" />
                             Knowledge Hub
@@ -117,7 +117,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="mb-4 text-4xl font-black text-gray-900 md:text-6xl dark:text-white"
                         >
-                            Artikel & <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Insights</span>
+                            Artikel & <span className="bg-primary-foreground bg-clip-text text-transparent">Insights</span>
                         </motion.h1>
 
                         <motion.p
@@ -170,7 +170,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
 
                         {/* Categories Filter */}
                         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-gray-800">
-                            <div className="border-b bg-gradient-to-r from-orange-500 to-orange-600 p-4">
+                            <div className="bg-primary-foreground border-b p-4">
                                 <h3 className="font-semibold text-white">Kategori Artikel</h3>
                             </div>
                             <div className="p-4">
@@ -210,7 +210,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
 
                         {/* Popular Articles */}
                         <div className="overflow-hidden rounded-2xl border bg-gradient-to-br from-orange-50 to-white shadow-sm dark:from-gray-800 dark:to-gray-900">
-                            <div className="border-b bg-gradient-to-r from-orange-500 to-orange-600 p-4">
+                            <div className="bg-primary-foreground border-b p-4">
                                 <div className="flex items-center gap-2 text-white">
                                     <TrendingUp className="h-5 w-5" />
                                     <h3 className="font-semibold">Trending Now</h3>

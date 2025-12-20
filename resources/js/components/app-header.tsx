@@ -240,7 +240,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                     <Button variant="ghost" className="size-10 rounded-full p-1">
                                         <Avatar className="size-8 overflow-hidden rounded-full">
                                             <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
-                                            <AvatarFallback className="bg-primary text-primary-foreground rounded-lg dark:bg-neutral-700 dark:text-white">
+                                            <AvatarFallback className="bg-secondary text-primary-foreground rounded-lg dark:bg-neutral-700 dark:text-white">
                                                 {getInitials(auth.user.name)}
                                             </AvatarFallback>
                                         </Avatar>

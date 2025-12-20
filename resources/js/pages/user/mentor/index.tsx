@@ -45,7 +45,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                         <div className="mb-4 flex items-start gap-4">
                                             <Avatar className="ring-primary/20 group-hover:ring-primary/50 h-16 w-16 ring-2 transition-all">
                                                 <AvatarImage src={mentor.avatar} alt={mentor.name} />
-                                                <AvatarFallback className="bg-primary text-primary-foreground text-xl font-semibold">
+                                                <AvatarFallback className="bg-secondary text-primary-foreground text-xl font-semibold">
                                                     {getInitials(mentor.name)}
                                                 </AvatarFallback>
                                             </Avatar>

@@ -75,129 +75,128 @@ export default function RegisterSection({
     }
 
     return (
-        <section className="mx-auto my-12 w-full max-w-5xl px-4" id="register">
-            <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Informasi Pendaftaran
-            </h2>
-            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">
-                Daftar sekarang dan dapatkan akses ke semua program pembelajaran dalam paket bundling ini.
-            </p>
+        <section className="mx-auto w-full space-y-4 md:p-4">
+            <div className="rounded-2xl bg-neutral-100 p-6">
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    Daftar Paket Bundling "{bundle.title}" Sekarang!
+                </h2>
 
-            {/* ✅ Warning if user already owns items */}
-            {hasOwnedItems && (
-                <Alert variant="destructive" className="mb-6">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                        <p className="mb-2 font-semibold">Anda sudah memiliki produk berikut dalam bundle ini:</p>
-                        <ul className="ml-4 list-disc space-y-1">
-                            {ownedItems.map((item) => (
-                                <li key={item.id}>
-                                    <span className="font-medium">{item.type}:</span> {item.title}
+                {/* ✅ Warning if user already owns items */}
+                {hasOwnedItems && (
+                    <Alert variant="destructive" className="mb-6">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                            <p className="mb-2 font-semibold">Anda sudah memiliki produk berikut dalam bundle ini:</p>
+                            <ul className="ml-4 list-disc space-y-1">
+                                {ownedItems.map((item) => (
+                                    <li key={item.id}>
+                                        <span className="font-medium">{item.type}:</span> {item.title}
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="mt-2 text-sm">Untuk menghindari duplikasi, Anda tidak dapat membeli bundle ini.</p>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {/* Left Column - Image & Benefits */}
+                    <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
+                        <img
+                            src={bundle.thumbnail ? `/storage/${bundle.thumbnail}` : '/assets/images/placeholder.png'}
+                            alt={bundle.title}
+                            className="rounded-lg border border-gray-200 shadow-md"
+                        />
+
+                        <div className="space-y-3">
+                            <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                <Sparkles className="text-primary h-5 w-5" />
+                                Keuntungan Paket Bundling
+                            </h3>
+                            <ul className="space-y-2">
+                                <li className="flex items-start gap-2 text-sm">
+                                    <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
+                                    <p>Hemat {discountPercentage}% dari harga normal</p>
                                 </li>
-                            ))}
-                        </ul>
-                        <p className="mt-2 text-sm">Untuk menghindari duplikasi, Anda tidak dapat membeli bundle ini.</p>
-                    </AlertDescription>
-                </Alert>
-            )}
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Left Column - Image & Benefits */}
-                <div className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
-                    <img
-                        src={bundle.thumbnail ? `/storage/${bundle.thumbnail}` : '/assets/images/placeholder.png'}
-                        alt={bundle.title}
-                        className="rounded-lg border border-gray-200 shadow-md"
-                    />
-
-                    <div className="space-y-3">
-                        <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-                            <Sparkles className="text-primary h-5 w-5" />
-                            Keuntungan Paket Bundling
-                        </h3>
-                        <ul className="space-y-2">
-                            <li className="flex items-start gap-2 text-sm">
-                                <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
-                                <p>Hemat {discountPercentage}% dari harga normal</p>
-                            </li>
-                            <li className="flex items-start gap-2 text-sm">
-                                <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
-                                <p>Akses ke {bundle.bundle_items_count} program pembelajaran sekaligus</p>
-                            </li>
-                            <li className="flex items-start gap-2 text-sm">
-                                <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
-                                <p>Sertifikat untuk semua program yang diselesaikan</p>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Right Column - Price & Registration */}
-                <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
-                    <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Detail Harga Paket</h3>
-
-                    {/* Price Comparison */}
-                    <div className="mb-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Harga Normal:</span>
-                            <span className="text-sm text-gray-500 line-through dark:text-gray-400">
-                                {rupiahFormatter.format(totalOriginalPrice)}
-                            </span>
+                                <li className="flex items-start gap-2 text-sm">
+                                    <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
+                                    <p>Akses ke {bundle.bundle_items_count} program pembelajaran sekaligus</p>
+                                </li>
+                                <li className="flex items-start gap-2 text-sm">
+                                    <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
+                                    <p>Sertifikat untuk semua program yang diselesaikan</p>
+                                </li>
+                            </ul>
                         </div>
+                    </div>
 
-                        {discountAmount > 0 && (
+                    {/* Right Column - Price & Registration */}
+                    <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
+                        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Detail Harga Paket</h3>
+
+                        {/* Price Comparison */}
+                        <div className="mb-4 space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">Hemat:</span>
-                                <Badge className="bg-green-500 text-white">
-                                    - {rupiahFormatter.format(discountAmount)} ({discountPercentage}%)
-                                </Badge>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Harga Normal:</span>
+                                <span className="text-sm text-gray-500 line-through dark:text-gray-400">
+                                    {rupiahFormatter.format(totalOriginalPrice)}
+                                </span>
                             </div>
-                        )}
-                    </div>
 
-                    <Separator className="my-4" />
-
-                    {/* Final Price */}
-                    <div className="mb-6">
-                        <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Harga Bundling:</p>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-primary text-4xl font-bold italic">{rupiahFormatter.format(bundle.price)}</span>
-                        </div>
-                    </div>
-
-                    <Separator className="my-4" />
-
-                    {/* Bundle Info */}
-                    <ul className="mb-6 space-y-3">
-                        <li className="flex items-center gap-2 text-sm">
-                            <Package size="16" className="text-primary dark:text-secondary flex-shrink-0" />
-                            <p>
-                                Total: <span className="font-medium">{bundle.bundle_items_count} Program Pembelajaran</span>
-                            </p>
-                        </li>
-
-                        {deadline && (
-                            <li className="flex items-start gap-2 text-sm">
-                                <Calendar size="16" className="text-primary dark:text-secondary mt-0.5 flex-shrink-0" />
-                                <div>
-                                    <p className="font-medium">Batas Pendaftaran:</p>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {format(deadline, "EEEE, dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
-                                    </p>
+                            {discountAmount > 0 && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Hemat:</span>
+                                    <Badge className="bg-green-500 text-white">
+                                        - {rupiahFormatter.format(discountAmount)} ({discountPercentage}%)
+                                    </Badge>
                                 </div>
-                            </li>
-                        )}
-                    </ul>
+                            )}
+                        </div>
 
-                    <div className="mt-auto">
-                        {warningMessage && (
-                            <p className={`mb-2 text-center text-sm ${hasOwnedItems ? 'font-semibold text-red-600' : 'text-red-500'}`}>
-                                {warningMessage}
-                            </p>
-                        )}
-                        <Button className="w-full" asChild={!isDisabled} disabled={isDisabled}>
-                            {isDisabled ? <span>{buttonText}</span> : <Link href={registrationUrl}>{buttonText}</Link>}
-                        </Button>
+                        <Separator className="my-4" />
+
+                        {/* Final Price */}
+                        <div className="mb-6">
+                            <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Harga Bundling:</p>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-primary text-4xl font-semibold">{rupiahFormatter.format(bundle.price)}</span>
+                            </div>
+                        </div>
+
+                        <Separator className="my-4" />
+
+                        {/* Bundle Info */}
+                        <ul className="mb-6 space-y-3">
+                            <li className="flex items-center gap-2 text-sm">
+                                <Package size="16" className="text-primary dark:text-secondary flex-shrink-0" />
+                                <p>
+                                    Total: <span className="font-medium">{bundle.bundle_items_count} Program Pembelajaran</span>
+                                </p>
+                            </li>
+
+                            {deadline && (
+                                <li className="flex items-start gap-2 text-sm">
+                                    <Calendar size="16" className="text-primary dark:text-secondary mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <p className="font-medium">Batas Pendaftaran:</p>
+                                        <p className="text-gray-600 dark:text-gray-400">
+                                            {format(deadline, "EEEE, dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                        </p>
+                                    </div>
+                                </li>
+                            )}
+                        </ul>
+
+                        <div className="mt-auto">
+                            {warningMessage && (
+                                <p className={`mb-2 text-center text-sm ${hasOwnedItems ? 'font-semibold text-red-600' : 'text-red-500'}`}>
+                                    {warningMessage}
+                                </p>
+                            )}
+                            <Button className="w-full" asChild={!isDisabled} disabled={isDisabled}>
+                                {isDisabled ? <span>{buttonText}</span> : <Link href={registrationUrl}>{buttonText}</Link>}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

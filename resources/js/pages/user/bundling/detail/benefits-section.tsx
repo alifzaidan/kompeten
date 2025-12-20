@@ -13,26 +13,15 @@ export default function BenefitsSection({ bundle }: BenefitsSectionProps) {
     }
 
     return (
-        <section className="mx-auto w-full max-w-5xl px-4">
-            {bundle.description && (
-                <div className="mb-8">
-                    <p className="text-primary border-primary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                        Tentang Paket Bundling
-                    </p>
-                    <div className="prose prose-lg dark:prose-invert max-w-none">
-                        <p className="whitespace-pre-line text-gray-700 dark:text-gray-300">{bundle.description}</p>
-                    </div>
-                </div>
-            )}
-
+        <>
             {bundle.benefits && (
-                <div className="mt-8">
-                    <p className="text-primary border-primary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs">
-                        Keuntungan yang Anda Dapatkan
-                    </p>
-                    <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: bundle.benefits }} />
-                </div>
+                <section className="mx-auto w-full space-y-4 md:p-4">
+                    <div className="rounded-2xl bg-neutral-100 p-6">
+                        <h2 className="mb-2 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Manfaat Paket Bundling</h2>
+                        <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: bundle.benefits }} />
+                    </div>
+                </section>
             )}
-        </section>
+        </>
     );
 }

@@ -12,35 +12,44 @@ export default function ScheduleInfoSection({ partnershipProduct }: { partnershi
     }
 
     return (
-        <section className="mx-auto w-full max-w-7xl px-4 py-8">
-            <div className="grid grid-cols-1 gap-8 rounded-lg border border-gray-200 bg-white p-6 md:grid-cols-2 dark:border-zinc-700 dark:bg-zinc-800">
-                {/* Schedule Days */}
-                <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="h-8 w-8 text-blue-600" />
-                        <h3 className="text-2xl font-bold italic">Jadwal Pelaksanaan</h3>
+        <section className="mx-auto w-full space-y-6">
+            <div className="space-y-6">
+                {/* Schedule Days Section */}
+                <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center gap-3">
+                        <div className="rounded-lg bg-blue-100 p-2">
+                            <Calendar className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900">Jadwal Pelaksanaan</h3>
                     </div>
-                    <div className="flex flex-wrap justify-center gap-2">
+                    <div className="mb-3 flex flex-wrap gap-2">
                         {partnershipProduct.schedule_days.map((day: string) => (
-                            <Badge key={day} className="bg-blue-100 px-4 py-2 text-base text-blue-700">
+                            <Badge
+                                key={day}
+                                variant="secondary"
+                                className="bg-blue-50 px-4 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                            >
                                 {day}
                             </Badge>
                         ))}
                     </div>
-                    <p className="text-muted-foreground text-center text-sm">Program ini dilaksanakan pada hari-hari yang telah ditentukan</p>
+                    <p className="text-sm text-gray-500">Program ini dilaksanakan pada hari-hari yang telah ditentukan</p>
                 </div>
 
+                {/* Duration Section */}
                 {partnershipProduct.duration_days > 0 && (
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-8 w-8 text-green-600" />
-                            <h3 className="text-2xl font-bold italic">Durasi Program</h3>
+                    <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+                        <div className="mb-4 flex items-center gap-3">
+                            <div className="rounded-lg bg-green-100 p-2">
+                                <Clock className="h-6 w-6 text-green-600" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900">Durasi Program</h3>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-bold text-green-600">{partnershipProduct.duration_days}</span>
-                            <span className="text-xl text-gray-600 dark:text-gray-400">hari</span>
+                        <div className="mb-3 flex items-baseline gap-2">
+                            <span className="text-4xl font-bold text-green-600">{partnershipProduct.duration_days}</span>
+                            <span className="text-lg font-medium text-gray-600">hari</span>
                         </div>
-                        <p className="text-muted-foreground text-center text-sm">Total durasi pembelajaran dari awal hingga akhir program</p>
+                        <p className="text-sm text-gray-500">Total durasi pembelajaran dari awal hingga akhir program</p>
                     </div>
                 )}
             </div>

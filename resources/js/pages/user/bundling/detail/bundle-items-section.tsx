@@ -144,34 +144,31 @@ export default function BundleItemsSection({ bundle, groupedItems, totalOriginal
     };
 
     return (
-        <section className="mx-auto w-full max-w-5xl px-4 py-12">
-            <div className="mb-8 text-center">
-                <p className="text-primary border-primary bg-background mb-4 inline-block rounded-full border bg-gradient-to-t from-[#D9E5FF] to-white px-4 py-1 text-sm font-medium shadow-xs dark:from-blue-900/40 dark:to-gray-900">
-                    Isi Paket
-                </p>
-                <h2 className="mb-2 text-3xl font-bold text-gray-900 italic md:text-4xl dark:text-white">
+        <section className="mx-auto w-full space-y-4 md:p-4">
+            <div className="rounded-2xl bg-neutral-100 p-6">
+                <h2 className="mb-2 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
                     {bundle.bundle_items_count} Program Pembelajaran
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">Dapatkan akses ke semua program ini dalam satu paket bundling</p>
-            </div>
+                <p className="mb-8 text-center text-gray-600 dark:text-gray-400">Dapatkan akses ke semua program ini dalam satu paket bundling</p>
 
-            <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-sm dark:border-gray-700 dark:from-gray-900 dark:to-gray-800">
-                {renderItems(groupedItems.courses, 'course')}
-                {renderItems(groupedItems.bootcamps, 'bootcamp')}
-                {renderItems(groupedItems.webinars, 'webinar')}
+                <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-sm dark:border-gray-700 dark:from-gray-900 dark:to-gray-800">
+                    {renderItems(groupedItems.courses, 'course')}
+                    {renderItems(groupedItems.bootcamps, 'bootcamp')}
+                    {renderItems(groupedItems.webinars, 'webinar')}
 
-                <div className="border-primary/50 mt-6 space-y-3 rounded-xl border-2 border-dashed bg-white p-6 dark:bg-gray-800">
-                    {/* Normal Price */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Harga Normal:</span>
-                        <span className="text-lg font-semibold text-gray-500 line-through dark:text-gray-400">
-                            {rupiahFormatter.format(totalOriginalPrice)}
-                        </span>
-                    </div>
+                    <div className="border-primary/50 mt-6 space-y-3 rounded-xl border-2 border-dashed bg-white p-6 dark:bg-gray-800">
+                        {/* Normal Price */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Harga Normal:</span>
+                            <span className="text-lg font-semibold text-gray-500 line-through dark:text-gray-400">
+                                {rupiahFormatter.format(totalOriginalPrice)}
+                            </span>
+                        </div>
 
-                    <div className="flex items-center justify-between">
-                        <span className="text-base font-semibold text-gray-700 dark:text-gray-300">Harga Paket Bundling:</span>
-                        <span className="text-primary text-3xl font-bold">{rupiahFormatter.format(bundle.price)}</span>
+                        <div className="flex items-center justify-between">
+                            <span className="text-base font-semibold text-gray-700 dark:text-gray-300">Harga Paket Bundling:</span>
+                            <span className="text-primary text-3xl font-bold">{rupiahFormatter.format(bundle.price)}</span>
+                        </div>
                     </div>
                 </div>
             </div>

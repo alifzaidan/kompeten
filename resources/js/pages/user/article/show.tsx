@@ -6,7 +6,7 @@ import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { BookText, Calendar, Clock, Eye, MonitorPlay, Presentation, Share2 } from 'lucide-react';
+import { BookText, Calendar, Clock, Eye, MonitorPlay, Presentation } from 'lucide-react';
 
 interface Category {
     id: string;
@@ -84,14 +84,14 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                                 <Badge variant="secondary" className="mb-3">
                                     {article.category.name}
                                 </Badge>
-                                <h1 className="mb-4 text-3xl font-bold italic md:text-4xl">{article.title}</h1>
+                                <h1 className="mb-4 text-3xl font-semibold md:text-4xl">{article.title}</h1>
 
                                 {/* Meta Info */}
                                 <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-sm">
                                     <div className="flex items-center gap-2">
                                         <Avatar className="h-7 w-7">
                                             <AvatarImage src={article.user.avatar} alt={article.user.name} />
-                                            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                                            <AvatarFallback className="bg-secondary text-primary-foreground rounded-lg dark:bg-neutral-700 dark:text-white">
                                                 {getInitials(article.user.name)}
                                             </AvatarFallback>
                                         </Avatar>
@@ -139,7 +139,7 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                             </div>
 
                             {/* Share Button */}
-                            <div className="mt-8 flex items-center justify-between rounded-lg border p-4">
+                            {/* <div className="mt-8 flex items-center justify-between rounded-lg border p-4">
                                 <p className="font-medium">Bagikan artikel ini</p>
                                 <button
                                     onClick={handleShare}
@@ -148,14 +148,14 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                                     <Share2 className="h-4 w-4" />
                                     Bagikan
                                 </button>
-                            </div>
+                            </div> */}
 
                             {/* Author Info */}
                             <div className="mt-8 border-t p-6">
                                 <div className="flex items-start gap-4">
                                     <Avatar className="h-16 w-16">
                                         <AvatarImage src={article.user.avatar} alt={article.user.name} />
-                                        <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                                        <AvatarFallback className="bg-secondary text-primary-foreground text-xl">
                                             {getInitials(article.user.name)}
                                         </AvatarFallback>
                                     </Avatar>
@@ -210,7 +210,7 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                             )}
 
                             {/* ✅ CTA - All Products & NO CARD */}
-                            <div className="bg-primary text-primary-foreground rounded-lg p-6">
+                            <div className="bg-secondary border-primary-foreground text-primary-foreground rounded-lg border-2 p-6">
                                 <h3 className="mb-2 text-lg font-semibold">Ingin Belajar Lebih Lanjut?</h3>
                                 <p className="mb-4 text-sm opacity-90">Jelajahi produk edukasi kami untuk meningkatkan skill Anda</p>
                                 <div className="space-y-2">

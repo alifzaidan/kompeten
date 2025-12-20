@@ -138,7 +138,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                             {/* Avatar */}
                             <Avatar className="ring-primary/20 h-16 w-16 ring-4 md:h-24 md:w-24">
                                 <AvatarImage src={mentor.avatar} alt={mentor.name} />
-                                <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold md:text-4xl">
+                                <AvatarFallback className="bg-secondary text-primary-foreground text-3xl font-bold md:text-4xl">
                                     {getInitials(mentor.name)}
                                 </AvatarFallback>
                             </Avatar>

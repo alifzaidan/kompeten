@@ -59,7 +59,7 @@ export default function ProfileLayout({ children }: PropsWithChildren) {
                         <div className="mb-4 p-2 text-center">
                             <Avatar className="mx-auto mb-2 size-16 overflow-hidden rounded-full">
                                 <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
-                                <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-2xl dark:bg-neutral-700 dark:text-white">
+                                <AvatarFallback className="bg-secondary text-primary-foreground rounded-lg dark:bg-neutral-700 dark:text-white">
                                     {getInitials(auth.user.name)}
                                 </AvatarFallback>
                             </Avatar>
