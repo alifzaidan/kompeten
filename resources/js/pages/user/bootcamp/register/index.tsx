@@ -533,23 +533,23 @@ export default function RegisterBootcamp({
                                                     <li>
                                                         • Follow Instagram{' '}
                                                         <a
-                                                            href="https://www.instagram.com/kompeten/"
+                                                            href="https://www.instagram.com/kompeten.idn/"
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium underline"
                                                         >
-                                                            @kompeten
+                                                            @kompeten.idn
                                                         </a>
                                                     </li>
                                                     <li>
                                                         • Follow TikTok{' '}
                                                         <a
-                                                            href="https://www.tiktok.com/@kompeten"
+                                                            href="https://www.tiktok.com/@kompetenidn"
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="font-medium underline"
                                                         >
-                                                            @kompeten
+                                                            @kompetenidn
                                                         </a>
                                                     </li>
                                                     <li>• Tag 3 teman di postingan Instagram kami</li>

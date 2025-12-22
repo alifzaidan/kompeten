@@ -47,7 +47,7 @@ class CertificatePdfService
             // Data dummy untuk preview
             $dummyData = [
                 'participant_name' => 'Kompeten',
-                'certificate_code' => 'AKS-25AHBEFJ',
+                'certificate_code' => 'KMP-25AHBEFJ',
                 'participant_issued_at' => now(),
                 'certificate_number' => '0001',
                 'completion_date' => now()->format('d F Y'),
