@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
 use App\Models\Bootcamp;
 use App\Models\Bundle;
 use App\Models\Course;
@@ -186,6 +187,26 @@ class HomeController extends Controller
                 ];
             });
 
+        $latestArticles = Article::with(['category'])
+            ->where('status', 'published')
+            ->orderBy('published_at', 'desc')
+            ->take(6)
+            ->get()
+            ->map(function ($article) {
+                return [
+                    'id' => $article->id,
+                    'title' => $article->title,
+                    'slug' => $article->slug,
+                    'excerpt' => $article->excerpt,
+                    'thumbnail' => $article->thumbnail,
+                    'category' => [
+                        'id' => $article->category->id,
+                        'name' => $article->category->name,
+                    ],
+                    'published_at' => $article->published_at?->format('Y-m-d H:i:s'),
+                ];
+            });
+
         $myProductIds = [
             'courses' => [],
             'bootcamps' => [],
@@ -255,6 +276,7 @@ class HomeController extends Controller
         return Inertia::render('user/home/index', [
             'tools' => $tools,
             'latestProducts' => $latestProducts,
+            'latestArticles' => $latestArticles,
             'myProductIds' => $myProductIds,
             'allProducts' => $allProducts,
             'activePromotion' => $activePromotion,

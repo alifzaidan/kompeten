@@ -210,7 +210,7 @@ export default function ArticleShow({ article, relatedArticles }: ArticleShowPro
                             )}
 
                             {/* ✅ CTA - All Products & NO CARD */}
-                            <div className="bg-secondary border-primary-foreground text-primary-foreground rounded-lg border-2 p-6">
+                            <div className="bg-secondary/20 border-primary text-primary-foreground rounded-lg border-2 p-6">
                                 <h3 className="mb-2 text-lg font-semibold">Ingin Belajar Lebih Lanjut?</h3>
                                 <p className="mb-4 text-sm opacity-90">Jelajahi produk edukasi kami untuk meningkatkan skill Anda</p>
                                 <div className="space-y-2">

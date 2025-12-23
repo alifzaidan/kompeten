@@ -4,8 +4,8 @@ import { Head } from '@inertiajs/react';
 import { MessageCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import AboutSection from './about-section';
+import ArticleSection from './article-section';
 import FaqSection from './faq-section';
-import GallerySection from './gallery-section';
 import HeroSection from './hero-section';
 import LatestProductsSection from './latest-products-section';
 import MentorSection from './mentor-section';
@@ -43,6 +43,19 @@ interface Product {
     created_at: string;
 }
 
+interface Article {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    thumbnail: string;
+    category: {
+        id: string;
+        name: string;
+    };
+    published_at: string;
+}
+
 interface MyProductIds {
     courses: string[];
     bootcamps: string[];
@@ -68,6 +81,7 @@ interface Promotion {
 interface HomeProps {
     tools: Tool[];
     latestProducts: Product[];
+    latestArticles: Article[];
     myProductIds: MyProductIds;
     allProducts: Array<{
         id: string;
@@ -79,7 +93,7 @@ interface HomeProps {
     referralInfo: ReferralInfo;
 }
 
-export default function Home({ tools, latestProducts, myProductIds, activePromotion, referralInfo }: HomeProps) {
+export default function Home({ tools, latestProducts, latestArticles, myProductIds, activePromotion, referralInfo }: HomeProps) {
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
@@ -103,10 +117,8 @@ export default function Home({ tools, latestProducts, myProductIds, activePromot
             <LatestProductsSection latestProducts={latestProducts} myProductIds={myProductIds} />
             <MentorSection />
             <TestimonySection />
-            <GallerySection />
+            <ArticleSection articles={latestArticles} />
             <FaqSection />
-
-            {/* {typeof window !== 'undefined' && window.innerWidth >= 1024 && <FakeNotifications products={allProducts} />} */}
 
             <a
                 href="https://wa.me/+6289528514480?text=Halo%20Admin%Kompeten,%20saya%20ingin%20bertanya%20tentang%20kelas%20online."

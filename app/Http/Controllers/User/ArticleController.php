@@ -16,6 +16,16 @@ class ArticleController extends Controller
         $query = Article::with(['category', 'user'])
             ->where('status', 'published');
 
+        // Search by title, excerpt, or content
+        if ($request->has('search') && $request->search) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('excerpt', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('content', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
         // Filter by category
         if ($request->has('category') && $request->category) {
             $query->where('category_id', $request->category);
@@ -65,6 +75,7 @@ class ArticleController extends Controller
             'categories' => $categories,
             'popularArticles' => $popularArticles,
             'filters' => [
+                'search' => $request->search,
                 'category' => $request->category,
                 'sort' => $request->sort ?? 'latest',
             ],

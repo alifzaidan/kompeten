@@ -6,9 +6,9 @@ import UserLayout from '@/layouts/user-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { ArrowRight, BookOpen, Calendar, Clock, Eye, Search, TrendingUp } from 'lucide-react';
+import { ArrowRight, BookOpen, Calendar, Clock, Eye, Search, TrendingUp, X } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Category {
     id: string;
@@ -59,6 +59,7 @@ interface ArticleIndexProps {
     categories: Category[];
     popularArticles: PopularArticle[];
     filters: {
+        search?: string;
         category?: string;
         sort?: string;
     };
@@ -67,13 +68,34 @@ interface ArticleIndexProps {
 export default function ArticleIndex({ articles, categories, popularArticles, filters }: ArticleIndexProps) {
     const [selectedCategory, setSelectedCategory] = useState<string>(filters.category || '');
     const [sortBy, setSortBy] = useState<string>(filters.sort || 'latest');
-    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState<string>(filters.search || '');
+    const [debouncedSearch, setDebouncedSearch] = useState<string>(filters.search || '');
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Trigger search when debounced value changes
+    useEffect(() => {
+        if (debouncedSearch !== filters.search) {
+            handleSearch(debouncedSearch);
+        }
+    }, [debouncedSearch]);
 
     const handleFilter = (category: string) => {
         setSelectedCategory(category);
         router.get(
             '/article',
-            { category: category || undefined, sort: sortBy },
+            {
+                search: searchQuery || undefined,
+                category: category || undefined,
+                sort: sortBy,
+            },
             {
                 preserveState: true,
                 replace: true,
@@ -85,7 +107,42 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
         setSortBy(sort);
         router.get(
             '/article',
-            { category: selectedCategory || undefined, sort },
+            {
+                search: searchQuery || undefined,
+                category: selectedCategory || undefined,
+                sort,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
+    };
+
+    const handleSearch = (search: string) => {
+        router.get(
+            '/article',
+            {
+                search: search || undefined,
+                category: selectedCategory || undefined,
+                sort: sortBy,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setDebouncedSearch('');
+        router.get(
+            '/article',
+            {
+                category: selectedCategory || undefined,
+                sort: sortBy,
+            },
             {
                 preserveState: true,
                 replace: true,
@@ -143,9 +200,22 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                     placeholder="Cari artikel yang kamu butuhkan..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="h-14 rounded-full border-2 pr-4 pl-12 text-base shadow-lg"
+                                    className="h-14 rounded-full border-2 pr-12 pl-12 text-base shadow-lg"
                                 />
+                                {searchQuery && (
+                                    <button
+                                        onClick={clearSearch}
+                                        className="absolute top-1/2 right-4 -translate-y-1/2 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                )}
                             </div>
+                            {searchQuery && (
+                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                    Mencari: "<span className="font-semibold">{searchQuery}</span>"
+                                </p>
+                            )}
                         </motion.div>
                     </motion.div>
                 </div>
@@ -246,7 +316,9 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                         {/* Sort Options (Desktop) */}
                         <div className="mb-8 hidden items-center justify-between lg:flex">
                             <div>
-                                <h2 className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">Latest Articles</h2>
+                                <h2 className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
+                                    {searchQuery ? 'Hasil Pencarian' : 'Latest Articles'}
+                                </h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Menampilkan {articles.data.length} artikel</p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -360,8 +432,18 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                         ) : (
                             <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-gray-50 dark:bg-gray-800">
                                 <BookOpen className="mb-4 h-16 w-16 text-gray-300" />
-                                <p className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">Artikel tidak ditemukan</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Coba ubah filter atau kategori</p>
+                                <p className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
+                                    {searchQuery ? `Tidak ada hasil untuk "${searchQuery}"` : 'Artikel tidak ditemukan'}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {searchQuery ? 'Coba kata kunci lain' : 'Coba ubah filter atau kategori'}
+                                </p>
+                                {searchQuery && (
+                                    <Button onClick={clearSearch} variant="outline" className="mt-4">
+                                        <X className="mr-2 h-4 w-4" />
+                                        Hapus Pencarian
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </div>

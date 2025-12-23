@@ -1,6 +1,7 @@
 import { SearchCommand } from '@/components/search-command';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ResponsiveSVG from '@/components/ui/responsive-svg';
 import { Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
@@ -59,13 +60,13 @@ export default function HeroSection() {
             </div>
 
             <div className="relative">
-                {/* <ResponsiveSVG /> */}
+                <ResponsiveSVG />
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
-                    className="absolute left-1/2 z-20 flex -translate-x-1/2 gap-2 pt-3 sm:top-4"
+                    className="absolute left-1/2 z-20 flex -translate-x-1/2 gap-2 pt-3 sm:top-0"
                 >
                     <Button size="lg">
                         <a href="#products">Layanan Kami</a>
@@ -77,14 +78,9 @@ export default function HeroSection() {
                     </Button>
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.5 }}
-                    className="relative mx-auto w-full max-w-7xl"
-                >
-                    <img src="/assets/images/hero.png" alt="Hero Section" loading="lazy" className="w-full rounded-4xl object-cover shadow-lg" />
-
+                <div className="relative mx-auto w-full max-w-7xl">
+                    {/* <img src="/assets/images/hero.png" alt="Hero Section" loading="lazy" className="w-full rounded-4xl object-cover shadow-lg" /> */}
+                    <div className="aspect-[2/1] w-full"></div>
                     <div className="absolute top-auto bottom-4 left-6 z-10 flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 shadow-xl backdrop-blur-lg sm:top-6 sm:bottom-auto">
                         <div className="flex -space-x-2">
                             <div className="h-4 w-4 rounded-full bg-blue-500 ring-2 ring-white md:h-7 md:w-7" />
@@ -93,12 +89,11 @@ export default function HeroSection() {
                         </div>
                         <span className="text-sm font-semibold text-white drop-shadow-lg md:text-base">5000+ Alumni</span>
                     </div>
-
                     <div className="absolute top-auto right-6 bottom-4 z-10 flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 shadow-xl backdrop-blur-lg sm:top-6 sm:bottom-auto">
                         <span className="md:text-xl">⭐</span>
                         <span className="text-sm font-semibold text-white drop-shadow-lg md:text-base">4500+ Pengguna</span>
                     </div>
-                </motion.div>
+                </div>
             </div>
 
             <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />

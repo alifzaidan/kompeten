@@ -9,85 +9,84 @@ export default function ResponsiveSVG() {
       if (width < 640) setScreenSize("small");
       else if (width < 1024) setScreenSize("medium");
       else setScreenSize("large");
-    }
+    };
 
     handler();
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  const pathData = 
-  screenSize === "small"
-    ? `M 0 0 
-       L 800 0
-       L 800 410 
-       Q 800 460 750 460 
-       L 275 460 
-       C 260 460 250 485 250 485
-       L 225 535
-       C 225 535 215 560 200 560
-       L 50 560 
-       Q 0 560 0 510 
-       Z`
-  : screenSize === "medium"
-    ? `M 0 0 
-       L 800 0
-       L 800 410 
-       Q 800 460 750 460 
-       L 275 460 
-       C 260 460 250 485 250 485
-       L 225 535
-       C 225 535 215 560 200 560
-       L 50 560 
-       Q 0 560 0 510 
-       Z`
-    : // Path untuk layar besar dengan cekungan di tengah atas
-      `M 0 0 
-       L 280 0
-       Q 290 0 295 5
-       Q 300 10 305 20
-       L 320 50
-       Q 325 60 335 60
-       L 465 60
-       Q 475 60 480 50
-       L 495 20
-       Q 500 10 505 5
-       Q 510 0 520 0
-       L 800 0
-       L 800 410 
-       Q 800 460 750 460 
-       L 275 460 
-       C 260 460 250 485 250 485
-       L 225 535
-       C 225 535 215 560 200 560
-       L 50 560 
-       Q 0 560 0 510 
-       Z`;
+  // Mobile/Tablet: Tanpa cekungan (lurus saja)
+  const mobilePath = `
+    M20,0 
+    L780,0 
+    Q800,0 800,20
+    L800,380
+    Q800,400 780,400
+    L20,400 
+    Q0,400 0,380
+    L0,20
+    Q0,0 20,0
+    Z
+  `;
+
+  // Desktop: Cekungan lebar & dangkal seperti gambar
+  const desktopPath = `
+    M20,0 
+    L280,0 
+    Q290,0 295,20
+    Q300,40 320,40
+    L480,40
+    Q500,40 505,20
+    Q510,0 520,0
+    L780,0 
+    Q800,0 800,20
+    L800,380
+    Q800,400 780,400
+    L20,400 
+    Q0,400 0,380
+    L0,20
+    Q0,0 20,0
+    Z
+  `;
+
+  const pathData = screenSize === "large" ? desktopPath : mobilePath;
 
   return (
     <svg
       width="100%"
       height="100%"
-      viewBox="0 0 800 600"
+      viewBox="0 0 800 400"
       preserveAspectRatio="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="absolute top-0 left-0 w-full z-10 h-[93%] sm:h-full"
+      className="absolute top-0 left-0 w-full z-10 h-full"
+      style={{ borderRadius: 40, overflow: "visible" }}
     >
       <defs>
-        <linearGradient id="myGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#FFCC00" />
-          <stop offset="56%" stopColor="#FE8501" />
-          <stop offset="100%" stopColor="#E84908" />
-        </linearGradient>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(0,0,0,0.4)" />
-        </filter>
+        <clipPath id="heroClip">
+          <path d={pathData} />
+        </clipPath>
       </defs>
-      <path
-        d={pathData}
-        fill="url(#myGradient)"
-        filter="url(#shadow)"
-      />
+      {/* Gambar object-cover pakai foreignObject + div */}
+      <foreignObject
+        x="0"
+        y="0"
+        width="800"
+        height="400"
+        clipPath="url(#heroClip)"
+        style={{ borderRadius: 40, overflow: "hidden" }}
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            backgroundImage: "url('/assets/images/hero.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+      </foreignObject>
     </svg>
   );
 }
