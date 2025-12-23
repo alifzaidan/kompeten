@@ -55,30 +55,30 @@ export default function ProfileLayout({ children }: PropsWithChildren) {
         <div className="px-4 py-6">
             <div className="mx-auto w-full max-w-7xl sm:px-4">
                 <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-8">
-                    <aside className="w-full rounded-xl border p-2 lg:w-52 lg:max-w-xl">
-                        <div className="mb-4 p-2 text-center">
-                            <Avatar className="mx-auto mb-2 size-16 overflow-hidden rounded-full">
+                    <aside className="w-full rounded-2xl border bg-white/95 p-4 shadow-lg backdrop-blur-sm lg:w-64 lg:max-w-xl dark:bg-gray-800/95">
+                        <div className="mb-6 border-b pb-4 text-center dark:border-gray-700">
+                            <Avatar className="mx-auto mb-3 size-20 overflow-hidden rounded-full ring-4 ring-orange-100 dark:ring-orange-900/30">
                                 <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
-                                <AvatarFallback className="bg-secondary text-primary-foreground rounded-lg dark:bg-neutral-700 dark:text-white">
+                                <AvatarFallback className="bg-secondary text-primary-foreground text-xl font-bold">
                                     {getInitials(auth.user.name)}
                                 </AvatarFallback>
                             </Avatar>
-                            <h1 className="text-xl font-bold italic">{auth.user.name}</h1>
-                            <p className="text-muted-foreground text-sm">Lifetime Learner</p>
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{auth.user.name}</h1>
                         </div>
-                        <nav className="flex flex-col space-y-1 space-x-0">
+                        <nav className="flex flex-col space-y-1">
                             {sidebarNavItems.map((item, index) => (
                                 <Button
                                     key={`${item.href}-${index}`}
                                     size="sm"
                                     variant="ghost"
                                     asChild
-                                    className={cn('w-full justify-start', {
-                                        'bg-muted': currentPath === item.href,
+                                    className={cn('hover:bg-secondary/80 w-full justify-start gap-3 font-medium transition-colors', {
+                                        'bg-secondary text-primary-foreground hover:bg-secondary/80 hover:text-primary-foreground':
+                                            currentPath === item.href,
                                     })}
                                 >
                                     <Link href={item.href} prefetch>
-                                        {item.icon && <item.icon />} {item.title}
+                                        {item.icon && <item.icon className="h-4 w-4" />} {item.title}
                                     </Link>
                                 </Button>
                             ))}
