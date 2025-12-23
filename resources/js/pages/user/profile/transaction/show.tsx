@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -10,10 +9,10 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, Clock, ExternalLink, FileText, Home, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, ExternalLink, FileText, Home, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -87,6 +86,7 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: course.thumbnail,
                 profileRoute: 'profile.course.detail',
                 publicRoute: 'course.detail',
+                badge: 'Kelas Online',
             };
         } else if (invoice.bootcamp_items && invoice.bootcamp_items.length > 0) {
             const bootcamp = invoice.bootcamp_items[0].bootcamp;
@@ -97,6 +97,7 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: bootcamp.thumbnail,
                 profileRoute: 'profile.bootcamp.detail',
                 publicRoute: 'bootcamp.detail',
+                badge: 'Bootcamp',
             };
         } else if (invoice.webinar_items && invoice.webinar_items.length > 0) {
             const webinar = invoice.webinar_items[0].webinar;
@@ -107,6 +108,7 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: webinar.thumbnail,
                 profileRoute: 'profile.webinar.detail',
                 publicRoute: 'webinar.detail',
+                badge: 'Webinar',
             };
         }
         return null;
@@ -142,272 +144,350 @@ export default function TransactionShow({ invoice }: Props) {
         }
     };
 
-    const getStatusIcon = () => {
-        switch (invoice.status) {
-            case 'paid':
-                return <CheckCircle className="mt-1 h-6 w-6 text-green-500" />;
-            case 'pending':
-                return <Clock className="mt-1 h-6 w-6 text-yellow-500" />;
-            case 'failed':
-                return <XCircle className="mt-1 h-6 w-6 text-red-500" />;
-            default:
-                return <AlertTriangle className="mt-1 h-6 w-6 text-gray-500" />;
+    const getStatusConfig = () => {
+        if (invoice.status === 'paid') {
+            return {
+                icon: <CheckCircle2 size={48} className="text-green-600" />,
+                title: 'Pembayaran Berhasil!',
+                subtitle: 'Transaksi Anda telah berhasil diproses',
+                gradient: 'from-green-500 to-emerald-600',
+                statusBadge: (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        <CheckCircle2 size={14} />
+                        Berhasil
+                    </span>
+                ),
+            };
+        } else if (invoice.status === 'pending' && !isExpired) {
+            return {
+                icon: <Clock size={48} className="text-yellow-600" />,
+                title: 'Menunggu Pembayaran',
+                subtitle: `Selesaikan pembayaran dalam ${hoursLeft} jam ${minutesLeft} menit`,
+                gradient: 'from-yellow-500 to-orange-600',
+                statusBadge: (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
+                        <Clock size={14} />
+                        Pending
+                    </span>
+                ),
+            };
+        } else if (invoice.status === 'pending' && isExpired) {
+            return {
+                icon: <XCircle size={48} className="text-red-600" />,
+                title: 'Pembayaran Kedaluwarsa',
+                subtitle: 'Waktu pembayaran telah habis',
+                gradient: 'from-red-500 to-rose-600',
+                statusBadge: (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        <XCircle size={14} />
+                        Kedaluwarsa
+                    </span>
+                ),
+            };
+        } else {
+            return {
+                icon: <XCircle size={48} className="text-red-600" />,
+                title: 'Pembayaran Dibatalkan',
+                subtitle: 'Transaksi telah dibatalkan',
+                gradient: 'from-red-500 to-rose-600',
+                statusBadge: (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        <XCircle size={14} />
+                        Dibatalkan
+                    </span>
+                ),
+            };
         }
     };
 
-    const getStatusText = () => {
-        switch (invoice.status) {
-            case 'paid':
-                return 'Pembayaran Berhasil';
-            case 'pending':
-                return isExpired ? 'Pembayaran Kedaluwarsa' : 'Menunggu Pembayaran';
-            case 'failed':
-                return 'Pembayaran Dibatalkan';
-            default:
-                return 'Status Tidak Diketahui';
-        }
-    };
-
-    const getStatusColor = () => {
-        switch (invoice.status) {
-            case 'paid':
-                return 'text-green-600';
-            case 'pending':
-                return isExpired ? 'text-red-600' : 'text-yellow-600';
-            case 'failed':
-                return 'text-red-600';
-            default:
-                return 'text-gray-600';
-        }
-    };
+    const statusConfig = getStatusConfig();
 
     return (
-        <UserLayout>
+        <div>
             <Head title={`Invoice ${invoice.invoice_code}`} />
 
-            <div className="min-h-screen bg-gray-50 py-4 md:py-8 dark:bg-gray-900">
-                <div className="mx-auto max-w-7xl px-4">
-                    <div className="overflow-hidden rounded-lg bg-white shadow-lg dark:bg-gray-800">
-                        <div className="to-primary flex gap-3 bg-gradient-to-tl from-black px-6 py-4 text-white">
-                            {getStatusIcon()}
-                            <div>
-                                <h1 className={`text-xl font-bold md:text-2xl ${getStatusColor()}`}>{getStatusText()}</h1>
-                                <p className="mt-1 text-sm text-blue-100 md:text-base">Invoice #{invoice.invoice_code}</p>
+            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
+                <div className="mx-auto w-full max-w-7xl px-4 py-12">
+                    {/* Breadcrumb */}
+                    <Breadcrumb className="mb-6">
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link href="/">Beranda</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink asChild>
+                                    <Link href="/profile/transactions">Transaksi Saya</Link>
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>Invoice #{invoice.invoice_code}</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+
+                    {/* Main Card */}
+                    <div className="mx-auto w-full max-w-3xl">
+                        <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
+                            {/* Header */}
+                            <div className={`border-b bg-gradient-to-r ${statusConfig.gradient} p-8 text-center dark:border-gray-700`}>
+                                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
+                                    {statusConfig.icon}
+                                </div>
+                                <h1 className="mb-2 text-3xl font-bold text-white">{statusConfig.title}</h1>
+                                <p className="text-white/90">{statusConfig.subtitle}</p>
+                                <p className="mt-2 text-sm text-white/80">Invoice #{invoice.invoice_code}</p>
                             </div>
-                        </div>
 
-                        <div className="p-6">
-                            {productInfo && (
-                                <div className="mb-6 rounded-lg border bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
-                                    <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Produk yang Dibeli</h3>
-                                    <div className="flex items-start gap-4">
-                                        <img
-                                            src={productInfo.thumbnail ? `/storage/${productInfo.thumbnail}` : '/assets/images/placeholder.png'}
-                                            alt={productInfo.name}
-                                            className="h-16 rounded-lg object-cover md:h-20"
-                                        />
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-gray-900 dark:text-white">{productInfo.name}</h4>
-                                            <p className="text-sm text-gray-600 capitalize dark:text-gray-400">
-                                                {productInfo.type === 'course'
-                                                    ? 'Kelas Online'
-                                                    : productInfo.type === 'bootcamp'
-                                                      ? 'Bootcamp'
-                                                      : 'Webinar'}
-                                            </p>
-                                            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                                                {invoice.status === 'paid' ? (
-                                                    <Button asChild size="sm" variant="outline">
-                                                        <Link href={route(productInfo.profileRoute, { [productInfo.type]: productInfo.slug })}>
-                                                            <ExternalLink className="mr-2 h-4 w-4" />
-                                                            Buka di Profile
-                                                        </Link>
-                                                    </Button>
-                                                ) : (
-                                                    <Button asChild size="sm" variant="ghost">
-                                                        <Link href={route(productInfo.publicRoute, { [productInfo.type]: productInfo.slug })}>
-                                                            <ExternalLink className="mr-2 h-4 w-4" />
-                                                            Lihat Detail Produk
-                                                        </Link>
-                                                    </Button>
-                                                )}
+                            {/* Content */}
+                            <div className="p-8">
+                                {/* Product Info */}
+                                {productInfo && (
+                                    <div className="mb-6 rounded-lg border bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-900/50">
+                                        <div className="mb-4 flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                                <span className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                    {productInfo.badge}
+                                                </span>
+                                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{productInfo.name}</h2>
+                                            </div>
+                                            <img
+                                                src={productInfo.thumbnail ? `/storage/${productInfo.thumbnail}` : '/assets/images/placeholder.png'}
+                                                alt={productInfo.name}
+                                                className="h-16 w-16 rounded-lg object-cover"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2 border-t pt-4 dark:border-gray-700">
+                                            {invoice.discount_amount > 0 && (
+                                                <>
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <span className="text-gray-600 dark:text-gray-400">Harga Asli</span>
+                                                        <span className="text-gray-500 line-through">
+                                                            Rp {(invoice.discount_amount + invoice.nett_amount).toLocaleString('id-ID')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-sm">
+                                                        <span className="text-gray-600 dark:text-gray-400">Diskon</span>
+                                                        <span className="font-medium text-green-600">
+                                                            - Rp {invoice.discount_amount.toLocaleString('id-ID')}
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            )}
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    Rp {invoice.nett_amount.toLocaleString('id-ID')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    Rp {(invoice.amount - invoice.nett_amount).toLocaleString('id-ID')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between border-t pt-2 dark:border-gray-700">
+                                                <span className="font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                                <span className="text-lg font-bold text-gray-900 dark:text-white">
+                                                    Rp {invoice.amount.toLocaleString('id-ID')}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600 dark:text-gray-400">Status</span>
+                                                {statusConfig.statusBadge}
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {invoice.status === 'pending' && !isExpired && (
-                                <Alert className="mb-6 border-yellow-200 bg-yellow-50">
-                                    <Clock className="h-4 w-4" />
-                                    <AlertDescription>
-                                        <div className="flex items-center justify-between">
-                                            <span>
-                                                Pembayaran akan kedaluwarsa dalam {hoursLeft} jam {minutesLeft} menit.
-                                            </span>
-                                        </div>
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            {invoice.status === 'pending' && isExpired && (
-                                <Alert className="mb-6 border-red-200 bg-red-50">
-                                    <XCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                        Invoice ini sudah kedaluwarsa dan tidak dapat dibayar lagi. Silakan buat pesanan baru.
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            {invoice.status === 'failed' && (
-                                <Alert className="mb-6 border-red-200 bg-red-50">
-                                    <XCircle className="h-4 w-4" />
-                                    <AlertDescription>
-                                        Invoice ini telah dibatalkan dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih ingin membeli.
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div>
-                                    <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Detail Pembayaran</h3>
+                                {/* Payment Details */}
+                                <div className="mb-6 rounded-lg border bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-900/50">
+                                    <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Informasi Pembayaran</h3>
                                     <div className="space-y-2 text-sm">
-                                        {invoice.discount_amount > 0 && (
-                                            <>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-600 dark:text-gray-400">Harga Asli:</span>
-                                                    <span className="medium">
-                                                        Rp {(invoice.discount_amount + invoice.nett_amount)?.toLocaleString('id-ID')}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span className="text-gray-600 dark:text-gray-400">Diskon:</span>
-                                                    <span className="text-gray-500 line-through">
-                                                        Rp {invoice.discount_amount?.toLocaleString('id-ID') || '0'}
-                                                    </span>
-                                                </div>
-                                            </>
-                                        )}
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
-                                            <span className="font-medium">Rp {invoice.nett_amount?.toLocaleString('id-ID') || '0'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi:</span>
-                                            <span className="font-medium">
-                                                Rp {((invoice.amount || 0) - (invoice.nett_amount || 0)).toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between border-t pt-2 text-lg font-semibold">
-                                            <span>Total:</span>
-                                            <span>Rp {invoice.amount?.toLocaleString('id-ID') || '0'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Informasi Pembayaran</h3>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                                            <span className={`font-medium ${getStatusColor()}`}>{getStatusText()}</span>
-                                        </div>
                                         {invoice.payment_method && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Metode:</span>
-                                                <span className="font-medium">{invoice.payment_method}</span>
-                                            </div>
-                                        )}
-                                        {invoice.payment_channel && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Channel:</span>
-                                                <span className="font-medium">{invoice.payment_channel}</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">{invoice.payment_method}</span>
                                             </div>
                                         )}
                                         {invoice.paid_at && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Dibayar pada:</span>
-                                                <span className="font-medium">{new Date(invoice.paid_at).toLocaleString('id-ID')}</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Dibayar pada</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    {new Date(invoice.paid_at).toLocaleString('id-ID', {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </span>
                                             </div>
                                         )}
                                         {invoice.expires_at && invoice.status === 'pending' && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Kedaluwarsa:</span>
-                                                <span className="font-medium">{new Date(invoice.expires_at).toLocaleString('id-ID')}</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Kedaluwarsa</span>
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    {new Date(invoice.expires_at).toLocaleString('id-ID', {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Alert Messages */}
+                                {invoice.status === 'pending' && !isExpired && (
+                                    <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
+                                        <div className="flex items-start gap-3">
+                                            <Clock className="mt-0.5 h-5 w-5 text-yellow-600" />
+                                            <div>
+                                                <p className="font-medium text-yellow-800 dark:text-yellow-200">Segera selesaikan pembayaran!</p>
+                                                <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+                                                    Pembayaran akan kedaluwarsa dalam {hoursLeft} jam {minutesLeft} menit. Setelah kedaluwarsa,
+                                                    invoice tidak dapat digunakan.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {invoice.status === 'pending' && isExpired && (
+                                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
+                                        <div className="flex items-start gap-3">
+                                            <XCircle className="mt-0.5 h-5 w-5 text-red-600" />
+                                            <div>
+                                                <p className="font-medium text-red-800 dark:text-red-200">Invoice Kedaluwarsa</p>
+                                                <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                                    Invoice ini sudah kedaluwarsa dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih
+                                                    ingin membeli.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {invoice.status === 'failed' && (
+                                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
+                                        <div className="flex items-start gap-3">
+                                            <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600" />
+                                            <div>
+                                                <p className="font-medium text-red-800 dark:text-red-200">Pembayaran Dibatalkan</p>
+                                                <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                                    Invoice ini telah dibatalkan dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih
+                                                    ingin membeli.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action Buttons */}
+                                <div className="space-y-3">
+                                    {invoice.status === 'pending' && !isExpired && invoice.invoice_url && (
+                                        <>
+                                            <Button asChild className="w-full" size="lg">
+                                                <a href={invoice.invoice_url} target="_blank" rel="noopener noreferrer">
+                                                    Lanjutkan Pembayaran
+                                                </a>
+                                            </Button>
+
+                                            <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="outline" size="lg" className="w-full" disabled={cancelLoading}>
+                                                        {cancelLoading ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Batalkan Pesanan?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Apakah Anda yakin ingin membatalkan pesanan ini? Invoice akan dinonaktifkan dan tidak
+                                                            dapat dibayar lagi. Tindakan ini tidak dapat dibatalkan.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Tidak, Pertahankan</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={handleCancelConfirm} className="bg-red-600 hover:bg-red-700">
+                                                            Ya, Batalkan Pesanan
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </>
+                                    )}
+
+                                    {invoice.status === 'paid' && productInfo && (
+                                        <>
+                                            <Button asChild className="w-full" size="lg">
+                                                <Link href={route(productInfo.profileRoute, { [productInfo.type]: productInfo.slug })}>
+                                                    <ExternalLink className="mr-2 h-5 w-5" />
+                                                    Akses {productInfo.badge}
+                                                </Link>
+                                            </Button>
+
+                                            <Button asChild variant="outline" className="w-full" size="lg">
+                                                <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
+                                                    <FileText className="mr-2 h-5 w-5" />
+                                                    Unduh Invoice (PDF)
+                                                </a>
+                                            </Button>
+                                        </>
+                                    )}
+
+                                    {(invoice.status === 'failed' || isExpired) && (
+                                        <>
+                                            <Button asChild className="w-full" size="lg">
+                                                <Link href="/">
+                                                    <Home className="mr-2 h-5 w-5" />
+                                                    Kembali ke Beranda
+                                                </Link>
+                                            </Button>
+
+                                            {productInfo && (
+                                                <Button asChild variant="outline" className="w-full" size="lg">
+                                                    <Link href={route(productInfo.publicRoute, { [productInfo.type]: productInfo.slug })}>
+                                                        <ExternalLink className="mr-2 h-5 w-5" />
+                                                        Lihat Detail Produk
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                        </>
+                                    )}
+
+                                    <Button asChild variant="ghost" className="w-full" size="lg">
+                                        <Link href="/profile/transactions">Lihat Semua Transaksi</Link>
+                                    </Button>
+                                </div>
                             </div>
 
-                            <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                                {invoice.status === 'pending' && !isExpired && invoice.invoice_url && (
-                                    <>
-                                        <Button asChild size="lg" className="w-full sm:w-auto">
-                                            <a href={invoice.invoice_url} target="_blank" rel="noopener noreferrer">
-                                                Lanjutkan Pembayaran
-                                            </a>
-                                        </Button>
-
-                                        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                            <AlertDialogTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="lg"
-                                                    className="w-full border-red-600 text-red-600 hover:bg-red-50 sm:w-auto"
-                                                    disabled={cancelLoading}
-                                                >
-                                                    {cancelLoading ? 'Membatalkan...' : 'Batalkan Pesanan'}
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Batalkan Pesanan?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        Apakah Anda yakin ingin membatalkan pesanan ini? Invoice akan dinonaktifkan dan tidak dapat
-                                                        dibayar lagi. Tindakan ini tidak dapat dibatalkan.
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Tidak, Pertahankan</AlertDialogCancel>
-                                                    <AlertDialogAction
-                                                        onClick={handleCancelConfirm}
-                                                        className="border-red-600 bg-red-600 hover:bg-red-700"
-                                                    >
-                                                        Ya, Batalkan Pesanan
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </>
-                                )}
-
-                                {invoice.status === 'paid' && (
-                                    <>
-                                        <Button asChild className="w-full sm:w-auto" variant="outline">
-                                            <Link href={route('profile.transactions')}>Lihat Riwayat Transaksi</Link>
-                                        </Button>
-                                        <Button asChild>
-                                            <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
-                                                <FileText className="size-4" />
-                                                Unduh Invoice
-                                            </a>
-                                        </Button>
-                                    </>
-                                )}
-
-                                {(invoice.status === 'failed' || isExpired) && (
-                                    <Button asChild size="lg" className="w-full sm:w-auto">
-                                        <Link href={route('home')}>
-                                            <Home /> Kembali ke Beranda
-                                        </Link>
-                                    </Button>
-                                )}
+                            {/* Footer */}
+                            <div className="border-t bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-900/50">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Butuh bantuan?{' '}
+                                    <a
+                                        href="https://wa.me/+6289528514480"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-medium text-orange-600 hover:underline"
+                                    >
+                                        Hubungi Customer Service
+                                    </a>
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </UserLayout>
+        </div>
     );
 }
