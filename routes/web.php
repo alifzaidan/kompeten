@@ -204,6 +204,7 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
 
         Route::post('/articles/{article}/publish', [ArticleController::class, 'publish'])->name('articles.publish');
         Route::post('/articles/{article}/archive', [ArticleController::class, 'archive'])->name('articles.archive');
+        Route::post('/articles/{article}/toggle-featured', [ArticleController::class, 'toggleFeatured'])->name('articles.toggle-featured');
 
         Route::post('/course-ratings/{rating}/approve', [CourseRatingController::class, 'approve'])->name('course-ratings.approve');
         Route::post('/course-ratings/{rating}/reject', [CourseRatingController::class, 'reject'])->name('course-ratings.reject');

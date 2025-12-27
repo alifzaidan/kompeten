@@ -19,8 +19,7 @@ import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Album, BookText, BriefcaseBusiness, FileText, Home, MonitorPlay, Presentation, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { SearchCommand } from './search-command';
+import { useState } from 'react';
 
 const serviceItems = [
     {
@@ -88,23 +87,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
-    const [searchOpen, setSearchOpen] = useState(false);
     const [servicesOpen, setServicesOpen] = useState(false);
 
     const isServicesActive = serviceItems.some((item) => page.url.startsWith(item.href)) || page.url.startsWith('/bundle');
 
     const isHomepage = page.url === '/' || page.url === '';
-
-    useEffect(() => {
-        const down = (e: KeyboardEvent) => {
-            if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                setSearchOpen((open) => !open);
-            }
-        };
-        document.addEventListener('keydown', down);
-        return () => document.removeEventListener('keydown', down);
-    }, []);
 
     return (
         <>
@@ -404,8 +391,6 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                     </div>
                 </div>
             </div>
-
-            <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
 
             {breadcrumbs.length > 1 && (
                 <div className="border-sidebar-border/70 flex w-full border-b">

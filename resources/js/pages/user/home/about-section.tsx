@@ -1,4 +1,5 @@
 import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from '@/components/ui/carousel';
+import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 interface Product {
@@ -6,6 +7,7 @@ interface Product {
     description: string;
     gradient: string;
     icon?: string;
+    href: string;
 }
 
 export default function AboutSection() {
@@ -14,26 +16,31 @@ export default function AboutSection() {
             title: 'Certification',
             description: 'Tingkatkan skill dan kantongi sertifikat resmi yang bikin CV-mu makin standout!',
             gradient: 'bg-gradient-to-br from-blue-400 via-teal-400 to-green-400',
+            href: '/certification',
         },
         {
             title: 'Bootcamp',
             description: 'Belajar intensif, praktik langsung, dan upgrade skill dengan cara yang seru dan cepat!',
             gradient: 'bg-gradient-to-br from-blue-500 via-cyan-400 to-yellow-300',
+            href: '/bootcamp',
         },
         {
             title: 'Webinar',
             description: 'Ikuti sesi belajar online yang ringan tapi penuh insight bareng mentor berpengalaman!',
             gradient: 'bg-gradient-to-br from-purple-900 via-purple-700 to-pink-500',
+            href: '/webinar',
         },
         {
             title: 'Kelas Online',
             description: 'Belajar dengan video pembelajaran terstruktur yang bisa kamu akses kapan saja dan di mana saja.',
             gradient: 'bg-gradient-to-br from-orange-400 via-pink-400 to-purple-500',
+            href: '/course',
         },
         {
             title: 'Paket Bundling',
             description: 'Belajar lebih banyak, bayar lebih hemat—semua materi favoritmu ada dalam satu paket lengkap!',
             gradient: 'bg-gradient-to-br from-green-400 via-emerald-400 to-teal-500',
+            href: '/bundle',
         },
     ];
 
@@ -86,8 +93,8 @@ export default function AboutSection() {
                     <CarouselContent>
                         {infiniteProducts.map((product, idx) => (
                             <CarouselItem key={`product-${idx}`} className="p-2 md:basis-1/2 md:p-6 lg:basis-1/3 lg:p-12">
-                                <div className="group flex h-full justify-center">
-                                    <div className="flex h-full w-full flex-col overflow-hidden rounded-3xl bg-white shadow transition-all duration-300 hover:shadow-xl dark:bg-gray-800">
+                                <Link href={product.href} className="group flex h-full justify-center">
+                                    <div className="flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-3xl bg-white shadow transition-all duration-300 hover:shadow-xl dark:bg-gray-800">
                                         {/* Gradient Header */}
                                         <div
                                             className={`relative h-48 w-full ${product.gradient} transition-transform duration-500 group-hover:scale-105`}
@@ -97,7 +104,9 @@ export default function AboutSection() {
 
                                         {/* Content */}
                                         <div className="flex flex-1 flex-col p-6">
-                                            <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">{product.title}</h3>
+                                            <h3 className="group-hover:text-primary mb-3 text-2xl font-bold text-gray-900 transition-colors dark:text-white">
+                                                {product.title}
+                                            </h3>
                                             <p className="mb-6 flex-1 text-justify text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                                                 {product.description}
                                             </p>
@@ -109,7 +118,7 @@ export default function AboutSection() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </Link>
                             </CarouselItem>
                         ))}
                     </CarouselContent>

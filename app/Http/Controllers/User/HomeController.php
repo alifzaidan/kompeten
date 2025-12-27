@@ -199,6 +199,7 @@ class HomeController extends Controller
                     'slug' => $article->slug,
                     'excerpt' => $article->excerpt,
                     'thumbnail' => $article->thumbnail,
+                    'is_featured' => $article->is_featured,
                     'category' => [
                         'id' => $article->category->id,
                         'name' => $article->category->name,

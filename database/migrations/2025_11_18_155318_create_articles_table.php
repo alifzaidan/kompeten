@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('thumbnail')->nullable();
             $table->integer('read_time')->default(0);
             $table->integer('views')->default(0);
+            $table->boolean('is_featured')->default(false);
             $table->enum('status', ['draft', 'published', 'archived'])->default('draft');
             $table->timestamp('published_at')->nullable();
             $table->timestamps();

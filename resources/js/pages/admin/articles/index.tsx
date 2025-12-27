@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AdminLayout from '@/layouts/admin-layout';
 import { SharedData, type BreadcrumbItem } from '@/types';
@@ -68,6 +69,8 @@ export default function Articles({ articles, statistics, flash }: ArticlesProps)
     const { auth } = usePage<SharedData>().props;
     const isAffiliate = auth.role.includes('affiliate');
     const [showMoreStats, setShowMoreStats] = useState(false);
+
+    const featuredArticles = articles.filter((article) => article.is_featured);
 
     useEffect(() => {
         if (flash?.success) {
@@ -405,6 +408,46 @@ export default function Articles({ articles, statistics, flash }: ArticlesProps)
                         </div>
                     )}
                 </div>
+
+                {featuredArticles.length > 0 && (
+                    <div className="dark:to-background mb-6 rounded-lg border bg-gradient-to-br from-yellow-50 to-white p-4 shadow-sm dark:from-yellow-950/20">
+                        <div className="mb-3 flex items-center gap-2">
+                            <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                            <h3 className="font-semibold">Artikel Sorotan</h3>
+                            <Badge variant="outline" className="ml-auto border-yellow-500 text-yellow-600">
+                                {featuredArticles.length}/2
+                            </Badge>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {featuredArticles.map((article) => (
+                                <Link
+                                    key={article.id}
+                                    href={route('articles.show', article.id)}
+                                    className="group hover:bg-accent flex gap-3 rounded-lg border p-3 transition-colors"
+                                >
+                                    <img
+                                        src={article.thumbnail ? `/storage/${article.thumbnail}` : '/assets/images/placeholder.png'}
+                                        alt={article.title}
+                                        className="h-20 w-20 flex-shrink-0 rounded object-cover"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="group-hover:text-primary line-clamp-2 font-medium">{article.title}</h4>
+                                        <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
+                                            <div className="flex items-center gap-1">
+                                                <Eye className="h-3 w-3" />
+                                                {article.views.toLocaleString()}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="h-3 w-3" />
+                                                {article.read_time} menit
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Data Table */}
                 <DataTable columns={columns} data={articles} />

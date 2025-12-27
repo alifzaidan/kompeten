@@ -10,7 +10,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Clock, Eye, FileText, Trash } from 'lucide-react';
+import { Clock, Eye, FileText, Star, Trash } from 'lucide-react';
 
 export type Article = {
     id: string;
@@ -37,9 +37,14 @@ export type Article = {
 function ArticleActions({ article }: { article: Article }) {
     const { auth } = usePage<SharedData>().props;
     const isAffiliate = auth.role.includes('affiliate');
+    const isAdmin = auth.role.includes('admin');
 
     const handleDelete = () => {
         router.delete(route('articles.destroy', article.id));
+    };
+
+    const handleToggleFeatured = () => {
+        router.post(route('articles.toggle-featured', article.id));
     };
 
     return (
@@ -57,6 +62,26 @@ function ArticleActions({ article }: { article: Article }) {
                     <p>Lihat Detail</p>
                 </TooltipContent>
             </Tooltip>
+
+            {isAdmin && (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            variant="link"
+                            size="icon"
+                            className={`size-8 ${article.is_featured ? 'text-yellow-500' : 'text-gray-400'}`}
+                            onClick={handleToggleFeatured}
+                        >
+                            <Star className={article.is_featured ? 'fill-current' : ''} />
+                            <span className="sr-only">Toggle Sorotan</span>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{article.is_featured ? 'Hapus dari Sorotan' : 'Jadikan Sorotan'}</p>
+                    </TooltipContent>
+                </Tooltip>
+            )}
+
             {!isAffiliate && (
                 <Tooltip>
                     <TooltipTrigger asChild>
@@ -97,10 +122,16 @@ export const columns: ColumnDef<Article>[] = [
         header: ({ column }) => <DataTableColumnHeader column={column} title="Judul Artikel" />,
         cell: ({ row }) => {
             return (
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-1">
                     <Link href={route('articles.show', row.original.id)} className="text-primary line-clamp-2 font-medium hover:underline">
                         {row.original.title}
                     </Link>
+                    {row.original.is_featured && (
+                        <Badge variant="outline" className="w-fit border-yellow-500 text-yellow-600">
+                            <Star className="mr-1 h-3 w-3 fill-current" />
+                            Sorotan
+                        </Badge>
+                    )}
                 </div>
             );
         },

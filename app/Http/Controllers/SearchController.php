@@ -89,7 +89,6 @@ class SearchController extends Controller
                 ->where(function ($q) use ($query) {
                     $q->where('title', 'LIKE', "%{$query}%")
                         ->orWhere('description', 'LIKE', "%{$query}%")
-                        ->orWhere('host_name', 'LIKE', "%{$query}%")
                         ->orWhereHas('user', function ($userQuery) use ($query) {
                             $userQuery->where('name', 'LIKE', "%{$query}%");
                         });
@@ -107,7 +106,7 @@ class SearchController extends Controller
                         'description' => $bootcamp->description,
                         'price' => $this->formatPrice($bootcamp->price),
                         'strikethrough_price' => $this->formatPrice($bootcamp->strikethrough_price),
-                        'instructor' => $bootcamp->host_name ?? $bootcamp->user->name ?? null,
+                        'instructor' => $bootcamp->user->name ?? null,
                         'thumbnail' => $bootcamp->thumbnail,
                         'duration' => $duration,
                         'start_date' => $bootcamp->start_date,
@@ -129,7 +128,6 @@ class SearchController extends Controller
                 ->where(function ($q) use ($query) {
                     $q->where('title', 'LIKE', "%{$query}%")
                         ->orWhere('description', 'LIKE', "%{$query}%")
-                        ->orWhere('host_name', 'LIKE', "%{$query}%")
                         ->orWhereHas('user', function ($userQuery) use ($query) {
                             $userQuery->where('name', 'LIKE', "%{$query}%");
                         });
@@ -147,7 +145,7 @@ class SearchController extends Controller
                         'description' => $webinar->description,
                         'price' => $this->formatPrice($webinar->price),
                         'strikethrough_price' => $this->formatPrice($webinar->strikethrough_price),
-                        'instructor' => $webinar->host_name ?? $webinar->user->name ?? null,
+                        'instructor' => $webinar->user->name ?? null,
                         'thumbnail' => $webinar->thumbnail,
                         'duration' => $duration,
                         'start_time' => $webinar->start_time,
@@ -162,6 +160,7 @@ class SearchController extends Controller
 
             return response()->json($results->values());
         } catch (\Exception $e) {
+            Log::error('Search error: ' . $e->getMessage());
             return response()->json(['error' => 'Search failed'], 500);
         }
     }
@@ -198,7 +197,7 @@ class SearchController extends Controller
     private function calculateWebinarDuration($startTime, $endTime)
     {
         if (!$endTime) {
-            return '2 jam'; // default duration
+            return '2 jam';
         }
 
         $start = \Carbon\Carbon::parse($startTime);

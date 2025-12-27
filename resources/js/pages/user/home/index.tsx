@@ -49,6 +49,7 @@ interface Article {
     slug: string;
     excerpt: string;
     thumbnail: string;
+    is_featured: boolean;
     category: {
         id: string;
         name: string;

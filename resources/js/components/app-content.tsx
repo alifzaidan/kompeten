@@ -32,10 +32,10 @@ export function AppContent({ variant = 'header', children, ...props }: AppConten
                 <div className="bg-secondary fixed top-16 right-0 left-0 z-40">
                     <div className="flex max-w-7xl items-center justify-between gap-4 px-4 py-2 md:mx-auto">
                         <div>
-                            <h2 className="font-semibold text-white md:text-lg">
+                            <h2 className="text-primary-foreground font-semibold md:text-lg">
                                 Anda Login Sebagai {isAdmin ? 'Admin' : isAffiliate ? 'Affiliate' : 'Mentor'}
                             </h2>
-                            <p className="text-muted text-xs md:text-sm">
+                            <p className="text-primary-foreground text-xs md:text-sm">
                                 Kelola{' '}
                                 {isAdmin
                                     ? 'pengaturan aplikasi dan peran pengguna Anda pada Panel Admin'
@@ -45,7 +45,7 @@ export function AppContent({ variant = 'header', children, ...props }: AppConten
                                 .
                             </p>
                         </div>
-                        <Button variant="outline" asChild>
+                        <Button variant="secondary" className="border-primary-foreground border" asChild>
                             <Link href={route('dashboard')}>
                                 <LayoutGrid />
                                 Buka Panel {isAdmin ? 'Admin' : isAffiliate ? 'Afiliasi' : 'Mentor'}

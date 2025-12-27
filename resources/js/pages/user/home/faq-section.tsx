@@ -18,7 +18,8 @@ interface FaqCategory {
 export default function FaqSection() {
     const [expanded, setExpanded] = useState<Record<string, React.Key | null>>({
         general: 'faq-0',
-        course: null,
+        learning: null,
+        certificate: null,
         payment: null,
         technical: null,
     });
@@ -26,67 +27,93 @@ export default function FaqSection() {
     const faqCategories: FaqCategory[] = [
         {
             id: 'general',
-            title: 'Umum',
+            title: 'Umum & Pendaftaran',
             faqs: [
                 {
-                    question: 'Apa itu Kompeten?',
-                    answer: 'Kompeten adalah platform edukasi digital yang dikembangkan oleh CV. Kompeten dan dirancang untuk mendukung pengembangan skill di era modern mulai dari teknologi, desain, hingga bisnis.',
+                    question: 'Apa itu Kompeten IDN?',
+                    answer: 'Kompeten IDN merupakan platform edukasi digital yang dirancang untuk mendukung pengembangan skill di era modern di berbagai bidang mulai dari akuntansi, ekonomi, perpajakan, teknologi, hingga desain.',
                 },
                 {
-                    question: 'Apa saja fitur yang tersedia di Kompeten?',
-                    answer: 'Kompeten menawarkan berbagai fitur seperti Kelas Online, Bootcamp, dan pelatihan dalam bentuk Webinar yang mencakup berbagai disiplin ilmu. Setiap fitur dirancang untuk memberikan pengalaman belajar yang interaktif dan mendalam, memungkinkan pengguna untuk mengembangkan keterampilan mereka secara efektif.',
+                    question: 'Apa saja yang tersedia di Kompeten?',
+                    answer: 'Kompeten menawarkan berbagai layanan seperti Online Class, Bootcamp, Webinar, dan Program Sertifikasi.',
                 },
                 {
-                    question: 'Bagaimana alur belajar di Kompeten?',
-                    answer: 'Alur belajar di Kompeten dimulai dengan memilih kelas atau bootcamp yang sesuai dengan minat dan kebutuhan Anda. Setelah mendaftar, Anda akan mendapatkan akses ke materi pembelajaran yang dapat diakses kapan saja. Setiap kelas dilengkapi dengan modul, quiz, dan forum diskusi untuk mendukung proses belajar Anda.',
+                    question: 'Apakah pelatihan ini terbuka untuk umum?',
+                    answer: 'Tentu, pelatihan kami terbuka untuk mahasiswa, lulusan baru (fresh graduate), maupun profesional yang ingin meningkatkan keahlian di bidang akuntansi, ekonomi, perpajakan, teknologi, hingga desain.',
+                },
+                {
+                    question: 'Bagaimana cara mendaftar pelatihan di Kompeten?',
+                    answer: 'Pendaftaran dapat dilakukan langsung melalui website kami atau melalui link pendaftaran yang tersedia di bio Instagram @kompeten.idn. Kamu hanya perlu mengisi formulir pendaftaran dan melakukan konfirmasi pembayarannya.',
+                },
+                {
+                    question: 'Apakah saya bisa mendaftar lebih dari satu program sekaligus?',
+                    answer: 'Tentu saja. Namun, pastikan jadwal Live Class antar program tidak bentrok agar kamu bisa mengikuti sesi interaktif dengan maksimal.',
                 },
                 {
                     question: 'Kemana saya bisa mendapatkan informasi lebih lanjut tentang Kompeten?',
-                    answer: 'Untuk informasi lebih lanjut tentang Kompeten, Anda dapat menghubungi admin kami di +6289528514480. Kami juga aktif di media sosial, jadi pastikan untuk mengikuti kami di platform seperti Instagram, TikTok, dan LinkedIn untuk update terbaru dan tips belajar.',
+                    answer: 'Kamu dapat menghubungi admin di +6289528514480 atau mengikuti media sosial Kompeten di Instagram, TikTok, dan LinkedIn.',
+                },
+                {
+                    question: 'Bagaimana cara mendaftar kelas yang diinginkan?',
+                    answer: 'Kamu dapat mendaftar dengan mengklik tombol "Daftar" pada halaman kelas, mengisi formulir pendaftaran, dan melakukan pembayaran.',
                 },
             ],
         },
         {
-            id: 'course',
-            title: 'Kelas & Bootcamp',
+            id: 'learning',
+            title: 'Sistem Pembelajaran',
             faqs: [
                 {
-                    question: 'Bagaimana cara mendaftar kelas?',
-                    answer: 'Anda dapat mendaftar kelas dengan mengklik tombol "Daftar" pada halaman detail kelas, kemudian mengisi formulir pendaftaran dan melakukan pembayaran.',
+                    question: 'Bagaimana alur belajar di Kompeten?',
+                    answer: 'Alur belajar di Kompeten dimulai dengan memilih kelas atau bootcamp yang diinginkan. Kemudian mendapatkan akses materi pembelajaran yang dapat diakses kapan saja, dilengkapi modul, kuis, dan juga forum diskusi.',
                 },
                 {
-                    question: 'Apakah ada sertifikat setelah menyelesaikan kelas?',
-                    answer: 'Ya, setiap peserta yang menyelesaikan kelas akan mendapatkan sertifikat digital yang dapat diunduh dan dibagikan di LinkedIn atau platform lainnya.',
+                    question: 'Apakah kelas dilakukan secara tatap muka atau online?',
+                    answer: 'Saat ini seluruh pelatihan kami dilakukan secara Online melalui platform Zoom (Live Session) dan Learning Management System (LMS) kami untuk akses materi mandiri.',
                 },
                 {
-                    question: 'Berapa lama akses kelas berlaku?',
-                    answer: 'Akses kelas bervariasi tergantung tipe program. Untuk kelas online, akses seumur hidup. Untuk bootcamp, akses selama durasi program ditambah 3 bulan setelahnya.',
+                    question: 'Bagaimana jika saya berhalangan hadir saat sesi Live Class?',
+                    answer: 'Jangan khawatir. Setiap sesi akan direkam, dan rekaman kelas dapat diakses kembali hingga kapan aja tanpa ada batasan waktu. Recording dapat diakses dalam waktu maksimal 24 jam setelah sesi berakhir.',
                 },
                 {
-                    question: 'Apakah bisa mengikuti lebih dari satu kelas sekaligus?',
-                    answer: 'Tentu saja! Anda dapat mengikuti beberapa kelas sekaligus sesuai dengan kemampuan dan waktu luang Anda.',
+                    question: 'Berapa lama masa akses materi pelatihan?',
+                    answer: 'Masa akses materi (video rekaman dan modul) dapat diakses hingga kapan saja tanpa batasan waktu sehingga kamu bisa belajar lagi secara mandiri.',
+                },
+            ],
+        },
+        {
+            id: 'certificate',
+            title: 'Sertifikat & Kompetensi',
+            faqs: [
+                {
+                    question: 'Apakah saya akan mendapatkan sertifikat?',
+                    answer: 'Tentu saja, setiap peserta yang telah menyelesaikan pelatihan dan memenuhi syarat kelulusan (seperti mengerjakan post-test atau tugas) akan mendapatkan e-sertifikat resmi dari Kompeten IDN.',
+                },
+                {
+                    question: 'Apakah sertifikat dari Kompeten IDN bisa digunakan untuk melamar kerja?',
+                    answer: 'Tentu, sertifikat kami mencantumkan daftar kompetensi yang kamu pelajari, yang dapat memperkuat CV dan portofolio kamu di mata rekruter.',
+                },
+                {
+                    question: 'Bagaimana memastikan kredibilitas e-sertifikat?',
+                    answer: 'Di e-sertifikat terdapat qr code yang dapat discan dan berisi data diri peserta pelatihan mulai dari nama peserta, tanggal pelatihan, dan program yang diikuti sehingga tidak dapat dimanipulasi oleh pihak yang tidak bertanggung jawab.',
                 },
             ],
         },
         {
             id: 'payment',
-            title: 'Pembayaran',
+            title: 'Sistem Pembayaran',
             faqs: [
                 {
                     question: 'Metode pembayaran apa saja yang tersedia?',
-                    answer: 'Kami menerima pembayaran melalui transfer bank, e-wallet (GoPay, OVO, DANA), kartu kredit/debit, dan cicilan melalui berbagai platform.',
-                },
-                {
-                    question: 'Apakah ada diskon untuk pembelian bundle?',
-                    answer: 'Ya, kami sering memberikan diskon khusus untuk pembelian paket bundle atau promo tertentu. Pantau terus website dan media sosial kami untuk info promo terbaru.',
+                    answer: 'Pembayaran dapat dilakukan melalui QRIS atau transfer bank menggunakan Virtual Account, e-wallet (GoPay, OVO, DANA).',
                 },
                 {
                     question: 'Bagaimana jika pembayaran saya belum terkonfirmasi?',
-                    answer: 'Jika pembayaran Anda belum terkonfirmasi dalam 1x24 jam, silakan hubungi tim support kami dengan menyertakan bukti pembayaran.',
+                    answer: 'Jika pembayaran belum terkonfirmasi dalam 1x24 jam, silakan hubungi tim support dengan menyertakan bukti pembayaran.',
                 },
                 {
-                    question: 'Apakah ada kebijakan refund?',
-                    answer: 'Ya, kami memiliki kebijakan refund 7 hari setelah pembelian jika Anda belum mengakses lebih dari 20% materi kelas. Syarat dan ketentuan berlaku.',
+                    question: 'Apa yang harus saya lakukan ketika sudah menyelesaikan pembayaran?',
+                    answer: 'Setelah menyelesaikan pembayaran, kamu dapat melakukan konfirmasi ke admin (MinKo) atau langsung bergabung ke dalam grup whatsapp.',
                 },
             ],
         },
@@ -95,20 +122,20 @@ export default function FaqSection() {
             title: 'Teknis',
             faqs: [
                 {
-                    question: 'Perangkat apa yang dibutuhkan untuk mengikuti kelas?',
-                    answer: 'Anda membutuhkan komputer atau smartphone dengan koneksi internet yang stabil. Browser yang direkomendasikan adalah Chrome, Firefox, atau Safari versi terbaru.',
+                    question: 'Perangkat apa yang saya butuhkan untuk mengikuti pelatihan?',
+                    answer: 'Kami menyarankan penggunaan laptop/pc (Windows atau Mac) atau bisa juga menggunakan tablet untuk memudahkan saat praktik langsung.',
                 },
                 {
-                    question: 'Bagaimana jika video tidak bisa diputar?',
-                    answer: 'Pastikan koneksi internet Anda stabil dan browser sudah diupdate ke versi terbaru. Jika masih bermasalah, coba clear cache browser atau hubungi support kami.',
-                },
-                {
-                    question: 'Apakah bisa download materi kelas?',
-                    answer: 'Beberapa materi dapat diunduh seperti slide presentasi dan file pendukung. Namun video pembelajaran hanya dapat diakses secara online untuk menjaga keamanan konten.',
+                    question: 'Saya mengalami kendala saat login ke member area, apa yang harus saya lakukan?',
+                    answer: 'Silakan gunakan fitur "Lupa Password" di halaman login. Jika kendala berlanjut, hubungi admin (MinKo) di nomor +62 895-2851-4480.',
                 },
                 {
                     question: 'Bagaimana cara reset password?',
-                    answer: 'Klik "Lupa Password" pada halaman login, masukkan email terdaftar, dan ikuti instruksi yang dikirimkan ke email Anda untuk reset password.',
+                    answer: 'Klik menu "Lupa Password" di halaman login, masukkan email terdaftar, lalu ikuti instruksi yang dikirimkan melalui email.',
+                },
+                {
+                    question: 'Bagaimana jika video pembelajaran tidak dapat diputar?',
+                    answer: 'Pastikan koneksi internet stabil, browser telah diperbarui, dan coba bersihkan cache browser.',
                 },
             ],
         },
@@ -133,12 +160,12 @@ export default function FaqSection() {
 
             <Tabs defaultValue="general" className="w-full">
                 <div className="flex flex-col gap-8 lg:flex-row">
-                    <TabsList className="flex w-full flex-row justify-start gap-3 overflow-x-auto bg-transparent p-0 lg:w-64 lg:flex-col lg:items-start lg:overflow-x-visible">
+                    <TabsList className="flex w-full flex-row justify-start gap-3 overflow-x-auto bg-transparent px-1 py-2 lg:w-64 lg:flex-col lg:items-start lg:overflow-x-visible lg:px-0 lg:py-0">
                         {faqCategories.map((category) => (
                             <TabsTrigger
                                 key={category.id}
                                 value={category.id}
-                                className="data-[state=active]:border-primary data-[state=active]:text-primary dark:data-[state=active]:bg-primary/20 flex w-full items-center justify-between gap-3 rounded-full border border-neutral-200 bg-transparent p-5 text-left text-gray-700 transition-all hover:cursor-pointer hover:bg-gray-100 data-[state=active]:bg-transparent dark:text-gray-300 dark:hover:bg-gray-800"
+                                className="data-[state=active]:border-primary data-[state=active]:text-primary dark:data-[state=active]:bg-primary/20 flex w-full flex-shrink-0 items-center justify-between gap-3 rounded-full border border-neutral-200 bg-transparent p-5 text-left text-gray-700 transition-all hover:cursor-pointer hover:bg-gray-100 data-[state=active]:bg-transparent dark:text-gray-300 dark:hover:bg-gray-800"
                             >
                                 <span className="font-medium whitespace-nowrap">{category.title}</span>
                                 <span className="text-2xl">
@@ -148,7 +175,7 @@ export default function FaqSection() {
                         ))}
                     </TabsList>
 
-                    <div className="flex-1">
+                    <div className="flex-1 lg:h-[300px] lg:overflow-y-auto lg:pr-2">
                         {faqCategories.map((category) => (
                             <TabsContent key={category.id} value={category.id} className="mt-0">
                                 <Accordion

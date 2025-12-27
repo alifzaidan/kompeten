@@ -304,4 +304,31 @@ class ArticleController extends Controller
 
         return back()->with('success', 'Artikel berhasil diarsipkan.');
     }
+
+    public function toggleFeatured(Request $request, string $id)
+    {
+        if (!$request->user()->hasRole('admin')) {
+            return back()->with('error', 'Anda tidak memiliki izin untuk mengatur artikel sorotan.');
+        }
+
+        $article = Article::findOrFail($id);
+
+        if (!$article->is_featured) {
+            $featuredCount = Article::where('is_featured', true)->count();
+
+            if ($featuredCount >= 2) {
+                return back()->with('error', 'Maksimal hanya 2 artikel yang dapat dijadikan sorotan. Hapus artikel sorotan lain terlebih dahulu.');
+            }
+
+            $article->is_featured = true;
+            $message = 'Artikel berhasil dijadikan sorotan.';
+        } else {
+            $article->is_featured = false;
+            $message = 'Artikel berhasil dihapus dari sorotan.';
+        }
+
+        $article->save();
+
+        return back()->with('success', $message);
+    }
 }
