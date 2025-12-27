@@ -66,7 +66,15 @@ export default function ResponsiveSVG() {
         <clipPath id="heroClip">
           <path d={pathData} />
         </clipPath>
+
+        {/* Gradient dari hitam ke transparan (top to bottom) */}
+        <linearGradient id="darkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#000000" stopOpacity="0.8" />
+          <stop offset="50%" stopColor="#000000" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        </linearGradient>
       </defs>
+
       {/* Gambar object-cover pakai foreignObject + div */}
       <foreignObject
         x="0"
@@ -80,13 +88,23 @@ export default function ResponsiveSVG() {
           style={{
             width: "100%",
             height: "100%",
-            backgroundImage: "url('/assets/images/hero.png')",
+            backgroundImage: "url('/assets/images/homepage.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
           }}
         />
       </foreignObject>
+
+      {/* Overlay gradient dari hitam ke transparan */}
+      <rect
+        x="0"
+        y="0"
+        width="800"
+        height="400"
+        fill="url(#darkGradient)"
+        clipPath="url(#heroClip)"
+      />
     </svg>
   );
 }
