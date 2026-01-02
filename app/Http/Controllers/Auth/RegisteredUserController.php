@@ -26,10 +26,10 @@ class RegisteredUserController extends Controller
             session(['referral_code' => $referralCode]);
         }
 
-        $affiliateCode = $referralCode ?? session('referral_code');
+        // $affiliateCode = $referralCode ?? session('referral_code');
 
         return Inertia::render('auth/register', [
-            'affiliate_code' => $affiliateCode,
+            // 'affiliate_code' => $affiliateCode,
         ]);
     }
 
@@ -45,27 +45,27 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'phone_number' => 'required|string|max:20',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'affiliate_code' => 'nullable|string|exists:users,affiliate_code',
+            // 'affiliate_code' => 'nullable|string|exists:users,affiliate_code',
         ]);
 
-        $affiliateCode = $request->affiliate_code
-            ?? session('referral_code')
-            ?? 'ATM2025';
+        // $affiliateCode = $request->affiliate_code
+        //     ?? session('referral_code')
+        //     ?? 'KMP2025';
 
-        $referred_by_user_id = null;
-        if ($affiliateCode) {
-            $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
-            if ($affiliateUser) {
-                $referred_by_user_id = $affiliateUser->id;
-            }
-        }
+        // $referred_by_user_id = null;
+        // if ($affiliateCode) {
+        //     $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
+        //     if ($affiliateUser) {
+        //         $referred_by_user_id = $affiliateUser->id;
+        //     }
+        // }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
-            'referred_by_user_id' => $referred_by_user_id,
+            // 'referred_by_user_id' => $referred_by_user_id,
         ]);
 
         $user->assignRole('user');
@@ -74,7 +74,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        session()->forget('referral_code');
+        // session()->forget('referral_code');
 
         // return to_route('home');
         return to_route('verification.notice')->with('status', 'Pendaftaran berhasil! Silakan periksa email Anda untuk tautan verifikasi.');

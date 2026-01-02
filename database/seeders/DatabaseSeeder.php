@@ -22,18 +22,18 @@ class DatabaseSeeder extends Seeder
         $admin = User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@gmail.com',
-            'phone_number' => '085142505794',
+            'phone_number' => '089528514480',
             'bio' => 'Admin',
-            'password' => bcrypt('M@lang2025'),
+            'password' => bcrypt('kompeten2025'),
         ]);
 
         $adminAffiliate = User::factory()->create([
             'name' => 'Kompeten',
             'email' => 'kompetenidn@gmail.com',
-            'phone_number' => '085142505794',
+            'phone_number' => '089528514480',
             'bio' => "Kompeten's Affiliate",
             'password' => bcrypt('kompeten2025'),
-            'affiliate_code' => 'ATM2025',
+            'affiliate_code' => 'KMP2025',
             'affiliate_status' => 'Active',
             'commission' => 15,
         ]);
