@@ -33,6 +33,7 @@
             width: 100%;
             position: relative;
             padding: 14mm;
+            margin-top: 8mm;
             margin-left: 66mm;
         }
 
@@ -51,33 +52,33 @@
         }
 
         .header-top {
-            font-size: 38px;
+            font-size: 42px;
             color: #6b7280;
             text-transform: uppercase;
             font-weight: 500;
         }
 
-        .header-bottom {
-            font-size: 38px;
-            color: #6b7280;
-            margin-bottom: 52px;
+        .header-bottom p {
+            font-size: 32px;
+            margin-bottom: 2px;
         }
 
         .certificate-title {
             font-size: 130px;
             font-weight: bold;
-            color: #1e40af;
             text-transform: uppercase;
+            margin-bottom: -24px;
         }
 
         .certificate-subtitle {
             font-size: 72px;
-            color: #1e40af;
+            color: #082854;
             font-weight: 600;
-            margin-bottom: 46px;
+            margin-bottom: 42px;
         }
 
         .content {
+            position: relative;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -85,42 +86,92 @@
             margin: 32px 0;
         }
 
-        .content-text {
+        .content-number {
+            position: absolute;
+            text-align: right;
+            top: -28mm;
+            right: 65mm;
+        }
+
+        .certificate-number-text {
             font-size: 38px;
-            color: #1e40af;
+            color: #082854;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .certificate-number {
+            font-size: 38px;
+            color: #082854;
+        }
+
+        .content-text {
+            font-size: 42px;
+            color: #082854;
             margin-top: 32px;
-            margin-bottom: 24px;
+            margin-bottom: -32px;
         }
 
         .participant-name {
-            font-size: 100px;
+            font-size: 115px;
             font-weight: bold;
-            color: #1e40af;
+            color: #082854;
             margin: 52px 0;
             display: inline-block;
             min-width: 250px;
         }
 
         .program-name {
-            color: #1e40af;
-            font-style: italic;
+            color: #082854;
             display: block;
             margin-top: 24px;
-            font-size: 38px;
-        }
-
-        .program-description {
-            font-size: 38px;
+            font-size: 72px;
             font-weight: 600;
         }
 
+        .program-description {
+            font-size: 42px;
+            margin-top: 16px;
+        }
+
         .description {
+            font-size: 42px;
+            max-width: 1920px;
+            margin-top: 24px;
+            padding-bottom: 38px;
+            border-bottom: 6px dotted #082854;
+        }
+
+        .date {
+            position: absolute;
+            top: 80mm;
+            right: 65mm;
+            display: flex;
+            justify-content: center;
+            margin: 32px 0;
+            width: 100mm;
+            border-top: 2px solid #082854;
+            padding-top: 8px;
+        }
+
+        .accreditation-label {
+            float: left;
+            width: 50%;
             font-size: 38px;
-            max-width: 920px;
+            color: #082854;
+            margin-right: 16px;
+        }
+
+        .accreditation-date {
+            float: right;
+            width: 50%;
+            font-size: 38px;
+            color: #082854;
+            text-align: right;
         }
 
         .period {
-            font-size: 38px;
+            font-size: 42px;
             color: #9ca3af;
             margin-top: 24px;
             font-style: italic;
@@ -128,35 +179,36 @@
 
         .footer {
             position: relative;
-            margin-top: 150px;
+            margin-left: -57mm;
+            margin-top: 200px;
             height: 120px;
             clear: both;
         }
 
         .signature-container {
             float: left;
-            width: 50%;
+            width: 80%;
             text-align: left;
         }
 
         .period-section {
             float: right;
-            width: 50%;
-            text-align: right;
+            width: 30%;
+            text-align: left;
             margin-top: 150px;
             margin-right: 600px;
         }
 
         .qr-container {
-            margin-bottom: 16px;
-            position: relative;
-            text-align: right;
+            position: absolute;
+            top: 48mm;
+            left: -51.5mm;
         }
 
         .qr-code {
-            width: 150px;
-            height: 150px;
-            margin: 0 0 16px auto;
+            width: 250px;
+            height: 250px;
+            margin: 32px;
             border: 2px solid #e5e7eb;
             border-radius: 8px;
             padding: 4px;
@@ -189,7 +241,8 @@
         .signature-space {
             width: 150px;
             height: 250px;
-            margin-bottom: 8px;
+            margin-top: 80px;
+            margin-bottom: -50px;
             position: relative;
         }
 
@@ -200,8 +253,8 @@
         }
 
         .signature-name {
-            font-size: 46px;
-            color: #1e40af;
+            font-size: 42px;
+            color: #082854;
             font-weight: bold;
             margin-bottom: 2px;
             text-decoration: underline;
@@ -209,7 +262,7 @@
 
         .signature-title,
         .signature-date {
-            font-size: 38px;
+            font-size: 42px;
         }
 
         /* Clearfix untuk footer */
@@ -234,28 +287,31 @@
         <div class="certificate-content">
             {{-- Header --}}
             <div class="header">
-                @if ($certificate->header_top)
+                {{-- @if ($certificate->header_top)
                     <div class="header-top">{{ $certificate->header_top }}</div>
-                @endif
+                @endif --}}
 
-                @if ($certificate->header_bottom)
-                    <div class="header-bottom">{{ $certificate->header_bottom }}</div>
-                @endif
-
-                <div class="certificate-title">Sertifikat</div>
+                <div class="certificate-title">Certificate</div>
                 <div class="certificate-subtitle">
                     @if ($certificate->webinar_id)
-                        Partisipasi
+                        of Participation
                     @else
-                        Kompetensi Kelulusan
+                        of Achievement
                     @endif
                 </div>
             </div>
 
             {{-- Content --}}
             <div class="content">
+                <div class="content-number">
+                    <p class="certificate-number-text">Accreditation Number</p>
+                    <p class="certificate-number">
+                        {{ sprintf('%04d', $data['certificate_number']) }}/{{ $certificate->certificate_number }}
+                    </p>
+                </div>
+
                 <div class="content-text">
-                    {{ sprintf('%04d', $data['certificate_number']) }}/{{ $certificate->certificate_number }}
+                    This certificate is proudly presented to
                 </div>
 
                 <div class="participant-name">
@@ -263,11 +319,11 @@
                 </div>
 
                 <div class="program-description">
-                    @if ($certificate->webinar_id)
-                        TELAH BERPARTISIPASI PADA
-                    @else
-                        TELAH MENGIKUTI DAN DINYATAKAN LULUS
-                    @endif
+                    as a participant who has successfully completed
+                </div>
+
+                <div class="program-name">
+                    {{ $certificate->title }}
                 </div>
 
                 @if ($certificate->description)
@@ -275,13 +331,42 @@
                         {{ $certificate->description }}
                     </div>
                 @endif
+
+                <div class="qr-container">
+                    @if ($qrCode)
+                        <div class="qr-code">
+                            @if (str_contains($qrCode, 'image/png'))
+                                <img src="{{ $qrCode }}" alt="QR Code"
+                                    style="width: 100%; height: 100%; object-fit: contain;">
+                            @else
+                                {!! $qrCode !!}
+                            @endif
+                        </div>
+                    @else
+                        <div class="qr-placeholder">
+                            QR Code<br>Not Available
+                        </div>
+                    @endif
+
+                    {{-- @if ($certificateUrl)
+                        <div class="certificate-url">{{ $certificateUrl }}</div>
+                    @else
+                        <div class="certificate-url">
+                            https://kompeten.id/certificate/{{ $data['certificate_code'] }}
+                        </div>
+                    @endif --}}
+                </div>
+
+                <div class="date">
+                    <p class="accreditation-label">Accreditation Date</p>
+                    <p class="accreditation-date">
+                        {{ \Carbon\Carbon::parse($data['participant_issued_at'])->locale('id')->translatedFormat('d F Y') }}
+                    </p>
+                </div>
             </div>
             {{-- Footer --}}
             <div class="footer">
                 <div class="signature-container">
-                    <div class="signature-date">
-                        {{ \Carbon\Carbon::parse($data['participant_issued_at'])->locale('id')->translatedFormat('d F Y') }}
-                    </div>
                     <div class="signature-space">
                         @if ($certificate->sign && $certificate->sign->image)
                             <img src="{{ public_path('storage/' . $certificate->sign->image) }}" alt="Tanda Tangan"
@@ -303,33 +388,14 @@
                 </div>
 
                 <div class="period-section">
-                    {{-- QR Code Section --}}
-                    <div class="qr-container">
-                        @if ($qrCode)
-                            <div class="qr-code">
-                                @if (str_contains($qrCode, 'image/png'))
-                                    <img src="{{ $qrCode }}" alt="QR Code"
-                                        style="width: 100%; height: 100%; object-fit: contain;">
-                                @else
-                                    {!! $qrCode !!}
-                                @endif
-                            </div>
-                        @else
-                            <div class="qr-placeholder">
-                                QR Code<br>Not Available
-                            </div>
-                        @endif
-
-                        @if ($certificateUrl)
-                            <div class="certificate-url">{{ $certificateUrl }}</div>
-                        @else
-                            <div class="certificate-url">
-                                https://kompeten.id/certificate/{{ $data['certificate_code'] }}
-                            </div>
-                        @endif
+                    <div class="header-bottom">
+                        <p>Kompeten IDN</p>
+                        <p>Alamat : {{ $certificate->header_bottom }}</p>
+                        <p>Whatspp: +62 895-2851-4480</p>
+                        <p>Email: kompetenidn@gmail.com</p>
                     </div>
 
-                    <div class="certificate-period">{{ $certificate->period }}</div>
+                    {{-- <div class="certificate-period">{{ $certificate->period }}</div> --}}
                 </div>
             </div>
         </div>
