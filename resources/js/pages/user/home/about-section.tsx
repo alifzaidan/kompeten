@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 interface Product {
     title: string;
     description: string;
-    gradient: string;
+    image: string;
     icon?: string;
     href: string;
 }
@@ -15,31 +15,31 @@ export default function AboutSection() {
         {
             title: 'Certification',
             description: 'Tingkatkan skill dan kantongi sertifikat resmi yang bikin CV-mu makin standout!',
-            gradient: 'bg-gradient-to-br from-blue-400 via-teal-400 to-green-400',
+            image: '/assets/images/Sertifikasi.webp',
             href: '/certification',
         },
         {
             title: 'Bootcamp',
             description: 'Belajar intensif, praktik langsung, dan upgrade skill dengan cara yang seru dan cepat!',
-            gradient: 'bg-gradient-to-br from-blue-500 via-cyan-400 to-yellow-300',
+            image: '/assets/images/Bootcamp.webp',
             href: '/bootcamp',
         },
         {
             title: 'Webinar',
             description: 'Ikuti sesi belajar online yang ringan tapi penuh insight bareng mentor berpengalaman!',
-            gradient: 'bg-gradient-to-br from-purple-900 via-purple-700 to-pink-500',
+            image: '/assets/images/Webinar.webp',
             href: '/webinar',
         },
         {
             title: 'Kelas Online',
             description: 'Belajar dengan video pembelajaran terstruktur yang bisa kamu akses kapan saja dan di mana saja.',
-            gradient: 'bg-gradient-to-br from-orange-400 via-pink-400 to-purple-500',
+            image: '/assets/images/Bootcamp.webp',
             href: '/course',
         },
         {
             title: 'Paket Bundling',
             description: 'Belajar lebih banyak, bayar lebih hemat—semua materi favoritmu ada dalam satu paket lengkap!',
-            gradient: 'bg-gradient-to-br from-green-400 via-emerald-400 to-teal-500',
+            image: '/assets/images/Bundling.webp',
             href: '/bundle',
         },
     ];
@@ -95,10 +95,13 @@ export default function AboutSection() {
                             <CarouselItem key={`product-${idx}`} className="p-2 md:basis-1/2 md:p-6 lg:basis-1/3 lg:p-12">
                                 <Link href={product.href} className="group flex h-full justify-center">
                                     <div className="flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-3xl bg-white shadow transition-all duration-300 hover:shadow-xl dark:bg-gray-800">
-                                        {/* Gradient Header */}
-                                        <div
-                                            className={`relative h-48 w-full ${product.gradient} transition-transform duration-500 group-hover:scale-105`}
-                                        >
+                                        {/* Image Header */}
+                                        <div className="relative h-48 w-full overflow-hidden">
+                                            <img
+                                                src={product.image}
+                                                alt={product.title}
+                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
                                             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
                                         </div>
 
