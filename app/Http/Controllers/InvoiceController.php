@@ -1391,7 +1391,7 @@ class InvoiceController extends Controller
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
                 'phone' => '+6289528514480',
                 'email' => 'kompetenidn@gmail.com',
-                'website' => 'www.kompeten.id'
+                'website' => 'www.kompetenidn.com'
             ]
         ];
 

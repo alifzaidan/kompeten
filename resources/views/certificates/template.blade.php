@@ -352,7 +352,7 @@
                         <div class="certificate-url">{{ $certificateUrl }}</div>
                     @else
                         <div class="certificate-url">
-                            https://kompeten.id/certificate/{{ $data['certificate_code'] }}
+                            https://kompetenidn.com/certificate/{{ $data['certificate_code'] }}
                         </div>
                     @endif --}}
                 </div>
