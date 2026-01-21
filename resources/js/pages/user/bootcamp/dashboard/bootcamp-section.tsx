@@ -186,7 +186,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                                 <img
                                                     src={bootcamp.thumbnail ? `/storage/${bootcamp.thumbnail}` : '/assets/images/placeholder.png'}
                                                     alt={bootcamp.title}
-                                                    className="h-48 w-full rounded-t-lg object-cover"
+                                                    className="w-full rounded-t-lg object-cover md:h-72"
                                                 />
 
                                                 {/* Bootcamp Badge */}

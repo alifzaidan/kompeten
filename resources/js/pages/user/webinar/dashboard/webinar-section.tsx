@@ -158,7 +158,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                                                 <img
                                                     src={webinar.thumbnail ? `/storage/${webinar.thumbnail}` : '/assets/images/placeholder.png'}
                                                     alt={webinar.title}
-                                                    className="h-48 w-full rounded-t-lg object-cover"
+                                                    className="w-full rounded-t-lg object-cover md:h-72"
                                                 />
 
                                                 {/* Webinar Badge */}

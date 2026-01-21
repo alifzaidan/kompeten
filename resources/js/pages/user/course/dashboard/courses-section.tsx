@@ -208,7 +208,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                                                 <img
                                                     src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
                                                     alt={course.title}
-                                                    className="h-48 w-full rounded-t-lg object-cover"
+                                                    className="w-full rounded-t-lg object-cover md:h-72"
                                                 />
 
                                                 {/* Course Badge */}

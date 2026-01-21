@@ -147,7 +147,7 @@ export default function PartnershipProductSection({ categories, partnershipProdu
                                         <img
                                             src={product.thumbnail ? `/storage/${product.thumbnail}` : '/assets/images/placeholder.png'}
                                             alt={product.title}
-                                            className="h-48 w-full rounded-t-lg object-cover"
+                                            className="w-full rounded-t-lg object-cover md:h-72"
                                         />
                                         <div className="p-4">
                                             <h2 className="mb-2 line-clamp-2 text-lg font-semibold">{product.title}</h2>

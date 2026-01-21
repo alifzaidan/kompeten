@@ -277,7 +277,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                     <img
                                                         src={product.thumbnail ? `/storage/${product.thumbnail}` : '/assets/images/placeholder.png'}
                                                         alt={product.title}
-                                                        className="h-48 w-full rounded-t-lg object-cover"
+                                                        className="w-full rounded-t-lg object-cover md:h-72"
                                                     />
                                                     {getProductBadge(product.type)}
 

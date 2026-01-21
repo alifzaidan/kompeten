@@ -139,7 +139,7 @@
             max-width: 1920px;
             margin-top: 24px;
             padding-bottom: 38px;
-            border-bottom: 6px dotted #082854;
+            border-bottom: 6px dotted transparent;
         }
 
         .date {
