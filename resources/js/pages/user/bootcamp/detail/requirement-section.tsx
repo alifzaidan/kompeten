@@ -5,26 +5,18 @@ interface Bootcamp {
     requirements?: string | null;
 }
 
-function parseList(items?: string | null): string[] {
-    if (!items) return [];
+type ParsedRichText = {
+    heading: string | null;
+    items: string[];
+};
+
+function parseList(items?: string | null): ParsedRichText {
+    if (!items) return { heading: null, items: [] };
 
     const raw = String(items).trim();
-    if (!raw) return [];
+    if (!raw) return { heading: null, items: [] };
 
     const liMatches = raw.match(/<li[^>]*>[\s\S]*?<\/li>/gi);
-    if (liMatches?.length) {
-        return liMatches
-            .map((li) =>
-                li
-                    .replace(/<li[^>]*>/gi, '')
-                    .replace(/<\/li>/gi, '')
-                    .replace(/<br\s*\/?\s*>/gi, '\n')
-                    .replace(/<[^>]+>/g, '')
-                    .trim(),
-            )
-            .filter(Boolean);
-    }
-
     const normalized = raw
         .replace(/<br\s*\/?\s*>/gi, '\n')
         .replace(/<\/p>/gi, '\n')
@@ -39,6 +31,7 @@ function parseList(items?: string | null): string[] {
         .map((s) => s.replace(/^[-*•–—\u2022]+\s+/, '').trim())
         .filter(Boolean);
 
+    let heading: string | null = null;
     if (lines.length >= 2) {
         const first = lines[0].toLowerCase();
         const looksLikeHeading =
@@ -48,23 +41,41 @@ function parseList(items?: string | null): string[] {
                 first.includes('persyaratan') ||
                 first.includes('syarat')) &&
             first.endsWith('.');
-
         if (looksLikeHeading) {
-            return lines.slice(1);
+            heading = lines[0];
         }
     }
 
-    return lines;
+    if (liMatches?.length) {
+        return {
+            heading,
+            items: liMatches
+                .map((li) =>
+                    li
+                        .replace(/<li[^>]*>/gi, '')
+                        .replace(/<\/li>/gi, '')
+                        .replace(/<br\s*\/?\s*>/gi, '\n')
+                        .replace(/<[^>]+>/g, '')
+                        .trim(),
+                )
+                .filter(Boolean),
+        };
+    }
+
+    const itemLines = heading ? lines.slice(1) : lines;
+    return { heading, items: itemLines };
 }
 
 export default function RequirementSection({ bootcamp }: { bootcamp: Bootcamp }) {
-    const requirementList = parseList(bootcamp.requirements);
-    const benefitList = parseList(bootcamp.benefits);
+    const { heading: requirementHeading, items: requirementList } = parseList(bootcamp.requirements);
+    const { heading: benefitHeading, items: benefitList } = parseList(bootcamp.benefits);
 
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Persyaratan Peserta</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {requirementHeading ?? 'Persyaratan Peserta'}
+                </h2>
 
                 <ul className="space-y-2">
                     {requirementList.map((req, idx) => (
@@ -79,7 +90,9 @@ export default function RequirementSection({ bootcamp }: { bootcamp: Bootcamp })
             </div>
 
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Manfaat yang Didapatkan</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {benefitHeading ?? 'Manfaat yang Didapatkan'}
+                </h2>
 
                 <ul className="space-y-2">
                     {benefitList.map((benefit, idx) => (
