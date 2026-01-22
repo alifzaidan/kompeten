@@ -1,0 +1,7 @@
+import{j as t}from"./app-Du9Va_cx.js";import{B as l}from"./badge-check-CrrIVRrg.js";/* empty css            */import"./createLucideIcon-Bp5WThYX.js";function c(a){if(!a)return[];const n=String(a).trim();if(!n)return[];const i=n.match(/<li[^>]*>[\s\S]*?<\/li>/gi);if(i!=null&&i.length)return i.map(e=>e.replace(/<li[^>]*>/gi,"").replace(/<\/li>/gi,"").replace(/<br\s*\/?\s*>/gi,`
+`).replace(/<[^>]+>/g,"").trim()).filter(Boolean);const r=n.replace(/<br\s*\/?\s*>/gi,`
+`).replace(/<\/p>/gi,`
+`).replace(/<\/div>/gi,`
+`).replace(/<[^>]+>/g,"").replace(/\r\n?/g,`
+`).split(`
+`).map(e=>e.trim()).filter(Boolean).map(e=>e.replace(/^[-*•–—\u2022]+\s+/,"").trim()).filter(Boolean);if(r.length>=2){const e=r[0].toLowerCase();if((e.includes("benefit")||e.includes("manfaat"))&&e.endsWith("."))return r.slice(1)}return r}function x({webinar:a}){const n=c(a.benefits);return t.jsx("section",{className:"mx-auto w-full space-y-4 md:p-4",children:t.jsxs("div",{className:"rounded-2xl bg-neutral-100 p-6",children:[t.jsx("h2",{className:"mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white",children:"Manfaat yang didapatkan"}),t.jsx("ul",{className:"space-y-2",children:n.map((i,s)=>t.jsxs("li",{className:"flex gap-2",children:[t.jsx(l,{className:"mt-1 min-w-12 text-green-600"}),t.jsx("div",{children:t.jsx("h4",{className:"text-lg font-semibold",children:i})})]},s))})]})})}export{x as default};
