@@ -7,9 +7,54 @@ interface Bootcamp {
 
 function parseList(items?: string | null): string[] {
     if (!items) return [];
-    const matches = items.match(/<li>(.*?)<\/li>/g);
-    if (!matches) return [];
-    return matches.map((li) => li.replace(/<\/?li>/g, '').trim());
+
+    const raw = String(items).trim();
+    if (!raw) return [];
+
+    const liMatches = raw.match(/<li[^>]*>[\s\S]*?<\/li>/gi);
+    if (liMatches?.length) {
+        return liMatches
+            .map((li) =>
+                li
+                    .replace(/<li[^>]*>/gi, '')
+                    .replace(/<\/li>/gi, '')
+                    .replace(/<br\s*\/?\s*>/gi, '\n')
+                    .replace(/<[^>]+>/g, '')
+                    .trim(),
+            )
+            .filter(Boolean);
+    }
+
+    const normalized = raw
+        .replace(/<br\s*\/?\s*>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\r\n?/g, '\n');
+
+    const lines = normalized
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => s.replace(/^[-*•–—\u2022]+\s+/, '').trim())
+        .filter(Boolean);
+
+    if (lines.length >= 2) {
+        const first = lines[0].toLowerCase();
+        const looksLikeHeading =
+            (first.includes('benefit') ||
+                first.includes('manfaat') ||
+                first.includes('requirement') ||
+                first.includes('persyaratan') ||
+                first.includes('syarat')) &&
+            first.endsWith('.');
+
+        if (looksLikeHeading) {
+            return lines.slice(1);
+        }
+    }
+
+    return lines;
 }
 
 export default function RequirementSection({ bootcamp }: { bootcamp: Bootcamp }) {
