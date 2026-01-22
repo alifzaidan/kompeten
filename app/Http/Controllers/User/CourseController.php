@@ -13,12 +13,12 @@ use Inertia\Inertia;
 
 class CourseController extends Controller
 {
-    protected $tripayService;
+    // protected $tripayService;
 
-    public function __construct(TripayService $tripayService)
-    {
-        $this->tripayService = $tripayService;
-    }
+    // public function __construct(TripayService $tripayService)
+    // {
+    //     $this->tripayService = $tripayService;
+    // }
 
     public function index()
     {
@@ -94,7 +94,7 @@ class CourseController extends Controller
         $course->load(['modules.lessons']);
         $hasAccess = false;
         $pendingInvoice = null;
-        $transactionDetail = null;
+        // $transactionDetail = null;
 
         $userId = Auth::id();
 
@@ -122,6 +122,7 @@ class CourseController extends Controller
                     'amount' => $invoice->amount,
                     'payment_method' => $invoice->payment_method,
                     'payment_channel' => $invoice->payment_channel,
+                    'invoice_url' => $invoice->invoice_url,
                     'va_number' => $invoice->va_number,
                     'qr_code_url' => $invoice->qr_code_url,
                     'bank_name' => $invoice->bank_name ?? null,
@@ -129,26 +130,26 @@ class CourseController extends Controller
                     'expires_at' => $invoice->expires_at,
                 ];
 
-                if ($invoice->payment_reference) {
-                    try {
-                        $tripayDetail = $this->tripayService->detailTransaction($invoice->payment_reference);
-                        if (isset($tripayDetail->data)) {
-                            $transactionDetail = [
-                                'reference' => $tripayDetail->data->reference ?? null,
-                                'payment_name' => $tripayDetail->data->payment_name ?? null,
-                                'pay_code' => $tripayDetail->data->pay_code ?? null,
-                                'instructions' => $tripayDetail->data->instructions ?? [],
-                                'status' => $tripayDetail->data->status ?? 'PENDING',
-                                'paid_at' => $tripayDetail->data->paid_at ?? null,
-                            ];
-                        }
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::warning('Failed to fetch Tripay details', [
-                            'invoice_code' => $invoice->invoice_code,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
+                // if ($invoice->payment_reference) {
+                //     try {
+                //         $tripayDetail = $this->tripayService->detailTransaction($invoice->payment_reference);
+                //         if (isset($tripayDetail->data)) {
+                //             $transactionDetail = [
+                //                 'reference' => $tripayDetail->data->reference ?? null,
+                //                 'payment_name' => $tripayDetail->data->payment_name ?? null,
+                //                 'pay_code' => $tripayDetail->data->pay_code ?? null,
+                //                 'instructions' => $tripayDetail->data->instructions ?? [],
+                //                 'status' => $tripayDetail->data->status ?? 'PENDING',
+                //                 'paid_at' => $tripayDetail->data->paid_at ?? null,
+                //             ];
+                //         }
+                //     } catch (\Exception $e) {
+                //         \Illuminate\Support\Facades\Log::warning('Failed to fetch Tripay details', [
+                //             'invoice_code' => $invoice->invoice_code,
+                //             'error' => $e->getMessage()
+                //         ]);
+                //     }
+                // }
             }
         }
 
@@ -156,8 +157,8 @@ class CourseController extends Controller
             'course' => $course,
             'hasAccess' => $hasAccess,
             'pendingInvoice' => $pendingInvoice,
-            'transactionDetail' => $transactionDetail,
-            'channels' => $this->tripayService->getPaymentChannels(),
+            // 'transactionDetail' => $transactionDetail,
+            // 'channels' => $this->tripayService->getPaymentChannels(),
             'referralInfo' => $this->getReferralInfo(),
         ]);
     }

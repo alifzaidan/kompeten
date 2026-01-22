@@ -2,12 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Toaster } from '@/components/ui/sonner';
 import { SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { BadgeCheck, Check, Hourglass, Package, ShoppingCart, User, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 interface Product {
     id: string;
     title: string;
@@ -42,88 +40,35 @@ interface ReferralInfo {
     hasActive: boolean;
 }
 
-interface PaymentInstruction {
-    title: string;
-    steps: string[];
-}
-
-interface TransactionDetail {
-    reference: string;
-    payment_name: string;
-    pay_code: string;
-    instructions: PaymentInstruction[];
-    status: string;
-    paid_at?: string | null;
-}
-
 interface PendingInvoice {
     id: string;
     invoice_code: string;
     status: string;
     amount: number;
-    payment_method: string;
-    payment_channel: string;
-    va_number?: string;
-    qr_code_url?: string;
-    bank_name?: string;
     created_at: string;
     expires_at: string;
-}
-
-interface PaymentChannel {
-    active: boolean;
-    code: string;
-    fee_customer: {
-        flat: number;
-        percent: number;
-    };
-    fee_merchant: {
-        flat: number;
-        percent: number;
-    };
-    group: string;
-    icon_url: string;
-    maximum_amount: number;
-    maximum_fee: number | null;
-    minimum_amount: number;
-    minimum_fee: number | null;
-    name: string;
-    total_fee: {
-        flat: number;
-        percent: string;
-    };
-    type: string;
+    invoice_url?: string | null;
 }
 
 interface CheckoutBundleProps {
     bundle: Bundle;
     hasAccess: boolean;
     pendingInvoice?: PendingInvoice | null;
-    transactionDetail?: TransactionDetail | null;
-    channels: PaymentChannel[];
     referralInfo: ReferralInfo;
 }
 
-export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, transactionDetail, channels, referralInfo }: CheckoutBundleProps) {
+export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, referralInfo }: CheckoutBundleProps) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number;
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<PaymentChannel | null>(channels.length > 0 ? channels[0] : null);
 
     const bundleDiscount = bundle.strikethrough_price - bundle.price;
 
-    const calculateAdminFee = (channel: PaymentChannel | null): number => {
-        if (!channel) return 0;
-        const flatFee = channel.fee_customer.flat || 0;
-        const percentFee = Math.round(bundle.price * ((channel.fee_customer.percent || 0) / 100));
-        return flatFee + percentFee;
-    };
-
-    const adminFee = calculateAdminFee(selectedChannel);
-    const totalPrice = bundle.price + adminFee;
+    const transactionFee = 5000;
+    const totalPrice = bundle.price + transactionFee;
 
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -177,8 +122,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                 bundle_id: bundle.id,
                 discount_amount: bundleDiscount,
                 nett_amount: bundle.price,
+                transaction_fee: transactionFee,
                 total_amount: totalPrice,
-                payment_channel: selectedChannel?.code,
             };
 
             try {
@@ -220,20 +165,11 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
 
         try {
             await submitPayment();
-        } catch (error: any) {
-            alert(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Terjadi kesalahan saat proses pembayaran.';
+            alert(message);
             setLoading(false);
         }
-    };
-
-    const getPaymentChannelName = (code: string): string => {
-        const channel = channels.find((c) => c.code === code);
-        return channel?.name || code;
-    };
-
-    const getPaymentGroupIcon = (channelCode: string): string => {
-        const channel = channels.find((c) => c.code === channelCode);
-        return channel?.icon_url || '';
     };
 
     const formatExpiryTime = (expiresAt: string): { time: string; status: 'expired' | 'urgent' | 'normal' } => {
@@ -253,12 +189,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
         }
 
         return { time: `${hours} jam ${minutes} menit lagi`, status: hours < 3 ? 'urgent' : 'normal' };
-    };
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text).then(() => {
-            toast.success('Berhasil menyalin ke clipboard!');
-        });
     };
 
     if (!isLoggedIn) {
@@ -434,65 +364,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                 </div>
                             </div>
                         </div>
-
-                        {/* Payment Channels Section */}
-                        {channels.length > 0 && !pendingInvoice && !hasAccess && (
-                            <div className="mt-6 overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Metode Pembayaran</h2>
-                                </div>
-                                <div className="p-6">
-                                    <div className="grid gap-3">
-                                        {channels.map((channel) => (
-                                            <div
-                                                key={channel.code}
-                                                onClick={() => setSelectedChannel(channel)}
-                                                className={`group cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                                                    selectedChannel?.code === channel.code
-                                                        ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20'
-                                                        : 'border-gray-200 hover:border-orange-300 dark:border-gray-700 dark:hover:border-orange-600'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex flex-1 items-center gap-4">
-                                                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
-                                                            <img
-                                                                src={channel.icon_url}
-                                                                alt={channel.name}
-                                                                className="h-full w-full object-contain p-1"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="font-semibold text-gray-900 dark:text-white">{channel.name}</p>
-                                                            <p className="text-xs text-gray-600 dark:text-gray-400">{channel.group}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all"
-                                                        style={{
-                                                            borderColor: selectedChannel?.code === channel.code ? '#ea580c' : '#d1d5db',
-                                                            backgroundColor: selectedChannel?.code === channel.code ? '#ea580c' : 'transparent',
-                                                        }}
-                                                    >
-                                                        {selectedChannel?.code === channel.code && <Check className="h-3 w-3 text-white" />}
-                                                    </div>
-                                                </div>
-                                                {selectedChannel?.code === channel.code && (
-                                                    <div className="mt-4 border-t border-orange-200 pt-4 dark:border-orange-900">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-semibold text-gray-600 dark:text-white">Biaya Admin</span>
-                                                            <span className="font-semibold text-orange-600">
-                                                                Rp {calculateAdminFee(channel).toLocaleString('id-ID')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Payment Section */}
@@ -556,19 +427,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             <span className="font-semibold text-gray-900 dark:text-white">{pendingInvoice.invoice_code}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
-                                            <div className="flex items-center gap-2">
-                                                <img
-                                                    src={getPaymentGroupIcon(pendingInvoice.payment_channel)}
-                                                    alt={pendingInvoice.payment_channel}
-                                                    className="h-5 w-5 object-contain"
-                                                />
-                                                <span className="font-semibold text-gray-900 dark:text-white">
-                                                    {transactionDetail?.payment_name || getPaymentChannelName(pendingInvoice.payment_channel)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">Total Pembayaran</span>
                                             <span className="text-xl font-bold text-orange-600">
                                                 Rp {pendingInvoice.amount.toLocaleString('id-ID')}
@@ -601,86 +459,20 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             );
                                         }
 
-                                        // Jika belum expired, tampilkan VA, QR, dan instruksi
+                                        // Jika belum expired, tampilkan tombol lanjutkan pembayaran
                                         return (
                                             <>
-                                                {/* VA Number */}
-                                                {pendingInvoice.va_number && (
-                                                    <div className="space-y-3 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Nomor Virtual Account</p>
-                                                        <div className="flex items-center justify-between rounded-lg bg-white p-3 dark:bg-gray-700">
-                                                            <span className="font-mono text-lg font-bold text-gray-900 dark:text-white">
-                                                                {pendingInvoice.va_number}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => copyToClipboard(pendingInvoice.va_number!)}
-                                                                className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:cursor-pointer hover:bg-blue-700"
-                                                            >
-                                                                Salin
-                                                            </button>
-                                                        </div>
+                                                {pendingInvoice.invoice_url ? (
+                                                    <Button asChild className="w-full" size="lg">
+                                                        <a href={pendingInvoice.invoice_url}>Lanjutkan Pembayaran</a>
+                                                    </Button>
+                                                ) : (
+                                                    <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                                                        <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                                            Link pembayaran tidak tersedia. Silakan refresh halaman untuk membuat pembayaran baru.
+                                                        </p>
                                                     </div>
                                                 )}
-
-                                                {/* QR Code */}
-                                                {pendingInvoice.qr_code_url && (
-                                                    <div className="space-y-3 rounded-lg bg-purple-50 p-4 dark:bg-purple-900/20">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Kode QR Pembayaran</p>
-                                                        <div className="flex justify-center rounded-lg bg-white p-4 dark:bg-gray-700">
-                                                            <img
-                                                                src={pendingInvoice.qr_code_url}
-                                                                alt="QR Code"
-                                                                className="h-48 w-48 object-contain"
-                                                            />
-                                                        </div>
-                                                        <a
-                                                            href={pendingInvoice.qr_code_url}
-                                                            download
-                                                            className="block rounded-lg bg-purple-600 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-purple-700"
-                                                        >
-                                                            Download QR Code
-                                                        </a>
-                                                    </div>
-                                                )}
-
-                                                {/* Instructions */}
-                                                {transactionDetail?.instructions && transactionDetail.instructions.length > 0 ? (
-                                                    <div className="space-y-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Langkah Pembayaran</p>
-                                                        <div className="space-y-4">
-                                                            {transactionDetail.instructions.map((instruction, idx) => (
-                                                                <details
-                                                                    key={idx}
-                                                                    className="group rounded-lg border border-gray-200 dark:border-gray-600"
-                                                                    open={idx === 0}
-                                                                >
-                                                                    <summary className="flex cursor-pointer items-center justify-between bg-gray-100 px-4 py-3 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500">
-                                                                        <span className="font-semibold text-gray-900 dark:text-white">
-                                                                            {instruction.title}
-                                                                        </span>
-                                                                        <span className="text-gray-600 transition-transform group-open:rotate-180 dark:text-gray-300">
-                                                                            ▼
-                                                                        </span>
-                                                                    </summary>
-                                                                    <div className="space-y-3 bg-white px-4 py-4 dark:bg-gray-700">
-                                                                        <ol className="space-y-2">
-                                                                            {instruction.steps.map((step, stepIdx) => (
-                                                                                <li key={stepIdx} className="flex gap-3">
-                                                                                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-orange-600 text-xs font-bold text-white">
-                                                                                        {stepIdx + 1}
-                                                                                    </span>
-                                                                                    <span className="flex-1 pt-0.5 text-sm text-gray-700 dark:text-gray-300">
-                                                                                        <div dangerouslySetInnerHTML={{ __html: step }} />
-                                                                                    </span>
-                                                                                </li>
-                                                                            ))}
-                                                                        </ol>
-                                                                    </div>
-                                                                </details>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : null}
                                             </>
                                         );
                                     })()}
@@ -723,7 +515,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi</span>
                                                 <span className="font-medium text-gray-900 dark:text-white">
-                                                    Rp {adminFee.toLocaleString('id-ID')}
+                                                    Rp {transactionFee.toLocaleString('id-ID')}
                                                 </span>
                                             </div>
 
@@ -769,7 +561,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                                             )}
                                         </Button>
 
-                                        <p className="text-center text-xs text-gray-500 dark:text-gray-400">Pembayaran aman dan terenkripsi 🔒</p>
+                                        <p className="text-center text-xs text-gray-500 dark:text-gray-400">Pembayaran aman dan terenkripsi</p>
                                     </div>
                                 </div>
                             </form>
@@ -777,7 +569,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, tran
                     </div>
                 </div>
             </section>
-            <Toaster position="top-center" richColors />
         </div>
     );
 }

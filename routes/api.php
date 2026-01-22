@@ -13,6 +13,8 @@ Route::get('/user', function (Request $request) {
 
 // Route::post('/discount-codes/validate', [DiscountCodeController::class, 'validate'])->name('discount-codes.validate');
 
+Route::post('/doku/callback', [InvoiceController::class, 'callbackDoku'])->name('doku.callback');
+
 Route::post('/xendit/callback', [InvoiceController::class, 'callbackXendit'])->name('xendit.callback');
 
 Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->name('tripay.callback');

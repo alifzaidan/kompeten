@@ -236,6 +236,8 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
     });
 });
 
+Route::get('/doku/callback', [InvoiceController::class, 'dokuReturn'])->name('doku.callback.web');
+
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
 
