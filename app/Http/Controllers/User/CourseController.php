@@ -19,6 +19,8 @@ class CourseController extends Controller
     // {
     //     $this->tripayService = $tripayService;
     // }
+  
+    private const ADMIN_WHATSAPP_URL = 'https://wa.me/+6289528514480';
 
     public function index()
     {
@@ -48,6 +50,17 @@ class CourseController extends Controller
     public function detail(Request $request, Course $course)
     {
         $this->handleReferralCode($request);
+
+        if ($course->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Kelas Tidak Tersedia',
+                'item' => $course->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Kelas tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('course.index'),
+                'backLabel' => 'Kembali ke Daftar Kelas',
+            ])->toResponse($request)->setStatusCode(404);
+        }
 
         $course->load(['category', 'user', 'tools', 'images', 'modules.lessons.quizzes.questions']);
 
@@ -85,6 +98,17 @@ class CourseController extends Controller
     public function showCheckout(Request $request, Course $course)
     {
         $this->handleReferralCode($request);
+
+        if ($course->status !== 'published') {
+            return Inertia::render('user/unavailable/index', [
+                'title' => 'Kelas Tidak Tersedia',
+                'item' => $course->only(['title', 'slug', 'status']),
+                'adminWhatsappUrl' => self::ADMIN_WHATSAPP_URL,
+                'message' => 'Kelas tidak tersedia. Silahkan hubungi admin.',
+                'backUrl' => route('course.index'),
+                'backLabel' => 'Kembali ke Daftar Kelas',
+            ])->toResponse($request)->setStatusCode(404);
+        }
 
         if (!Auth::check()) {
             $currentUrl = $request->fullUrl();
