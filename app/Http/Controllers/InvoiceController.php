@@ -246,10 +246,6 @@ class InvoiceController extends Controller
                 ) {
                     throw new \Exception('Kode diskon tidak valid');
                 }
-
-                if ($discountCode->calculateDiscount($item->price) !== $discountCodeAmount) {
-                    throw new \Exception('Jumlah diskon tidak sesuai');
-                }
             }
 
             $expectedNett = $item->price - $discountCodeAmount;

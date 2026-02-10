@@ -5,15 +5,38 @@ interface Bootcamp {
     curriculum?: string | null;
 }
 
-function parseCurriculum(curriculum?: string | null): string[] {
+function stripHtmlTags(input: string): string {
+    return input
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/?p>/gi, '\n')
+        .replace(/<[^>]*>/g, '')
+        .replace(/\n{2,}/g, '\n')
+        .trim();
+}
+
+function parseCurriculumItems(curriculum?: string | null): string[] {
     if (!curriculum) return [];
-    const matches = curriculum.match(/<li>(.*?)<\/li>/g);
-    if (!matches) return [];
-    return matches.map((li) => li.replace(/<\/?li>/g, '').trim());
+
+    const liRegex = /<li\b[^>]*>([\s\S]*?)<\/li>/gi;
+    const items: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = liRegex.exec(curriculum)) !== null) {
+        const text = stripHtmlTags(match[1]).trim();
+        if (text) items.push(text);
+    }
+    if (items.length) return items;
+
+    const asText = stripHtmlTags(curriculum);
+    if (!asText) return [];
+    return asText
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter(Boolean);
 }
 
 export default function TimelineSection({ bootcamp }: { bootcamp: Bootcamp }) {
-    const curriculumList = parseCurriculum(bootcamp.curriculum);
+    const hasHtmlList = /<(ol|ul)\b/i.test(bootcamp.curriculum || '');
+    const curriculumItems = hasHtmlList ? [] : parseCurriculumItems(bootcamp.curriculum);
 
     return (
         <section className="to-primary mt-8 w-full bg-gradient-to-tl from-black px-4">
@@ -21,16 +44,27 @@ export default function TimelineSection({ bootcamp }: { bootcamp: Bootcamp }) {
                 <h2 className="mx-auto mb-8 max-w-3xl bg-gradient-to-r from-[#71D0F7] via-white to-[#E6834A] bg-clip-text text-center text-3xl font-bold text-transparent italic sm:text-4xl">
                     Materi yang akan kamu pelajari
                 </h2>
-                <div className="grid grid-cols-1 gap-x-20 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {curriculumList.map((curriculum, idx) => (
-                        <div key={idx} className="flex flex-col items-center">
-                            <Button variant="secondary" className="mb-2 w-fit">
-                                <File />
-                            </Button>
-                            <h3 className="text-primary-foreground text-xl font-medium">{curriculum}</h3>
-                        </div>
-                    ))}
-                </div>
+                {hasHtmlList ? (
+                    <div
+                        className="prose prose-invert md:prose-lg mx-auto max-w-none"
+                        dangerouslySetInnerHTML={{ __html: bootcamp.curriculum || '<p>Materi belum tersedia.</p>' }}
+                    />
+                ) : curriculumItems.length ? (
+                    <ol className="grid list-decimal grid-cols-1 gap-x-20 gap-y-4 pl-6 sm:grid-cols-2 lg:grid-cols-4">
+                        {curriculumItems.map((item, idx) => (
+                            <li key={idx} className="text-primary-foreground">
+                                <div className="flex flex-col items-center">
+                                    <Button variant="secondary" className="mb-2 w-fit">
+                                        <File />
+                                    </Button>
+                                    <h3 className="text-center text-xl font-medium">{item}</h3>
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
+                ) : (
+                    <p className="text-primary-foreground text-center">Materi belum tersedia.</p>
+                )}
             </div>
         </section>
     );
