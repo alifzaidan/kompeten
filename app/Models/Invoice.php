@@ -58,7 +58,7 @@ class Invoice extends Model
 
     public function affiliateEarnings()
     {
-        return $this->hasMany(AffiliateEarning::class, 'affiliate_user_id');
+        return $this->hasMany(AffiliateEarning::class, 'invoice_id');
     }
 
     protected function casts(): array

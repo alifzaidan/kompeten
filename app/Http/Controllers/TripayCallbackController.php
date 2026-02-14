@@ -345,46 +345,35 @@ class TripayCallbackController extends Controller
 
     private function recordAffiliateCommission(Invoice $invoice)
     {
+        $affiliate = null;
+
         if ($invoice->referred_by_user_id) {
-            $affiliate = User::find($invoice->referred_by_user_id);
-
-            if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
-                $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
-
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $affiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $affiliate->commission,
-                    'status' => 'approved',
-                ]);
-
-                Log::info('Affiliate commission recorded', [
-                    'affiliate_id' => $affiliate->id,
-                    'invoice_code' => $invoice->invoice_code,
-                    'commission_amount' => $commissionAmount
-                ]);
+            $candidate = User::find($invoice->referred_by_user_id);
+            if ($candidate && $candidate->hasRole('affiliate')) {
+                $affiliate = $candidate;
             }
-        } else {
-            $defaultAffiliate = User::where('affiliate_code', 'KMP2025')->first();
+        }
 
-            if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
-                $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
+        if (!$affiliate) {
+            $affiliate = User::role('affiliate')->where('affiliate_code', 'KMP2025')->first();
+        }
 
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $defaultAffiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $defaultAffiliate->commission,
-                    'status' => 'approved',
-                ]);
+        if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
+            $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
 
-                Log::info('Default affiliate commission recorded (KMP2025)', [
-                    'affiliate_id' => $defaultAffiliate->id,
-                    'invoice_code' => $invoice->invoice_code,
-                    'commission_amount' => $commissionAmount
-                ]);
-            }
+            AffiliateEarning::create([
+                'affiliate_user_id' => $affiliate->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $commissionAmount,
+                'rate' => $affiliate->commission,
+                'status' => 'approved',
+            ]);
+
+            Log::info('Affiliate commission recorded', [
+                'affiliate_id' => $affiliate->id,
+                'invoice_code' => $invoice->invoice_code,
+                'commission_amount' => $commissionAmount
+            ]);
         }
 
         $this->recordMentorCommission($invoice);

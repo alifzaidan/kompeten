@@ -32,7 +32,6 @@ use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Support\Facades\Log;
 
 use Xendit\Configuration;
-use Xendit\Invoice\CreateInvoiceRequest;
 use Xendit\Invoice\InvoiceApi;
 
 class InvoiceController extends Controller
@@ -183,11 +182,7 @@ class InvoiceController extends Controller
             $discountCodeId = $validated['discount_code_id'] ?? null;
             $discountCodeAmount = (float)($validated['discount_code_amount'] ?? 0);
 
-            $referralCode = session('referral_code');
-            $referredByUserId = User::where('affiliate_code', $referralCode)
-                ->where('id', '!=', $userId)
-                ->value('id')
-                ?? User::where('affiliate_code', 'KMP2025')->value('id');
+            $referredByUserId = $this->resolveAffiliateReferrerId($userId, true);
 
             if ($type === 'course') {
                 $item = Course::findOrFail($itemId);
@@ -372,19 +367,7 @@ class InvoiceController extends Controller
             $discountCodeId = $validated['discount_code_id'] ?? null;
             $discountCodeAmount = (float)($validated['discount_code_amount'] ?? 0);
 
-            $referralCode = session('referral_code');
-            $referredByUserId = null;
-
-            if ($referralCode && $referralCode !== 'KMP2025') {
-                $referrer = User::where('affiliate_code', $referralCode)->first();
-                if ($referrer && $referrer->id !== $userId) {
-                    $referredByUserId = $referrer->id;
-                }
-            }
-
-            if (!$referredByUserId) {
-                $referredByUserId = User::where('affiliate_code', 'KMP2025')->value('id');
-            }
+            $referredByUserId = $this->resolveAffiliateReferrerId($userId, true);
 
             $bundle = Bundle::with('bundleItems.bundleable')->findOrFail($bundleId);
 
@@ -577,15 +560,8 @@ class InvoiceController extends Controller
             $type = $request->input('type', 'course');
             $itemId = $request->input('id');
 
-            $referralCode = session('referral_code');
-            $referredByUserId = null;
-
-            if ($referralCode && $referralCode !== 'KMP2025') {
-                $referrer = User::where('affiliate_code', $referralCode)->first();
-                if ($referrer && $referrer->id !== $userId) {
-                    $referredByUserId = $referrer->id;
-                }
-            }
+            // For free enrollments, only attribute if an explicit valid affiliate ref exists.
+            $referredByUserId = $this->resolveAffiliateReferrerId($userId, false);
 
             $item = null;
             $enrollmentTable = null;
@@ -1593,34 +1569,32 @@ class InvoiceController extends Controller
      */
     private function recordAffiliateCommission(Invoice $invoice)
     {
+        $affiliate = null;
+
         if ($invoice->referred_by_user_id) {
-            $affiliate = User::find($invoice->referred_by_user_id);
-
-            if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
-                $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
-
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $affiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $affiliate->commission,
-                    'status' => 'approved',
-                ]);
+            $candidate = User::find($invoice->referred_by_user_id);
+            if ($candidate && $candidate->hasRole('affiliate')) {
+                $affiliate = $candidate;
             }
-        } else {
-            $defaultAffiliate = User::where('affiliate_code', 'KMP2025')->first();
+        }
 
-            if ($defaultAffiliate && $defaultAffiliate->affiliate_status === 'Active' && $defaultAffiliate->commission > 0) {
-                $commissionAmount = $invoice->nett_amount * ($defaultAffiliate->commission / 100);
-
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $defaultAffiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $defaultAffiliate->commission,
-                    'status' => 'approved',
-                ]);
+        if (!$affiliate) {
+            $defaultAffiliateId = $this->defaultAffiliateId();
+            if ($defaultAffiliateId) {
+                $affiliate = User::find($defaultAffiliateId);
             }
+        }
+
+        if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
+            $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
+
+            AffiliateEarning::create([
+                'affiliate_user_id' => $affiliate->id,
+                'invoice_id' => $invoice->id,
+                'amount' => $commissionAmount,
+                'rate' => $affiliate->commission,
+                'status' => 'approved',
+            ]);
         }
 
         $this->recordMentorCommission($invoice);
@@ -1654,6 +1628,32 @@ class InvoiceController extends Controller
                 ]);
             }
         }
+    }
+
+    private function resolveAffiliateReferrerId(string $buyerUserId, bool $useDefaultWhenMissing): ?string
+    {
+        $referralCode = session('referral_code');
+
+        $referralCode = is_string($referralCode) ? trim($referralCode) : null;
+        if ($referralCode !== null && $referralCode !== '') {
+            $referrerId = User::role('affiliate')
+                ->where('affiliate_code', $referralCode)
+                ->where('id', '!=', $buyerUserId)
+                ->value('id');
+
+            if ($referrerId) {
+                return $referrerId;
+            }
+        }
+
+        return $useDefaultWhenMissing ? $this->defaultAffiliateId() : null;
+    }
+
+    private function defaultAffiliateId(): ?string
+    {
+        return User::role('affiliate')
+            ->where('affiliate_code', 'KMP2025')
+            ->value('id');
     }
 
     /**
@@ -1742,7 +1742,7 @@ class InvoiceController extends Controller
             ]
         ];
 
-        $pdf = PDF::loadView('invoices.pdf', $data);
+        $pdf = Pdf::loadView('invoices.pdf', $data);
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream("invoice-{$invoice->invoice_code}.pdf");
