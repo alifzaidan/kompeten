@@ -55,24 +55,10 @@ export default function RegisterSection({
     let warningMessage: string | null = null;
     let isDisabled = false;
 
-    if (hasOwnedItems) {
-        registrationUrl = '#';
-        buttonText = 'Tidak Dapat Mendaftar';
-        warningMessage = 'Anda sudah memiliki beberapa produk dalam bundle ini!';
-        isDisabled = true;
-    } else if (!isLoggedIn) {
-        registrationUrl = bundle.registration_url;
-        buttonText = 'Login untuk Mendaftar';
-        warningMessage = 'Anda harus login terlebih dahulu!';
-    } else if (!isProfileComplete) {
-        registrationUrl = route('profile.edit', { redirect: window.location.href });
-        buttonText = 'Lengkapi Profil untuk Mendaftar';
-        warningMessage = 'Profil Anda belum lengkap!';
-    } else {
-        registrationUrl = bundle.registration_url;
-        buttonText = 'Daftar Sekarang';
-        warningMessage = null;
-    }
+    registrationUrl = bundle.registration_url;
+    buttonText = 'Daftar Sekarang';
+    warningMessage = null;
+
 
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">

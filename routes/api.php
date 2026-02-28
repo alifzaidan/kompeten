@@ -20,3 +20,17 @@ Route::post('/xendit/callback', [InvoiceController::class, 'callbackXendit'])->n
 Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->name('tripay.callback');
 
 Route::get('/search', [SearchController::class, 'search']);
+
+Route::post('/check-email', function (Request $request) {
+    $user = \App\Models\User::where('email', $request->email)->first();
+    
+    if ($user) {
+        return response()->json([
+            'exists' => true,
+            'name' => $user->name,
+            'phone_number' => $user->phone_number,
+        ]);
+    }
+    
+    return response()->json(['exists' => false]);
+});
