@@ -82,6 +82,7 @@ type RegisterForm = {
     name: string;
     email: string;
     phone_number: string;
+    instance: string;
     password: string;
     password_confirmation: string;
 };
@@ -134,6 +135,7 @@ export default function RegisterBootcamp({
         name: '',
         email: '',
         phone_number: '',
+        instance: '',
         password: '',
         password_confirmation: '',
     });
@@ -155,6 +157,7 @@ export default function RegisterBootcamp({
                     setEmailExists(true);
                     setData('name', response.data.name || '');
                     setData('phone_number', response.data.phone_number || '');
+                    setData('instance', response.data.instance || '');
                 } else {
                     setEmailExists(false);
                 }
@@ -894,7 +897,7 @@ export default function RegisterBootcamp({
                                         )}
                                         <InputError message={errors.email} />
                                     </div>
-                                    <div className="grid gap-6">
+                                    <div className="grid gap-6 pb-2">
                                         <div className="grid gap-2">
                                             <Label htmlFor="name">Nama</Label>
                                             <Input
@@ -934,6 +937,26 @@ export default function RegisterBootcamp({
                                                 </p>
                                             )}
                                             <InputError message={errors.phone_number} />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="instance">Instansi/Perusahaan</Label>
+                                            <Input
+                                                id="instance"
+                                                type="text"
+                                                tabIndex={4}
+                                                autoComplete="organization"
+                                                value={data.instance}
+                                                onChange={(e) => setData('instance', e.target.value)}
+                                                disabled={processing || emailExists}
+                                                placeholder="Instansi atau perusahaan Anda"
+                                            />
+                                            {!emailExists && (
+                                                <p className="text-xs text-gray-500">
+                                                    Kosongkan jika tidak memiliki instansi
+                                                </p>
+                                            )}
+                                            <InputError message={errors.instance} />
                                         </div>
                                     </div>
                                 </form>

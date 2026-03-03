@@ -11,6 +11,7 @@ import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import InputError from '@/components/input-error';
+import { set } from 'date-fns';
 
 interface Webinar {
     id: string;
@@ -78,6 +79,7 @@ type RegisterForm = {
     name: string;
     email: string;
     phone_number: string;
+    instance?: string;
     password: string;
     password_confirmation: string;
 };
@@ -123,6 +125,7 @@ export default function RegisterWebinar({
         name: '',
         email: '',
         phone_number: '',
+        instance: '',
         password: '',
         password_confirmation: '',
     });
@@ -212,6 +215,7 @@ export default function RegisterWebinar({
                     setEmailExists(true);
                     setData('name', response.data.name || '');
                     setData('phone_number', response.data.phone_number || '');
+                    setData('instance', response.data.instance || '');
                 } else {
                     setEmailExists(false);
                 }
@@ -513,132 +517,132 @@ export default function RegisterWebinar({
         return { time: `${hours} jam ${minutes} menit lagi`, status: hours < 3 ? 'urgent' : 'normal' };
     };
 
-     useEffect(() => {
-    
-            const pendingCheckout = sessionStorage.getItem('pendingCheckout');
-    
-            if (pendingCheckout && isLoggedIn) {
-                try {
-                    const checkoutData = JSON.parse(pendingCheckout);
-    
-                    // Validasi timestamp (maksimal 5 menit)
-                    const timestamp = checkoutData.timestamp || 0;
-                    const now = Date.now();
-                    const fiveMinutes = 5 * 60 * 1000;
-    
-                    if ((now - timestamp) > fiveMinutes) {
-                        sessionStorage.removeItem('pendingCheckout');
-                        toast.error('Sesi checkout telah kadaluarsa');
-                        return;
-                    }
-        
-                    // Validasi webinar ID
-                    if (checkoutData.webinarId !== webinar.id) {
-                        sessionStorage.removeItem('pendingCheckout');
-                        return;
-                    }
-    
-                    
-                    // Restore state
-                    if (checkoutData.promoCode) {
-                        setPromoCode(checkoutData.promoCode);
-                    }
-                    if (checkoutData.discountData) {
-                        setDiscountData(checkoutData.discountData);
-                    }
-                    setTermsAccepted(checkoutData.termsAccepted || false);
-    
-                    // Toast notification
-                    toast.success('Melanjutkan pembayaran...');
-    
-                    // Auto-submit setelah delay
-                    setTimeout(async () => {
-                        setLoading(true);
-    
-                        const submitPayment = async (retryCount = 0): Promise<void> => {
-                            const originalDiscountAmount = webinar.strikethrough_price > 0
-                                ? webinar.strikethrough_price - webinar.price
-                                : 0;
-                            const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
-                            const finalPrice = webinar.price - promoDiscountAmount;
-                            const totalAmount = finalPrice + 5000; // Admin fee
-    
-                            const invoiceData: InvoiceData = {
-                                type: 'webinar',
-                                id: webinar.id,
-                                discount_amount: originalDiscountAmount + promoDiscountAmount,
-                                nett_amount: finalPrice,
-                                total_amount: totalAmount,
-                                transaction_fee: transactionFee,
-                            };
-    
-                            if (checkoutData.discountData?.valid) {
-                                invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
-                                invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
-                            }
-    
-    
-                            try {
-                                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-    
-                                const res = await fetch(route('invoice.store'), {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'X-CSRF-TOKEN': csrfToken || '',
-                                        Accept: 'application/json',
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                    },
-                                    credentials: 'same-origin',
-                                    body: JSON.stringify(invoiceData),
-                                });
-    
-    
-                                if (res.status === 419 && retryCount < 2) {
-                                    await refreshCSRFToken();
-                                    return submitPayment(retryCount + 1);
-                                }
-    
-                                if (res.status === 401 && retryCount < 2) {
-                                    await new Promise(resolve => setTimeout(resolve, 2000));
-                                    return submitPayment(retryCount + 1);
-                                }
-    
-                                const data = await res.json();
-    
-                                if (res.ok && data.success) {
-                                    if (data.payment_url) {
-                                        sessionStorage.removeItem('pendingCheckout');
-                                        window.location.href = data.payment_url;
-                                    } else {
-                                        throw new Error('Payment URL not received');
-                                    }
-                                } else {
-                                    throw new Error(data.message || 'Gagal membuat invoice.');
-                                }
-                            } catch (error) {
-                                console.error('Payment error:', error);
-                                throw error;
-                            }
-                        };
-    
-                        try {
-                            await submitPayment();
-                        } catch (error: any) {
-                            console.error('Failed to process payment:', error);
-                            toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
-                            sessionStorage.removeItem('pendingCheckout');
-                            setLoading(false);
-                        }
-                    }, 2000); // Tingkatkan delay jadi 2 detik
-    
-                } catch (error) {
-                    console.error('Error processing pending checkout:', error);
+    useEffect(() => {
+
+        const pendingCheckout = sessionStorage.getItem('pendingCheckout');
+
+        if (pendingCheckout && isLoggedIn) {
+            try {
+                const checkoutData = JSON.parse(pendingCheckout);
+
+                // Validasi timestamp (maksimal 5 menit)
+                const timestamp = checkoutData.timestamp || 0;
+                const now = Date.now();
+                const fiveMinutes = 5 * 60 * 1000;
+
+                if ((now - timestamp) > fiveMinutes) {
                     sessionStorage.removeItem('pendingCheckout');
-                    toast.error('Gagal memproses checkout');
+                    toast.error('Sesi checkout telah kadaluarsa');
+                    return;
                 }
+
+                // Validasi webinar ID
+                if (checkoutData.webinarId !== webinar.id) {
+                    sessionStorage.removeItem('pendingCheckout');
+                    return;
+                }
+
+
+                // Restore state
+                if (checkoutData.promoCode) {
+                    setPromoCode(checkoutData.promoCode);
+                }
+                if (checkoutData.discountData) {
+                    setDiscountData(checkoutData.discountData);
+                }
+                setTermsAccepted(checkoutData.termsAccepted || false);
+
+                // Toast notification
+                toast.success('Melanjutkan pembayaran...');
+
+                // Auto-submit setelah delay
+                setTimeout(async () => {
+                    setLoading(true);
+
+                    const submitPayment = async (retryCount = 0): Promise<void> => {
+                        const originalDiscountAmount = webinar.strikethrough_price > 0
+                            ? webinar.strikethrough_price - webinar.price
+                            : 0;
+                        const promoDiscountAmount = checkoutData.discountData?.discount_amount || 0;
+                        const finalPrice = webinar.price - promoDiscountAmount;
+                        const totalAmount = finalPrice + 5000; // Admin fee
+
+                        const invoiceData: InvoiceData = {
+                            type: 'webinar',
+                            id: webinar.id,
+                            discount_amount: originalDiscountAmount + promoDiscountAmount,
+                            nett_amount: finalPrice,
+                            total_amount: totalAmount,
+                            transaction_fee: transactionFee,
+                        };
+
+                        if (checkoutData.discountData?.valid) {
+                            invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
+                            invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
+                        }
+
+
+                        try {
+                            const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+
+                            const res = await fetch(route('invoice.store'), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken || '',
+                                    Accept: 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify(invoiceData),
+                            });
+
+
+                            if (res.status === 419 && retryCount < 2) {
+                                await refreshCSRFToken();
+                                return submitPayment(retryCount + 1);
+                            }
+
+                            if (res.status === 401 && retryCount < 2) {
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                return submitPayment(retryCount + 1);
+                            }
+
+                            const data = await res.json();
+
+                            if (res.ok && data.success) {
+                                if (data.payment_url) {
+                                    sessionStorage.removeItem('pendingCheckout');
+                                    window.location.href = data.payment_url;
+                                } else {
+                                    throw new Error('Payment URL not received');
+                                }
+                            } else {
+                                throw new Error(data.message || 'Gagal membuat invoice.');
+                            }
+                        } catch (error) {
+                            console.error('Payment error:', error);
+                            throw error;
+                        }
+                    };
+
+                    try {
+                        await submitPayment();
+                    } catch (error: any) {
+                        console.error('Failed to process payment:', error);
+                        toast.error(error.message || 'Terjadi kesalahan saat proses pembayaran.');
+                        sessionStorage.removeItem('pendingCheckout');
+                        setLoading(false);
+                    }
+                }, 2000); // Tingkatkan delay jadi 2 detik
+
+            } catch (error) {
+                console.error('Error processing pending checkout:', error);
+                sessionStorage.removeItem('pendingCheckout');
+                toast.error('Gagal memproses checkout');
             }
-        }, [isLoggedIn, webinar.id]);
+        }
+    }, [isLoggedIn, webinar.id]);
 
     const continuePendingPayment = () => {
         if (pendingInvoice?.invoice_url) {
@@ -883,6 +887,25 @@ export default function RegisterWebinar({
                                             )}
                                             <InputError message={errors.phone_number} />
                                         </div>
+                                    </div>
+                                    <div className="grid gap-2 pb-2">
+                                        <Label htmlFor="instance">Instansi/Perusahaan</Label>
+                                        <Input
+                                            id="instance"
+                                            type="text"
+                                            tabIndex={4}
+                                            autoComplete="organization"
+                                            value={data.instance}
+                                            onChange={(e) => setData('instance', e.target.value)}
+                                            disabled={processing || emailExists}
+                                            placeholder="Instansi atau perusahaan Anda"
+                                        />
+                                        {!emailExists && (
+                                            <p className="text-xs text-gray-500">
+                                                Kosongkan jika tidak memiliki instansi
+                                            </p>
+                                        )}
+                                        <InputError message={errors.instance} />
                                     </div>
                                 </form>
                             </div>

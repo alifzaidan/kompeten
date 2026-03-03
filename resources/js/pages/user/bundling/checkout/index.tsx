@@ -66,6 +66,7 @@ type RegisterForm = {
     name: string;
     email: string;
     phone_number: string;
+    instance: string;
     password: string;
     password_confirmation: string;
 };
@@ -91,6 +92,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
         name: '',
         email: '',
         phone_number: '',
+        instance: '',
         password: '',
         password_confirmation: '',
     });
@@ -112,6 +114,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                     setEmailExists(true);
                     setData('name', response.data.name || '');
                     setData('phone_number', response.data.phone_number || '');
+                    setData('instance', response.data.instance || '');
                 } else {
                     setEmailExists(false);
                 }
@@ -625,6 +628,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                         </div>
                         {!isLoggedIn && (
                             <form className="flex flex-col gap-6 p-6 mt-6 rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95" onSubmit={submit}>
+                                <h1 className="text-xl font-bold">Masukkan Data Diri Anda</h1>
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Email</Label>
                                     <div className="flex gap-2">
@@ -738,6 +742,26 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                             </p>
                                         )}
                                         <InputError message={errors.phone_number} />
+                                    </div>
+
+                                    <div className="grid gap-2 pb-2">
+                                        <Label htmlFor="instance">Instansi/Perusahaan</Label>
+                                        <Input
+                                            id="instance"
+                                            type="text"
+                                            tabIndex={4}
+                                            autoComplete="organization"
+                                            value={data.instance}
+                                            onChange={(e) => setData('instance', e.target.value)}
+                                            disabled={processing || emailExists}
+                                            placeholder="Instansi atau perusahaan Anda"
+                                        />
+                                        {!emailExists && (
+                                            <p className="text-xs text-gray-500">
+                                                Kosongkan jika tidak memiliki instansi
+                                            </p>
+                                        )}
+                                        <InputError message={errors.instance} />
                                     </div>
                                 </div>
                             </form>
