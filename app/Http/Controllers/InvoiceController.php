@@ -1623,8 +1623,16 @@ class InvoiceController extends Controller
     }
     public function export(Request $request)
     {
-        $filters = $request->only(['start_date', 'end_date', 'status', 'payment_type', 'product_type']);
-
+        $filters = $request->only([
+            'start_date',
+            'end_date',
+            'status',
+            'payment_type',
+            'product_type',
+            'bootcamp_id',
+            'webinar_id',
+            'course_id'
+        ]);
         $filename = 'Laporan_Transaksi';
 
         if ($request->start_date && $request->end_date) {

@@ -48,9 +48,10 @@ export const status = [
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    courseId?: string;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, courseId }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -62,6 +63,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     const [isStartDateOpen, setIsStartDateOpen] = useState(false);
     const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
+    // Filter data by date range (client-side)
     const filteredData = useMemo(() => {
         if (!startDate || !endDate) {
             return data;
@@ -142,6 +144,10 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         if (paymentTypeFilter) params.append('payment_type', String(paymentTypeFilter));
 
         params.append('product_type', 'course');
+
+        if (courseId) {
+            params.append('course_id', courseId);
+        }
 
         window.location.href = route('transactions.export') + '?' + params.toString();
     };
