@@ -71,6 +71,20 @@ type RegisterForm = {
     password_confirmation: string;
 };
 
+interface DiscountData {
+    valid: boolean;
+    discount_amount: number;
+    final_amount: number;
+    discount_code: {
+        id: string;
+        code: string;
+        name: string;
+        type: string;
+        formatted_value: string;
+    };
+    message?: string;
+}
+
 export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, referralInfo }: CheckoutBundleProps) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
@@ -82,11 +96,66 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
     const bundleDiscount = bundle.strikethrough_price - bundle.price;
 
     const transactionFee = 5000;
-    const totalPrice = bundle.price + transactionFee;
 
     const [emailExists, setEmailExists] = useState(false);
     const [checkingEmail, setCheckingEmail] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    const [promoCode, setPromoCode] = useState('');
+    const [promoLoading, setPromoLoading] = useState(false);
+    const [promoError, setPromoError] = useState('');
+    const [discountData, setDiscountData] = useState<DiscountData | null>(null);
+    const totalPrice = bundle.price + transactionFee - (discountData?.discount_amount || 0);
+
+    useEffect(() => {
+        if (!promoCode.trim()) {
+            setDiscountData(null);
+            setPromoError('');
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            validatePromoCode();
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [promoCode]);
+
+    const validatePromoCode = async () => {
+        if (!promoCode.trim()) return;
+
+        setPromoLoading(true);
+        setPromoError('');
+
+        try {
+            const requestData: any = {
+                code: promoCode,
+                amount: bundle.price,
+                product_type: 'bundle',
+                product_id: bundle.id,
+            };
+
+            if (!isLoggedIn && emailExists && data.email) {
+                requestData.email = data.email;
+            }
+
+            const response = await axios.post('/api/discount-codes/validate', requestData);
+
+            if (response.data.valid) {
+                setDiscountData(response.data);
+                setPromoError('');
+            } else {
+                setDiscountData(null);
+                setPromoError(response.data.message || 'Kode promo tidak valid');
+            }
+        } catch (error: any) {
+            setDiscountData(null);
+            setPromoError(error.response?.data?.message || 'Terjadi kesalahan saat memvalidasi kode promo');
+        } finally {
+            setPromoLoading(false);
+        }
+    };
+
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
@@ -199,6 +268,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                             productType: 'bundle',
                             termsAccepted,
                             timestamp: Date.now(),
+                            discountData: discountData,
+                            source: 'login'
                         }),
                     );
 
@@ -227,6 +298,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                             productType: 'bundle',
                             termsAccepted,
                             timestamp: Date.now(),
+                            discountData: discountData,
+                            source: 'register'
                         }),
                     );
 
@@ -269,9 +342,13 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
             const invoiceData = {
                 bundle_id: bundle.id,
                 discount_amount: bundleDiscount,
-                nett_amount: bundle.price,
+                nett_amount: bundle.price - (discountData?.discount_amount || 0),
                 transaction_fee: transactionFee,
                 total_amount: totalPrice,
+                ...(discountData?.valid ? {
+                    discount_code_id: discountData.discount_code.id,
+                    discount_code_amount: discountData.discount_amount,
+                } : {}),
             };
 
             try {
@@ -370,6 +447,10 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                     return;
                 }
 
+                if (checkoutData.source !== 'register') {
+                    sessionStorage.removeItem('pendingCheckout');
+                    return;
+                }
 
                 // Restore state
                 setTermsAccepted(checkoutData.termsAccepted || false);
@@ -891,7 +972,71 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Ringkasan Pembayaran</h2>
                                     </div>
 
+
                                     <div className="space-y-4 p-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="promo-code" className="text-sm font-medium">
+                                                Punya Kode Promo?
+                                            </Label>
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <Input
+                                                        id="promo-code"
+                                                        type="text"
+                                                        placeholder="Masukkan kode promo"
+                                                        value={promoCode}
+                                                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                        className="pr-10"
+                                                    />
+                                                    {promoLoading && (
+                                                        <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                            <LoaderCircle className="h-4 w-4 animate-spin text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                    {!promoLoading && promoCode && (
+                                                        <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                                                            {discountData?.valid ? (
+                                                                <Check className="h-5 w-5 text-green-600" />
+                                                            ) : promoError ? (
+                                                                <X className="h-5 w-5 text-red-600" />
+                                                            ) : null}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={async () => {
+                                                        if (!promoCode.trim()) {
+                                                            toast.error('Masukkan kode promo terlebih dahulu');
+                                                            return;
+                                                        }
+                                                        await validatePromoCode();
+                                                    }}
+                                                    disabled={promoLoading || !promoCode.trim()}
+                                                    className="flex-shrink-0"
+                                                >
+                                                    <RefreshCw className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            {promoError && <p className="text-sm text-red-600">{promoError}</p>}
+                                            {discountData?.valid && (
+                                                <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+                                                    <div className="flex items-center gap-2">
+                                                        <Check className="h-4 w-4 text-green-600" />
+                                                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                                                            Promo "{discountData.discount_code.code}" diterapkan!
+                                                        </p>
+                                                    </div>
+                                                    <p className="mt-1 text-xs text-green-600 dark:text-green-300">
+                                                        {discountData.discount_code.name}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <Separator />
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-gray-600 dark:text-gray-400">Harga Normal</span>
@@ -913,6 +1058,17 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                                     Rp {bundle.price.toLocaleString('id-ID')}
                                                 </span>
                                             </div>
+
+                                            {discountData?.valid && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-gray-600 dark:text-gray-400">
+                                                        Diskon Promo ({discountData.discount_code.code})
+                                                    </span>
+                                                    <span className="font-semibold text-green-600">
+                                                        -Rp {discountData.discount_amount.toLocaleString('id-ID')}
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi</span>
