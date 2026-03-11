@@ -212,19 +212,19 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
 
         // Sync column filters from URL
         const newColumnFilters: ColumnFiltersState = [];
-        
+
         if (filters?.status) {
             newColumnFilters.push({ id: 'status', value: filters.status });
         }
-        
+
         if (filters?.payment_type) {
             newColumnFilters.push({ id: 'payment_type', value: filters.payment_type });
         }
-        
+
         if (filters?.product_type) {
             newColumnFilters.push({ id: 'product_type', value: filters.product_type });
         }
-        
+
         setColumnFilters(newColumnFilters);
     }, [filters?.start_date, filters?.end_date, filters?.status, filters?.payment_type, filters?.product_type]);
 
@@ -359,6 +359,12 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
                     placeholder="Cari nama pembeli..."
                     value={(table.getColumn('user_name')?.getFilterValue() as string) ?? ''}
                     onChange={(event) => table.getColumn('user_name')?.setFilterValue(event.target.value)}
+                    className="lg:max-w-sm"
+                />
+                <Input
+                    placeholder="Cari nama produk..."
+                    value={(table.getColumn('items')?.getFilterValue() as string) ?? ''}
+                    onChange={(event) => table.getColumn('items')?.setFilterValue(event.target.value)}
                     className="lg:max-w-sm"
                 />
                 <div className="flex flex-col items-center gap-2 lg:flex-row">
