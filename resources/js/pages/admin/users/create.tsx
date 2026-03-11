@@ -84,7 +84,7 @@ export default function CreateUser({ setOpen }: CreateUserProps) {
                     <InputError message={errors.email} />
 
                     <Label htmlFor="instance" className="sr-only">
-                        Instance
+                        Instansi
                     </Label>
                     <Input
                         id="instance"
@@ -93,7 +93,7 @@ export default function CreateUser({ setOpen }: CreateUserProps) {
                         ref={emailInput}
                         value={data.instance}
                         onChange={(e) => setData('instance', e.target.value)}
-                        placeholder="Instance"
+                        placeholder="Instansi"
                         autoComplete="off"
                     />
                     <InputError message={errors.instance} />

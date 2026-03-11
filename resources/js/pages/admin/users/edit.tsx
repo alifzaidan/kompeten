@@ -107,7 +107,7 @@ export default function EditUser({ user, setOpen }: EditUserProps) {
                     <InputError message={errors.phone_number} />
                     
                     <Label htmlFor="instance" className="sr-only">
-                        Instance
+                        Instansi
                     </Label>
                     <Input
                         id="instance"
@@ -116,7 +116,7 @@ export default function EditUser({ user, setOpen }: EditUserProps) {
                         ref={phoneInput}
                         value={data.instance}
                         onChange={(e) => setData('instance', e.target.value)}
-                        placeholder="Instance"
+                        placeholder="Instansi"
                         autoComplete="off"
                     />
                     <InputError message={errors.instance} />
