@@ -339,17 +339,18 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
         }
 
         const submitPayment = async (retryCount = 0): Promise<void> => {
-            const invoiceData = {
+           const invoiceData: any = {
                 bundle_id: bundle.id,
                 discount_amount: bundleDiscount,
                 nett_amount: bundle.price - (discountData?.discount_amount || 0),
                 transaction_fee: transactionFee,
                 total_amount: totalPrice,
-                ...(discountData?.valid ? {
-                    discount_code_id: discountData.discount_code.id,
-                    discount_code_amount: discountData.discount_amount,
-                } : {}),
             };
+
+            if (discountData?.valid) {
+                invoiceData.discount_code_id = discountData.discount_code.id;
+                invoiceData.discount_code_amount = discountData.discount_amount;
+            }
 
             try {
                 const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
@@ -455,6 +456,11 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                 // Restore state
                 setTermsAccepted(checkoutData.termsAccepted || false);
 
+                // Restore promo code jika ada
+                if (checkoutData.discountData?.valid) {
+                    setPromoCode(checkoutData.discountData.discount_code.code);
+                    setDiscountData(checkoutData.discountData);
+                }
                 toast.success('Melanjutkan pembayaran...');
 
                 // Auto-submit setelah delay
@@ -462,13 +468,27 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                     setLoading(true);
 
                     const submitPayment = async (retryCount = 0): Promise<void> => {
-                        const invoiceData = {
+                        // Hitung ulang total dengan diskon dari sessionStorage
+                        let calculatedNettAmount = bundle.price;
+                        let calculatedTotalAmount = bundle.price + transactionFee;
+
+                        if (checkoutData.discountData?.valid) {
+                            calculatedNettAmount = bundle.price - checkoutData.discountData.discount_amount;
+                            calculatedTotalAmount = calculatedNettAmount + transactionFee;
+                        }
+
+                        const invoiceData: any = {
                             bundle_id: bundle.id,
                             discount_amount: bundleDiscount,
-                            nett_amount: bundle.price,
+                            nett_amount: calculatedNettAmount,
                             transaction_fee: transactionFee,
-                            total_amount: totalPrice,
+                            total_amount: calculatedTotalAmount,
                         };
+
+                        if (checkoutData.discountData?.valid) {
+                            invoiceData.discount_code_id = checkoutData.discountData.discount_code.id;
+                            invoiceData.discount_code_amount = checkoutData.discountData.discount_amount;
+                        }
 
 
                         try {
@@ -531,7 +551,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
             }
         }
 
-    }, [isLoggedIn, bundle.id, bundle.price, bundleDiscount, transactionFee, totalPrice]);
+    }, [isLoggedIn, bundle.id]);
 
 
     // if (!isLoggedIn) {
