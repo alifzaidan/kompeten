@@ -23,6 +23,11 @@ interface Bootcamp {
     end_date: string;
     level?: 'beginner' | 'intermediate' | 'advanced';
     category: Category;
+    mentors?: {
+        name: string;
+        avatar?: string;
+        bio?: string;
+    }[];
     user?: {
         name: string;
         avatar?: string;
@@ -168,6 +173,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                     visibleBootcamps.map((bootcamp) => {
                         const hasAccess = myBootcampIds.includes(bootcamp.id);
                         const discount = calculateDiscount(bootcamp.strikethrough_price, bootcamp.price);
+                        const mentors = bootcamp.mentors && bootcamp.mentors.length > 0 ? bootcamp.mentors : bootcamp.user ? [bootcamp.user] : [];
 
                         return (
                             <Link
@@ -259,24 +265,40 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                             </div>
 
                                             {/* Mentor Info */}
-                                            {bootcamp.user && (
+                                            {mentors.length > 0 && (
                                                 <div className="mt-2 flex items-center gap-3 border-t-2 border-neutral-200 pt-3 dark:border-gray-700">
-                                                    <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
-                                                        {bootcamp.user.avatar ? (
-                                                            <img
-                                                                src={`/storage/${bootcamp.user.avatar}`}
-                                                                alt={bootcamp.user.name}
-                                                                className="h-full w-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="from-primary flex h-full w-full items-center justify-center bg-gradient-to-br to-orange-500 text-sm font-semibold text-white">
-                                                                {bootcamp.user.name.charAt(0).toUpperCase()}
+                                                    <div className="flex -space-x-3">
+                                                        {mentors.slice(0, 3).map((mentor, index) => (
+                                                            <div
+                                                                key={`${bootcamp.id}-mentor-${index}`}
+                                                                className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border-2 border-white bg-gray-200 dark:border-zinc-800"
+                                                            >
+                                                                {mentor.avatar ? (
+                                                                    <img
+                                                                        src={`/storage/${mentor.avatar}`}
+                                                                        alt={mentor.name}
+                                                                        className="h-full w-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="from-primary flex h-full w-full items-center justify-center bg-gradient-to-br to-orange-500 text-sm font-semibold text-white">
+                                                                        {mentor.name.charAt(0).toUpperCase()}
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
+                                                        ))}
                                                     </div>
                                                     <div className="flex flex-col">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{bootcamp.user.name}</p>
-                                                        <p className="text-primary text-xs">{bootcamp.user.bio || 'Mentor'}</p>
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                            {mentors.length === 1 ? mentors[0].name : `${mentors.length} Mentor`}
+                                                        </p>
+                                                        <p className="text-primary text-xs">
+                                                            {mentors.length === 1
+                                                                ? (mentors[0].bio ?? 'Mentor')
+                                                                : `${mentors
+                                                                      .slice(0, 2)
+                                                                      .map((mentor) => mentor.name)
+                                                                      .join(', ')}${mentors.length > 2 ? ` +${mentors.length - 2} lainnya` : ''}`}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             )}

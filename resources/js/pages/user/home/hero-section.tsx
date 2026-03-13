@@ -41,7 +41,7 @@ export default function HeroSection() {
                         <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
                         <Input
                             type="search"
-                            placeholder="Cari kelas, bootcamp, webinar, atau artikel..."
+                            placeholder="Cari kelas, bootcamp, webinar, atau bundle..."
                             readOnly
                             onClick={() => setSearchOpen(true)}
                             className="h-14 cursor-pointer rounded-full border-2 pr-4 pl-12 text-base shadow-lg transition-all hover:border-orange-300 focus:border-orange-500"

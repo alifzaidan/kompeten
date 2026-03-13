@@ -27,6 +27,7 @@ interface Product {
     duration_days?: number;
     category?: Category;
     mentor?: Mentor;
+    mentors?: Mentor[];
     type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'partnership';
     created_at: string;
 }
@@ -267,6 +268,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                         return availableProducts.map((product) => {
                             const productUrl = getProductUrl(product);
                             const discount = calculateDiscount(product.strikethrough_price, product.price);
+                            const mentors = product.mentors && product.mentors.length > 0 ? product.mentors : product.mentor ? [product.mentor] : [];
 
                             return (
                                 <Link key={product.id} href={productUrl} className="h-full">
@@ -318,26 +320,40 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
 
                                                 {getDateDisplay(product)}
 
-                                                {product.mentor && (
+                                                {mentors.length > 0 && (
                                                     <div className="mt-2 flex items-center gap-3 border-t-2 border-neutral-200 pt-3 dark:border-gray-700">
-                                                        <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
-                                                            {product.mentor.avatar ? (
-                                                                <img
-                                                                    src={`/storage/${product.mentor.avatar}`}
-                                                                    alt={product.mentor.name}
-                                                                    className="h-full w-full object-cover"
-                                                                />
-                                                            ) : (
-                                                                <div className="from-primary flex h-full w-full items-center justify-center bg-gradient-to-br to-orange-500 text-sm font-semibold text-white">
-                                                                    {product.mentor.name.charAt(0).toUpperCase()}
+                                                        <div className="flex -space-x-3">
+                                                            {mentors.slice(0, 3).map((mentor, index) => (
+                                                                <div
+                                                                    key={`${product.id}-mentor-${index}`}
+                                                                    className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border-2 border-white bg-gray-200 dark:border-zinc-800"
+                                                                >
+                                                                    {mentor.avatar ? (
+                                                                        <img
+                                                                            src={`/storage/${mentor.avatar}`}
+                                                                            alt={mentor.name}
+                                                                            className="h-full w-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="from-primary flex h-full w-full items-center justify-center bg-gradient-to-br to-orange-500 text-sm font-semibold text-white">
+                                                                            {mentor.name.charAt(0).toUpperCase()}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                            )}
+                                                            ))}
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                                {product.mentor.name}
+                                                                {mentors.length === 1 ? mentors[0].name : `${mentors.length} Mentor`}
                                                             </p>
-                                                            <p className="text-primary text-xs">Mentor</p>
+                                                            <p className="text-primary text-xs">
+                                                                {mentors.length === 1
+                                                                    ? 'Mentor'
+                                                                    : `${mentors
+                                                                          .slice(0, 2)
+                                                                          .map((mentor) => mentor.name)
+                                                                          .join(', ')}${mentors.length > 2 ? ` +${mentors.length - 2} lainnya` : ''}`}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 )}

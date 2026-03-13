@@ -64,14 +64,14 @@
         }
 
         .certificate-title {
-            font-size: 130px;
+            font-size: 110px;
             font-weight: bold;
             text-transform: uppercase;
             margin-bottom: -24px;
         }
 
         .certificate-subtitle {
-            font-size: 72px;
+            font-size: 60px;
             color: #082854;
             font-weight: 600;
             margin-bottom: 42px;
@@ -113,7 +113,7 @@
         }
 
         .participant-name {
-            font-size: 115px;
+            font-size: 85px;
             font-weight: bold;
             color: #082854;
             margin: 52px 0;
@@ -125,7 +125,7 @@
             color: #082854;
             display: block;
             margin-top: 24px;
-            font-size: 72px;
+            font-size: 60px;
             font-weight: 600;
         }
 
@@ -180,8 +180,7 @@
         .footer {
             position: relative;
             margin-left: -57mm;
-            margin-top: 200px;
-            height: 120px;
+            height: 50px;
             clear: both;
         }
 

@@ -33,12 +33,12 @@ interface Bootcamp {
     instructions?: string | null;
     requirements?: string | null;
     curriculum?: string | null;
-    user?: {
+    mentors?: {
         id: string;
         name: string;
         bio?: string;
         avatar?: string;
-    };
+    }[];
     created_at: string | Date;
 }
 
