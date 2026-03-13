@@ -56,7 +56,7 @@ class CertificatePdfService
             ];
 
             // Generate QR Code
-            $certificateUrl = "https://kompeten.id/certificate/{$dummyData['certificate_code']}";
+            $certificateUrl = "https://kompetenidn.com/certificate/{$dummyData['certificate_code']}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
             $html = $this->generateHtml($certificate, $dummyData, $qrCodeBase64, $certificateUrl);
@@ -84,7 +84,7 @@ class CertificatePdfService
             $participantData = [
                 'participant_name' => $participant->user->name,
                 'certificate_code' => $participant->certificate_code,
-                'participant_issued_at' => $participant->created_at,
+                'participant_issued_at' => $participant->issued_date,
                 'certificate_number' => str_pad($participant->certificate_number, 4, '0', STR_PAD_LEFT),
                 'completion_date' => $participant->created_at->format('d F Y'),
                 'program_name' => $this->getProgramName($certificate),
@@ -92,7 +92,7 @@ class CertificatePdfService
             ];
 
             // Generate QR Code
-            $certificateUrl = "https://kompeten.id/certificate/{$participant->certificate_code}";
+            $certificateUrl = "https://kompetenidn.com/certificate/{$participant->certificate_code}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
             $html = $this->generateHtml($certificate, $participantData, $qrCodeBase64, $certificateUrl);
