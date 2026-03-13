@@ -359,7 +359,7 @@
                 <div class="date">
                     <p class="accreditation-label">Accreditation Date</p>
                     <p class="accreditation-date">
-                        {{ \Carbon\Carbon::parse($data['participant_issued_at'])->locale('id')->translatedFormat('d F Y') }}
+                        {{ \Carbon\Carbon::parse($certificate->issued_date)->locale('id')->translatedFormat('d F Y') }}
                     </p>
                 </div>
             </div>
