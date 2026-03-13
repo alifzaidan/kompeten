@@ -48,9 +48,10 @@ export const status = [
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    webinarId?: string;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, webinarId }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -62,6 +63,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     const [isStartDateOpen, setIsStartDateOpen] = useState(false);
     const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
+    // Filter data by date range (client-side)
     const filteredData = useMemo(() => {
         if (!startDate || !endDate) {
             return data;
@@ -121,7 +123,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         setEndDate(undefined);
     };
 
-   const handleExportToExcel = () => {
+    const handleExportToExcel = () => {
         const params = new URLSearchParams();
 
         // Date filter
@@ -142,6 +144,10 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         if (paymentTypeFilter) params.append('payment_type', String(paymentTypeFilter));
 
         params.append('product_type', 'webinar');
+
+        if (webinarId) {
+            params.append('webinar_id', webinarId);
+        }
 
         window.location.href = route('transactions.export') + '?' + params.toString();
     };

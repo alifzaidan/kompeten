@@ -211,7 +211,7 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try {
             $validated = $request->validate([
-                'type' => 'required|in:course,bootcamp,webinar',
+                'type' => 'required|in:course,bootcamp,webinar,bundle',
                 'id' => 'required|string',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'nett_amount' => 'required|numeric|min:0',
@@ -465,7 +465,7 @@ class InvoiceController extends Controller
                 }
 
                 $calculatedDiscount = $discountCode->calculateDiscount($bundle->price);
-                if ($calculatedDiscount !== $discountCodeAmount) {
+                if ((int) $calculatedDiscount !== (int) $discountCodeAmount) {
                     throw new \Exception('Jumlah diskon tidak sesuai');
                 }
             }
@@ -592,7 +592,7 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'type' => 'required|string|in:course,bootcamp,webinar',
+                'type' => 'required|string|in:course,bootcamp,webinar,bundle',
                 'id' => 'required',
 
                 // New generic proof keys (preferred)
@@ -629,6 +629,10 @@ class InvoiceController extends Controller
                 $item = Webinar::findOrFail($itemId);
                 $enrollmentTable = EnrollmentWebinar::class;
                 $enrollmentField = 'webinar_id';
+            } elseif ($type === 'bundle') {
+                $item = Bundle::findOrFail($itemId);
+                $enrollmentTable = EnrollmentBundle::class;
+                $enrollmentField = 'bundle_id';
             } else {
                 throw new \Exception('Tipe pendaftaran tidak valid');
             }
@@ -678,7 +682,7 @@ class InvoiceController extends Controller
                 'progress' => 0,
             ]);
 
-            if ($type === 'webinar' || $type === 'bootcamp') {
+            if ($type === 'webinar' || $type === 'bootcamp' || $type === 'bundle') {
                 $proof1 = $request->file('requirement_1_proof') ?? $request->file('ig_follow_proof');
                 $proof2 = $request->file('requirement_2_proof') ?? $request->file('tiktok_follow_proof');
                 $proof3 = $request->file('requirement_3_proof') ?? $request->file('tag_friend_proof');
@@ -1623,8 +1627,16 @@ class InvoiceController extends Controller
     }
     public function export(Request $request)
     {
-        $filters = $request->only(['start_date', 'end_date', 'status', 'payment_type', 'product_type']);
-
+        $filters = $request->only([
+            'start_date',
+            'end_date',
+            'status',
+            'payment_type',
+            'product_type',
+            'bootcamp_id',
+            'webinar_id',
+            'course_id'
+        ]);
         $filename = 'Laporan_Transaksi';
 
         if ($request->start_date && $request->end_date) {
