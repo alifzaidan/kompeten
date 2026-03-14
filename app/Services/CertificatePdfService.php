@@ -38,13 +38,14 @@ class CertificatePdfService
     public function generatePreview(Certificate $certificate)
     {
         try {
-            $certificate->load(['design', 'sign', 'course', 'bootcamp', 'webinar']);
+            $certificate->load([
+                'design',
+                'sign',
+                'course',
+                'bootcamp.schedules',
+                'webinar'
+            ]);
 
-            if ($certificate->design && $certificate->design->image_1) {
-                $imagePath = storage_path('app/public/' . $certificate->design->image_1);
-            }
-
-            // Data dummy untuk preview
             $dummyData = [
                 'participant_name' => 'Kompeten',
                 'certificate_code' => 'KMP-25AHBEFJ',
@@ -55,7 +56,6 @@ class CertificatePdfService
                 'program_type' => $this->getProgramType($certificate)
             ];
 
-            // Generate QR Code
             $certificateUrl = "https://kompetenidn.com/certificate/{$dummyData['certificate_code']}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
@@ -78,7 +78,13 @@ class CertificatePdfService
         try {
             $certificate = $participant->certificate;
 
-            $certificate->load(['design', 'sign', 'course', 'bootcamp', 'webinar']);
+            $certificate->load([
+                'design',
+                'sign',
+                'course',
+                'bootcamp.schedules',
+                'webinar'
+            ]);
             $participant->load(['user']);
 
             $participantData = [
@@ -91,7 +97,6 @@ class CertificatePdfService
                 'program_type' => $this->getProgramType($certificate)
             ];
 
-            // Generate QR Code
             $certificateUrl = "https://kompetenidn.com/certificate/{$participant->certificate_code}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 

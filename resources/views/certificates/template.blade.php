@@ -20,9 +20,9 @@
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
             width: 297mm;
-            height: 210mm;
+            min-height: 210mm;
             position: relative;
-            overflow: hidden;
+            /* overflow: hidden; */
             background-image: url("{{ public_path('storage/' . $certificate->design->image_1) }}");
             background-size: cover;
             background-position: center;
@@ -35,6 +35,7 @@
             padding: 14mm;
             margin-top: 8mm;
             margin-left: 66mm;
+            height: 100% overflow: hidden;
         }
 
         .certificate-content {
@@ -170,13 +171,6 @@
             text-align: right;
         }
 
-        .period {
-            font-size: 42px;
-            color: #9ca3af;
-            margin-top: 24px;
-            font-style: italic;
-        }
-
         .footer {
             position: relative;
             margin-left: -57mm;
@@ -226,17 +220,6 @@
             display: block;
         }
 
-        .certificate-url {
-            font-size: 32px;
-            color: #6b7280;
-            font-weight: 600;
-        }
-
-        .certificate-period {
-            font-size: 32px;
-            margin-bottom: 2px;
-        }
-
         .signature-space {
             width: 150px;
             height: 250px;
@@ -264,14 +247,117 @@
             font-size: 42px;
         }
 
-        /* Clearfix untuk footer */
         .footer::after {
             content: "";
             display: table;
             clear: both;
         }
 
-        /* Print optimization */
+        /* ===== Halaman 2 khusus bootcamp (style baru) ===== */
+        .curriculum-page {
+            page-break-before: always;
+            width: 270mm;
+            min-height: 210mm;
+            padding: 16mm 14mm;
+            background: #f3f4f6;
+            color: #111827;
+            position: relative;
+        }
+
+        .curriculum-inner {
+            position: relative;
+            z-index: 2;
+        }
+
+        .material-title {
+            text-align: center;
+            font-size: 22pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+
+        .material-divider {
+            border: 0;
+            border-top: 1px solid #9ca3af;
+            margin-bottom: 18px;
+            margin-top: 50px;
+        }
+
+        .material-meta {
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+
+        .material-meta-row {
+            font-size: 14pt;
+            line-height: 1.2;
+        }
+
+        .material-meta-row span {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .material-meta-label {
+            display: inline-block;
+            width: 84px;
+            font-weight: 500;
+            margin-right: 150px;
+        }
+
+        .material-meta-colon {
+            display: inline-block;
+            width: 12px;
+            text-align: center;
+            margin-right: 30px;
+
+        }
+
+        .material-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13pt;
+            background: transparent;
+        }
+
+        .material-table th,
+        .material-table td {
+            border: 1px solid #9ca3af;
+            padding: 8px 10px;
+            vertical-align: top;
+        }
+
+        .material-table th {
+            font-size: 14pt;
+            font-weight: 700;
+            text-align: center;
+            background: transparent;
+        }
+
+        .material-col-no {
+            width: 52px;
+            text-align: center;
+        }
+
+        .material-col-ket {
+            width: 82px;
+            text-align: center;
+        }
+
+        .material-check {
+            font-size: 16pt;
+            font-weight: 700;
+        }
+
+        .material-empty {
+            font-size: 13pt;
+            color: #6b7280;
+            font-style: italic;
+        }
+
         @media print {
             body {
                 -webkit-print-color-adjust: exact;
@@ -282,14 +368,10 @@
 </head>
 
 <body>
+    {{-- Halaman 1 --}}
     <div class="certificate-container">
         <div class="certificate-content">
-            {{-- Header --}}
             <div class="header">
-                {{-- @if ($certificate->header_top)
-                    <div class="header-top">{{ $certificate->header_top }}</div>
-                @endif --}}
-
                 <div class="certificate-title">Certificate</div>
                 <div class="certificate-subtitle">
                     @if ($certificate->webinar_id)
@@ -300,7 +382,6 @@
                 </div>
             </div>
 
-            {{-- Content --}}
             <div class="content">
                 <div class="content-number">
                     <p class="certificate-number-text">Accreditation Number</p>
@@ -346,14 +427,6 @@
                             QR Code<br>Not Available
                         </div>
                     @endif
-
-                    {{-- @if ($certificateUrl)
-                        <div class="certificate-url">{{ $certificateUrl }}</div>
-                    @else
-                        <div class="certificate-url">
-                            https://kompetenidn.com/certificate/{{ $data['certificate_code'] }}
-                        </div>
-                    @endif --}}
                 </div>
 
                 <div class="date">
@@ -363,7 +436,7 @@
                     </p>
                 </div>
             </div>
-            {{-- Footer --}}
+
             <div class="footer">
                 <div class="signature-container">
                     <div class="signature-space">
@@ -393,12 +466,110 @@
                         <p>Whatspp: +62 895-2851-4480</p>
                         <p>Email: kompetenidn@gmail.com</p>
                     </div>
-
-                    {{-- <div class="certificate-period">{{ $certificate->period }}</div> --}}
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Halaman 2 khusus bootcamp --}}
+    @if ($certificate->bootcamp_id && $certificate->bootcamp)
+        @php
+            $bootcamp = $certificate->bootcamp;
+            $schedules = $bootcamp->schedules ? $bootcamp->schedules->sortBy('schedule_date')->values() : collect();
+
+            // Periode
+            $periodText = '-';
+            if ($schedules->count() > 0) {
+                $firstDate = \Carbon\Carbon::parse($schedules->first()->schedule_date);
+                $lastDate = \Carbon\Carbon::parse($schedules->last()->schedule_date);
+                $periodText = $firstDate->isSameDay($lastDate)
+                    ? $firstDate->locale('id')->translatedFormat('d F Y')
+                    : $firstDate->locale('id')->translatedFormat('d F Y') .
+                        ' - ' .
+                        $lastDate->locale('id')->translatedFormat('d F Y');
+            } elseif (!empty($bootcamp->start_date)) {
+                $startDate = \Carbon\Carbon::parse($bootcamp->start_date);
+                $endDate = !empty($bootcamp->end_date) ? \Carbon\Carbon::parse($bootcamp->end_date) : null;
+                $periodText = $endDate
+                    ? $startDate->locale('id')->translatedFormat('d F Y') .
+                        ' - ' .
+                        $endDate->locale('id')->translatedFormat('d F Y')
+                    : $startDate->locale('id')->translatedFormat('d F Y');
+            }
+
+            // Materi dari <li> curriculum, fallback ke jadwal
+            $curriculumItems = collect();
+            if (!empty($bootcamp->curriculum)) {
+                preg_match_all('/<li[^>]*>(.*?)<\/li>/si', $bootcamp->curriculum, $matches);
+                if (!empty($matches[1])) {
+                    $curriculumItems = collect($matches[1])
+                        ->map(fn($item) => trim(preg_replace('/\s+/', ' ', strip_tags($item))))
+                        ->filter()
+                        ->values();
+                }
+            }
+
+            $materials = $curriculumItems->isNotEmpty()
+                ? $curriculumItems
+                : $schedules
+                    ->map(function ($schedule) {
+                        $date = \Carbon\Carbon::parse($schedule->schedule_date)
+                            ->locale('id')
+                            ->translatedFormat('d F Y');
+                        $day = ucfirst($schedule->day);
+                        $time =
+                            \Carbon\Carbon::parse($schedule->start_time)->format('H:i') .
+                            ' - ' .
+                            \Carbon\Carbon::parse($schedule->end_time)->format('H:i') .
+                            ' WIB';
+                        return "Sesi {$day}, {$date} ({$time})";
+                    })
+                    ->values();
+        @endphp
+
+        <div class="curriculum-page">
+            <div class="curriculum-inner">
+                <div class="material-title">MATERI PEMBELAJARAN</div>
+                <hr class="material-divider">
+
+                <div class="material-meta">
+                    <div class="material-meta-row">
+                        <span class="material-meta-label">Nama</span>
+                        <span class="material-meta-colon">:</span>
+                        <span>{{ $data['participant_name'] }}</span>
+                    </div>
+                    <div class="material-meta-row">
+                        <span class="material-meta-label">Periode</span>
+                        <span class="material-meta-colon">:</span>
+                        <span>{{ $periodText }}</span>
+                    </div>
+                </div>
+
+                @if ($materials->count() > 0)
+                    <table class="material-table">
+                        <thead>
+                            <tr>
+                                <th class="material-col-no">No</th>
+                                <th>Materi</th>
+                                <th class="material-col-ket">Ket.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($materials as $index => $material)
+                                <tr>
+                                    <td class="material-col-no">{{ $index + 1 }}</td>
+                                    <td>{{ $material }}</td>
+                                    <td class="material-col-ket"><span class="material-check">✔</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <div class="material-empty">Materi belum tersedia.</div>
+                @endif
+            </div>
+        </div>
+    @endif
 </body>
 
 </html>
