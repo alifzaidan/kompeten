@@ -99,7 +99,6 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
 
     const [emailExists, setEmailExists] = useState(false);
     const [checkingEmail, setCheckingEmail] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
 
     const [promoCode, setPromoCode] = useState('');
     const [promoLoading, setPromoLoading] = useState(false);
@@ -241,7 +240,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
 
         // Jika belum login, lakukan registrasi/login terlebih dahulu
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number) {
+            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -856,12 +855,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                             onChange={(e) => setData('instance', e.target.value)}
                                             disabled={processing || emailExists}
                                             placeholder="Instansi atau perusahaan Anda"
+                                            required
                                         />
-                                        {!emailExists && (
-                                            <p className="text-xs text-gray-500">
-                                                Kosongkan jika tidak memiliki instansi
-                                            </p>
-                                        )}
                                         <InputError message={errors.instance} />
                                     </div>
                                 </div>

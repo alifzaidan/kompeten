@@ -7,7 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { SharedData } from '@/types';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { BadgeCheck, Calendar, Check, Hourglass, LoaderCircle, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
-import { FormEventHandler, useCallback, useEffect, useState } from 'react';
+import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import InputError from '@/components/input-error';
@@ -129,7 +129,6 @@ export default function RegisterBootcamp({
     const finalBootcampPrice = basePrice - discountAmount;
     const adminFee = isFree ? 0 : 5000;
     const totalPrice = isFree ? 0 : finalBootcampPrice + adminFee;
-    const [showPassword, setShowPassword] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
@@ -170,7 +169,7 @@ export default function RegisterBootcamp({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [data.email]);
+    }, [data.email, setData]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -297,7 +296,7 @@ export default function RegisterBootcamp({
 
         // Jika belum login, lakukan registrasi/login terlebih dahulu
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number) {
+            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -956,12 +955,8 @@ export default function RegisterBootcamp({
                                                 onChange={(e) => setData('instance', e.target.value)}
                                                 disabled={processing || emailExists}
                                                 placeholder="Instansi atau perusahaan Anda"
+                                                required
                                             />
-                                            {!emailExists && (
-                                                <p className="text-xs text-gray-500">
-                                                    Kosongkan jika tidak memiliki instansi
-                                                </p>
-                                            )}
                                             <InputError message={errors.instance} />
                                         </div>
                                     </div>

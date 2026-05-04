@@ -11,7 +11,6 @@ import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import InputError from '@/components/input-error';
-import { set } from 'date-fns';
 
 interface Webinar {
     id: string;
@@ -228,7 +227,7 @@ export default function RegisterWebinar({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [data.email]);
+    }, [data.email, setData]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -297,7 +296,7 @@ export default function RegisterWebinar({
 
         // Jika belum login, lakukan registrasi/login terlebih dahulu
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number) {
+            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -905,12 +904,8 @@ export default function RegisterWebinar({
                                             onChange={(e) => setData('instance', e.target.value)}
                                             disabled={processing || emailExists}
                                             placeholder="Instansi atau perusahaan Anda"
+                                            required
                                         />
-                                        {!emailExists && (
-                                            <p className="text-xs text-gray-500">
-                                                Kosongkan jika tidak memiliki instansi
-                                            </p>
-                                        )}
                                         <InputError message={errors.instance} />
                                     </div>
                                 </form>
