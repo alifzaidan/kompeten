@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sertifikat {{ $data['participant_name'] }}</title>
     <style>
+        @font-face {
+            font-family: 'Glacial';
+            font-weight: normal;
+            font-style: normal;
+            src: url('/assets/fonts/GlacialIndifference-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Glacial';
+            font-weight: bold;
+            font-style: normal;
+            src: url('/assets/fonts/GlacialIndifference-Bold.ttf') format('truetype');
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,7 +32,7 @@
         }
 
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-family: 'Glacial';
             width: 297mm;
             min-height: 210mm;
             position: relative;
@@ -56,7 +70,7 @@
             font-size: 42px;
             color: #6b7280;
             text-transform: uppercase;
-            font-weight: 500;
+            font-weight: normal;
         }
 
         .header-bottom p {
@@ -74,7 +88,7 @@
         .certificate-subtitle {
             font-size: 60px;
             color: #082854;
-            font-weight: 600;
+            font-weight: bold;
             margin-bottom: 42px;
         }
 
@@ -98,7 +112,7 @@
             font-size: 38px;
             color: #082854;
             margin-bottom: 4px;
-            font-weight: 600;
+            font-weight: bold;
         }
 
         .certificate-number {
@@ -127,7 +141,7 @@
             display: block;
             margin-top: 24px;
             font-size: 60px;
-            font-weight: 600;
+            font-weight: bold;
         }
 
         .program-description {
@@ -256,106 +270,107 @@
         /* ===== Halaman 2 khusus bootcamp (style baru) ===== */
         .curriculum-page {
             page-break-before: always;
-            width: 270mm;
+            width: 297mm;
             min-height: 210mm;
-            padding: 16mm 14mm;
-            background: #f3f4f6;
-            color: #111827;
+            @if(!empty($certificate->design->image_2))
+                background-image: url("{{ public_path('storage/' . $certificate->design->image_2) }}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            @else background: #f3f4f6;
+            @endif color: #111827;
             position: relative;
         }
 
         .curriculum-inner {
             position: relative;
             z-index: 2;
+            padding: 16mm 20mm;
         }
 
         .material-title {
             text-align: center;
-            font-size: 22pt;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            margin-top: 10px;
+            font-size: 31pt;
+            font-weight: bold;
+            color: #082854;
+            margin-top: 50px;
             margin-bottom: 12px;
         }
 
-        .material-divider {
-            border: 0;
-            border-top: 1px solid #9ca3af;
-            margin-bottom: 18px;
-            margin-top: 50px;
-        }
-
-        .material-meta {
-            margin-top: 50px;
-            margin-bottom: 50px;
-        }
-
-        .material-meta-row {
-            font-size: 14pt;
-            line-height: 1.2;
-        }
-
-        .material-meta-row span {
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .material-meta-label {
-            display: inline-block;
-            width: 84px;
-            font-weight: 500;
-            margin-right: 150px;
-        }
-
-        .material-meta-colon {
-            display: inline-block;
-            width: 12px;
+        .material-period {
             text-align: center;
-            margin-right: 30px;
-
+            font-size: 18pt;
+            color: #082854;
+            margin-bottom: 60px;
         }
 
         .material-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13pt;
+            font-size: 15pt;
             background: transparent;
-        }
-
-        .material-table th,
-        .material-table td {
-            border: 1px solid #9ca3af;
-            padding: 8px 10px;
-            vertical-align: top;
+            color: #082854;
         }
 
         .material-table th {
-            font-size: 14pt;
-            font-weight: 700;
+            font-weight: bold;
+            font-size: 18pt;
+            color: #082854;
+            padding-top: 20px;
+            padding-bottom: 33px;
+            border-top: 2pt solid #082854;
+            border-bottom: 2pt solid #082854;
             text-align: center;
-            background: transparent;
+            padding-right: 100px;
+            padding-left: 100px;
+        }
+
+        .material-table td {
+            padding: 50px 10px;
+            border: none;
+            color: #082854;
+        }
+
+        .material-table tbody tr:first-child td {
+            padding-top: 100px;
+        }
+
+        .material-table tbody tr:last-child td {
+            border-bottom: 2pt solid #082854;
+            padding-bottom: 130px;
         }
 
         .material-col-no {
-            width: 52px;
+            width: 80px;
             text-align: center;
         }
 
-        .material-col-ket {
-            width: 82px;
+        .material-col-name {
+            text-align: left;
+            padding-left: 60px !important;
+        }
+
+        th.material-col-name {
+            text-align: center !important;
+            padding-left: 10px !important;
+        }
+
+        .material-col-status {
+            width: 120px;
             text-align: center;
         }
 
         .material-check {
-            font-size: 16pt;
-            font-weight: 700;
+            font-size: 15pt;
+            font-family: 'Sinteca';
         }
 
         .material-empty {
-            font-size: 13pt;
-            color: #6b7280;
+            font-size: 14pt;
+            color: #082854;
             font-style: italic;
+            text-align: center;
+            margin-top: 40px;
         }
 
         @media print {
@@ -416,8 +431,7 @@
                     @if ($qrCode)
                         <div class="qr-code">
                             @if (str_contains($qrCode, 'image/png'))
-                                <img src="{{ $qrCode }}" alt="QR Code"
-                                    style="width: 100%; height: 100%; object-fit: contain;">
+                                <img src="{{ $qrCode }}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;">
                             @else
                                 {!! $qrCode !!}
                             @endif
@@ -485,15 +499,15 @@
                 $periodText = $firstDate->isSameDay($lastDate)
                     ? $firstDate->locale('id')->translatedFormat('d F Y')
                     : $firstDate->locale('id')->translatedFormat('d F Y') .
-                        ' - ' .
-                        $lastDate->locale('id')->translatedFormat('d F Y');
+                    ' - ' .
+                    $lastDate->locale('id')->translatedFormat('d F Y');
             } elseif (!empty($bootcamp->start_date)) {
                 $startDate = \Carbon\Carbon::parse($bootcamp->start_date);
                 $endDate = !empty($bootcamp->end_date) ? \Carbon\Carbon::parse($bootcamp->end_date) : null;
                 $periodText = $endDate
                     ? $startDate->locale('id')->translatedFormat('d F Y') .
-                        ' - ' .
-                        $endDate->locale('id')->translatedFormat('d F Y')
+                    ' - ' .
+                    $endDate->locale('id')->translatedFormat('d F Y')
                     : $startDate->locale('id')->translatedFormat('d F Y');
             }
 
@@ -529,37 +543,24 @@
 
         <div class="curriculum-page">
             <div class="curriculum-inner">
-                <div class="material-title">MATERI PEMBELAJARAN</div>
-                <hr class="material-divider">
-
-                <div class="material-meta">
-                    <div class="material-meta-row">
-                        <span class="material-meta-label">Nama</span>
-                        <span class="material-meta-colon">:</span>
-                        <span>{{ $data['participant_name'] }}</span>
-                    </div>
-                    <div class="material-meta-row">
-                        <span class="material-meta-label">Periode</span>
-                        <span class="material-meta-colon">:</span>
-                        <span>{{ $periodText }}</span>
-                    </div>
-                </div>
+                <div class="material-title">{{ $certificate->title }}</div>
+                <div class="material-period">{{ $periodText }}</div>
 
                 @if ($materials->count() > 0)
                     <table class="material-table">
                         <thead>
                             <tr>
                                 <th class="material-col-no">No</th>
-                                <th>Materi</th>
-                                <th class="material-col-ket">Ket.</th>
+                                <th class="material-col-name">Materi Pelatihan</th>
+                                <th class="material-col-status">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($materials as $index => $material)
                                 <tr>
                                     <td class="material-col-no">{{ $index + 1 }}</td>
-                                    <td>{{ $material }}</td>
-                                    <td class="material-col-ket"><span class="material-check">✔</span></td>
+                                    <td class="material-col-name">{{ $material }}</td>
+                                    <td class="material-col-status"><span class="material-check">✓</span></td>
                                 </tr>
                             @endforeach
                         </tbody>
