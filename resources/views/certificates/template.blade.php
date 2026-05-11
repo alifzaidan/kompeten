@@ -290,43 +290,46 @@
 
         .material-title {
             text-align: center;
-            font-size: 31pt;
-            font-weight: bold;
+            font-size: 25pt;
+            font-weight: 700;
             color: #082854;
-            margin-top: 50px;
-            margin-bottom: 12px;
+            margin-top: 20px;
+            margin-bottom: 10px;
         }
 
         .material-period {
             text-align: center;
-            font-size: 18pt;
+            font-size: 15pt;
             color: #082854;
-            margin-bottom: 60px;
+            margin-bottom: 100px;
         }
 
         .material-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 15pt;
+            font-size: 12pt;
             background: transparent;
             color: #082854;
+            padding-right: 260px;
+            padding-left: 260px;
+
         }
 
         .material-table th {
             font-weight: bold;
-            font-size: 18pt;
+            font-size: 15pt;
             color: #082854;
             padding-top: 20px;
             padding-bottom: 33px;
             border-top: 2pt solid #082854;
             border-bottom: 2pt solid #082854;
             text-align: center;
-            padding-right: 100px;
-            padding-left: 100px;
+            padding-right: 64px;
+            padding-left: 64px;
         }
 
         .material-table td {
-            padding: 50px 10px;
+            padding: 30px 10px;
             border: none;
             color: #082854;
         }
@@ -541,35 +544,47 @@
                     ->values();
         @endphp
 
-        <div class="curriculum-page">
-            <div class="curriculum-inner">
-                <div class="material-title">{{ $certificate->title }}</div>
-                <div class="material-period">{{ $periodText }}</div>
+        @if ($materials->count() > 0)
+            @foreach ($materials->chunk(6) as $chunkIndex => $chunkMaterials)
+                <div class="curriculum-page">
+                    <div class="curriculum-inner">
+                        @if ($chunkIndex === 0)
+                            <div class="material-title">{{ $certificate->title }}</div>
+                            <div class="material-period">{{ $periodText }}</div>
+                        @else
+                            <div style="margin-top: 80px;"></div>
+                        @endif
 
-                @if ($materials->count() > 0)
-                    <table class="material-table">
-                        <thead>
-                            <tr>
-                                <th class="material-col-no">No</th>
-                                <th class="material-col-name">Materi Pelatihan</th>
-                                <th class="material-col-status">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($materials as $index => $material)
+                        <table class="material-table">
+                            <thead>
                                 <tr>
-                                    <td class="material-col-no">{{ $index + 1 }}</td>
-                                    <td class="material-col-name">{{ $material }}</td>
-                                    <td class="material-col-status"><span class="material-check">✓</span></td>
+                                    <th class="material-col-no">No</th>
+                                    <th class="material-col-name">Materi Pelatihan</th>
+                                    <th class="material-col-status">Status</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
+                            </thead>
+                            <tbody>
+                                @foreach ($chunkMaterials as $index => $material)
+                                    <tr>
+                                        <td class="material-col-no">{{ ($chunkIndex * 6) + $loop->iteration }}</td>
+                                        <td class="material-col-name">{{ $material }}</td>
+                                        <td class="material-col-status"><span class="material-check">✓</span></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endforeach
+        @else
+            <div class="curriculum-page">
+                <div class="curriculum-inner">
+                    <div class="material-title">{{ $certificate->title }}</div>
+                    <div class="material-period">{{ $periodText }}</div>
                     <div class="material-empty">Materi belum tersedia.</div>
-                @endif
+                </div>
             </div>
-        </div>
+        @endif
     @endif
 </body>
 

@@ -131,7 +131,7 @@ class CertificateController extends Controller
                 $prefilledData['description'] = "Sertifikat {$course->title} yang diselenggarakan oleh Kompeten";
 
                 if (!$courses->contains('id', $courseId)) {
-                    $courses->push((object)[
+                    $courses->push((object) [
                         'id' => $course->id,
                         'title' => $course->title
                     ]);
@@ -150,7 +150,7 @@ class CertificateController extends Controller
                 $prefilledData['description'] = "Sertifikat {$bootcamp->title} yang diselenggarakan oleh Kompeten";
 
                 if (!$bootcamps->contains('id', $bootcampId)) {
-                    $bootcamps->push((object)[
+                    $bootcamps->push((object) [
                         'id' => $bootcamp->id,
                         'title' => $bootcamp->title
                     ]);
@@ -169,7 +169,7 @@ class CertificateController extends Controller
                 $prefilledData['description'] = "Sertifikat {$webinar->title} yang diselenggarakan oleh Kompeten";
 
                 if (!$webinars->contains('id', $webinarId)) {
-                    $webinars->push((object)[
+                    $webinars->push((object) [
                         'id' => $webinar->id,
                         'title' => $webinar->title
                     ]);
