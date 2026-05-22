@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Link } from '@inertiajs/react';
-import { Calendar, Clock, Package, Percent } from 'lucide-react';
+import { Calendar, Clock, Percent } from 'lucide-react';
 
 interface Category {
     id: string;
@@ -28,7 +28,7 @@ interface Product {
     category?: Category;
     mentor?: Mentor;
     mentors?: Mentor[];
-    type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'partnership';
+    type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'certification-program';
     created_at: string;
 }
 
@@ -37,7 +37,7 @@ interface MyProductIds {
     bootcamps: string[];
     webinars: string[];
     bundles: string[];
-    partnerships: string[];
+    certificationPrograms: string[];
 }
 
 interface LatestProductsProps {
@@ -51,7 +51,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
         bootcamps: myProductIds?.bootcamps || [],
         webinars: myProductIds?.webinars || [],
         bundles: myProductIds?.bundles || [],
-        partnerships: myProductIds?.partnerships || [],
+        certificationPrograms: myProductIds?.certificationPrograms || [],
     };
 
     const getProductBadge = (type: string) => {
@@ -80,10 +80,10 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                         Bundle
                     </span>
                 );
-            case 'partnership':
+            case 'certification-program':
                 return (
-                    <span className="absolute top-2 left-2 rounded-full bg-pink-100 px-2 py-1 text-xs font-medium text-pink-700 dark:bg-pink-900 dark:text-pink-300">
-                        Partnership
+                    <span className="absolute top-2 left-2 rounded-full bg-cyan-100 px-2 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300">
+                        Sertifikasi
                     </span>
                 );
             default:
@@ -135,8 +135,8 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                 return safeMyProductIds.webinars.includes(product.id);
             case 'bundle':
                 return safeMyProductIds.bundles.includes(product.id);
-            case 'partnership':
-                return safeMyProductIds.partnerships.includes(product.id);
+            case 'certification-program':
+                return safeMyProductIds.certificationPrograms.includes(product.id);
             default:
                 return false;
         }
@@ -153,8 +153,8 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                 return hasProductAccess ? `profile/my-webinars/${product.slug}` : `/webinar/${product.slug}`;
             case 'bundle':
                 return `/bundle/${product.slug}`;
-            case 'partnership':
-                return `/certification/${product.slug}`;
+            case 'certification-program':
+                return hasProductAccess ? `profile/my-certification-programs/${product.slug}` : `/certification-programs/${product.slug}`;
             default:
                 return '#';
         }
@@ -212,15 +212,6 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
             );
         }
 
-        if (product.type === 'partnership' && product.duration_days) {
-            return (
-                <div className="mt-2 flex items-center gap-2">
-                    <Package size="18" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Durasi: {product.duration_days} Hari</p>
-                </div>
-            );
-        }
-
         return null;
     };
 
@@ -237,7 +228,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
     };
 
     const safeLatestProducts = Array.isArray(latestProducts) ? latestProducts : [];
-    const availableProducts = safeLatestProducts.filter((product) => !hasAccess(product));
+    const availableProducts = safeLatestProducts.filter((product) => product.type === 'certification-program' || !hasAccess(product));
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8" id="products">
@@ -269,11 +260,14 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                             const productUrl = getProductUrl(product);
                             const discount = calculateDiscount(product.strikethrough_price, product.price);
                             const mentors = product.mentors && product.mentors.length > 0 ? product.mentors : product.mentor ? [product.mentor] : [];
+                            const hasProductAccess = hasAccess(product);
 
                             return (
                                 <Link key={product.id} href={productUrl} className="h-full">
                                     <div className="relative h-full overflow-hidden rounded-xl bg-zinc-300/30 p-[2px] dark:bg-zinc-700/30">
-                                        <div className="bg-sidebar relative flex h-full w-full flex-col rounded-lg dark:bg-zinc-800">
+                                        <div
+                                            className={`relative flex h-full w-full flex-col rounded-lg ${hasProductAccess ? 'bg-zinc-100 dark:bg-zinc-900' : 'bg-sidebar dark:bg-zinc-800'}`}
+                                        >
                                             <div className="w-full flex-shrink-0 overflow-hidden rounded-t-lg">
                                                 <div className="relative">
                                                     <img
@@ -282,6 +276,12 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                         className="w-full rounded-t-lg object-cover md:h-72"
                                                     />
                                                     {getProductBadge(product.type)}
+
+                                                    {hasProductAccess && (
+                                                        <div className="absolute top-2 right-2">
+                                                            <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                        </div>
+                                                    )}
 
                                                     {discount > 0 && (
                                                         <div className="absolute top-2 right-2">
@@ -319,6 +319,12 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                 </div>
 
                                                 {getDateDisplay(product)}
+                                                {product.type === 'certification-program' && product.registration_deadline && (
+                                                    <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                                        <Calendar className="h-3 w-3" />
+                                                        <span>Daftar s/d {new Date(product.registration_deadline).toLocaleDateString('id-ID')}</span>
+                                                    </div>
+                                                )}
 
                                                 {mentors.length > 0 && (
                                                     <div className="mt-2 flex items-center gap-3 border-t-2 border-neutral-200 pt-3 dark:border-gray-700">

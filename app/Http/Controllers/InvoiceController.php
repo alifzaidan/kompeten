@@ -8,11 +8,15 @@ use App\Models\Bootcamp;
 use App\Models\Bundle;
 use App\Models\Certificate;
 use App\Models\CertificateParticipant;
+use App\Models\CertificationProgram;
+use App\Models\CertificationProgramApplication;
+use App\Models\CertificationProgramScholarshipApplication;
 use App\Models\Course;
 use App\Models\DiscountCode;
 use App\Models\DiscountUsage;
 use App\Models\EnrollmentBootcamp;
 use App\Models\EnrollmentBundle;
+use App\Models\EnrollmentCertificationProgram;
 use App\Models\EnrollmentCourse;
 use App\Models\EnrollmentWebinar;
 use App\Models\FreeEnrollmentRequirement;
@@ -32,8 +36,6 @@ use Inertia\Inertia;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-use Xendit\Configuration;
-use Xendit\Invoice\InvoiceApi;
 
 class InvoiceController extends Controller
 {
@@ -65,7 +67,8 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'bundleEnrollments.bundle'
+            'bundleEnrollments.bundle',
+            'certificationProgramItems.certificationProgram'
         ]);
 
         // Apply date filter jika ada
@@ -98,7 +101,12 @@ class InvoiceController extends Controller
 
         // Apply product type filter
         if ($productType && !empty($productType)) {
-            $invoicesQuery->whereHas($productType . 'Items');
+            $relationName = match ($productType) {
+                'bundle' => 'bundleEnrollments',
+                'certification_program' => 'certificationProgramItems',
+                default => $productType . 'Items',
+            };
+            $invoicesQuery->whereHas($relationName);
         }
 
         // Get filtered invoices
@@ -211,12 +219,13 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try {
             $validated = $request->validate([
-                'type' => 'required|in:course,bootcamp,webinar,bundle',
+                'type' => 'required|in:course,bootcamp,webinar,certification_program',
                 'id' => 'required|string',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'nett_amount' => 'required|numeric|min:0',
                 'transaction_fee' => 'required|numeric|min:0',
                 'total_amount' => 'required|numeric|min:0',
+                'isScholarship' => 'nullable|boolean',
                 'discount_code_id' => 'nullable|string|exists:discount_codes,id',
                 'discount_code_amount' => 'nullable|numeric|min:0',
             ]);
@@ -224,6 +233,8 @@ class InvoiceController extends Controller
             $userId = Auth::id();
             $type = $validated['type'];
             $itemId = $validated['id'];
+            $isScholarship = (bool)($validated['isScholarship'] ?? false);
+            $itemPrice = null;
 
             $discountAmount = (float)($validated['discount_amount'] ?? 0);
             $nettAmount = (float)$validated['nett_amount'];
@@ -246,22 +257,81 @@ class InvoiceController extends Controller
                 $item = Webinar::findOrFail($itemId);
                 $enrollmentTable = EnrollmentWebinar::class;
                 $enrollmentField = 'webinar_id';
+            } elseif ($type === 'certification_program') {
+                $item = CertificationProgram::findOrFail($itemId);
+                $enrollmentTable = EnrollmentCertificationProgram::class;
+                $enrollmentField = 'certification_program_id';
+
+                if ($item->type === 'scholarship') {
+                    $isScholarship = true;
+                }
+
+                if ($item->type === 'regular' && $isScholarship) {
+                    throw new \Exception('Program ini bukan tipe beasiswa');
+                }
+
+                if (!in_array($item->status, ['published', 'hidden'], true)) {
+                    throw new \Exception('Sertifikasi tidak tersedia untuk checkout');
+                }
+
+                if ($item->registration_deadline && now()->gt($item->registration_deadline)) {
+                    throw new \Exception('Pendaftaran sertifikasi sudah ditutup');
+                }
+
+                if ($isScholarship) {
+                    $application = CertificationProgramScholarshipApplication::where('certification_program_id', $item->id)
+                        ->where('email', Auth::user()->email)
+                        ->latest()
+                        ->first();
+
+                    if (!$application) {
+                        throw new \Exception('Anda belum terdaftar sebagai peserta beasiswa');
+                    }
+
+                    if ($application->status !== 'approved') {
+                        throw new \Exception('Pengajuan beasiswa Anda belum disetujui');
+                    }
+                } elseif ($item->document_required) {
+                    $application = CertificationProgramApplication::where('certification_program_id', $item->id)
+                        ->where('user_id', $userId)
+                        ->latest()
+                        ->first();
+
+                    if (!$application) {
+                        throw new \Exception('Dokumen pendaftaran belum diajukan');
+                    }
+
+                    if ($application->status !== 'approved') {
+                        throw new \Exception('Dokumen pendaftaran Anda belum disetujui');
+                    }
+                }
             } else {
                 throw new \Exception('Tipe pembelian tidak valid');
             }
 
-            if ($item->price <= 0) {
+            $itemPrice = $item->price;
+            if ($type === 'certification_program' && $isScholarship) {
+                $itemPrice = $item->scholarship_price;
+            }
+
+            if ($itemPrice <= 0) {
                 throw new \Exception('Item ini gratis, silakan gunakan pendaftaran gratis.');
             }
 
             // Re-use existing pending invoice if available
+            $relationName = match ($type) {
+                'certification_program' => 'certificationProgramItems',
+                default => $type . 'Items',
+            };
+
             $existingInvoice = Invoice::where('user_id', $userId)
                 ->where('status', 'pending')
-                ->whereHas($type . 'Items', function ($q) use ($type, $itemId) {
+                ->whereHas($relationName, function ($q) use ($type, $itemId) {
                     $field = match ($type) {
                         'course' => 'course_id',
                         'bootcamp' => 'bootcamp_id',
                         'webinar' => 'webinar_id',
+                        'certification_program' => 'certification_program_id',
                     };
 
                     $q->where($field, $itemId);
@@ -293,7 +363,7 @@ class InvoiceController extends Controller
                 }
             }
 
-            $expectedNett = $item->price - $discountCodeAmount;
+            $expectedNett = $itemPrice - $discountCodeAmount;
             $fee = 5000;
             $expectedTotal = $expectedNett + $fee;
 
@@ -331,14 +401,22 @@ class InvoiceController extends Controller
                 'expires_at' => now()->addHours(24),
             ]);
 
-            $enrollmentTable::create([
+            $enrollmentData = [
                 'invoice_id' => $invoice->id,
                 $enrollmentField => $item->id,
                 'price' => $nettAmount,
                 'progress' => 0,
-            ]);
+            ];
 
-            $this->addToCertificateParticipants($type, $item->id, $userId);
+            if ($type === 'certification_program') {
+                $enrollmentData['is_scholarship'] = $isScholarship;
+            }
+
+            $enrollmentTable::create($enrollmentData);
+
+            if (in_array($type, ['course', 'bootcamp', 'webinar'], true)) {
+                $this->addToCertificateParticipants($type, $item->id, $userId);
+            }
 
             if ($discountCode) {
                 DiscountUsage::create([
@@ -727,7 +805,7 @@ class InvoiceController extends Controller
 
     public function show($id)
     {
-        $invoice = Invoice::with(['courseItems.course', 'bootcampItems.bootcamp', 'webinarItems.webinar'])->findOrFail($id);
+        $invoice = Invoice::with(['courseItems.course', 'bootcampItems.bootcamp', 'webinarItems.webinar', 'certificationProgramItems.certificationProgram'])->findOrFail($id);
         return Inertia::render('user/checkout/success', ['invoice' => $invoice]);
     }
 
@@ -771,8 +849,13 @@ class InvoiceController extends Controller
             if ($invoice->webinarItems->count() > 0) {
                 EnrollmentWebinar::where('invoice_id', $invoice->id)->delete();
             }
+
             if ($invoice->bundleEnrollments->count() > 0) {
                 EnrollmentBundle::where('invoice_id', $invoice->id)->delete();
+            }
+
+            if ($invoice->certificationProgramItems->count() > 0) {
+                EnrollmentCertificationProgram::where('invoice_id', $invoice->id)->delete();
             }
 
             $userId = $invoice->user_id;
@@ -1191,6 +1274,8 @@ class InvoiceController extends Controller
                 $itemType = 'Bootcamp';
             } elseif ($invoice->webinarItems->count() > 0) {
                 $itemType = 'Webinar';
+            } elseif ($invoice->certificationProgramItems->count() > 0) {
+                $itemType = 'Sertifikasi Program';
             }
 
             $message = "*[Kompeten - Pembayaran {$itemType} Gagal]*\n\n";
@@ -1318,6 +1403,26 @@ class InvoiceController extends Controller
         if ($itemType === 'bundle') {
             $message .= "3. Semua program sudah bisa diakses dari menu masing-masing\n";
             $message .= "4. Mulai belajar dan raih sertifikat untuk setiap program! 🎓\n\n";
+
+            $bundle = $typeInfo['item'];
+            $hasGroupUrl = false;
+            $groupLinks = "";
+            
+            foreach ($bundle->bundleItems as $item) {
+                $program = $item->bundleable;
+                if ($program && !empty($program->group_url)) {
+                    $hasGroupUrl = true;
+                    $groupLinks .= "👥 {$program->title}:\n{$program->group_url}\n\n";
+                }
+            }
+
+            if ($hasGroupUrl) {
+                $message .= "*Join Group Pelatihan:*\n";
+                $message .= $groupLinks;
+                $message .= "⚠️ *Penting:*\n";
+                $message .= "• Bergabung dengan group untuk mendapatkan info penting dan diskusi\n";
+                $message .= "• Aktif mengikuti seluruh kegiatan program\n\n";
+            }
         } else {
             $message .= "3. Pilih menu '{$typeInfo['menu']}'\n";
             $message .= "4. Mulai belajar dan raih sertifikat! 🎓\n\n";
@@ -1352,6 +1457,16 @@ class InvoiceController extends Controller
                 $message .= "⚠️ *Penting:* \n";
                 $message .= "• Bergabung dengan group untuk mendapatkan info penting dan diskusi\n";
                 $message .= "• Aktif mengikuti seluruh kegiatan bootcamp\n\n";
+            }
+        } elseif ($itemType === 'certification_program') {
+            $program = $typeInfo['item'];
+
+            if (!empty($program->group_url)) {
+                $message .= "*Join Group Sertifikasi:*\n";
+                $message .= "👥 {$program->group_url}\n\n";
+                $message .= "⚠️ *Penting:*\n";
+                $message .= "• Bergabung dengan group untuk mendapatkan info penting\n";
+                $message .= "• Ikuti jadwal program yang tersedia\n\n";
             }
         }
 
@@ -1605,7 +1720,8 @@ class InvoiceController extends Controller
             'user',
             'courseItems.course',
             'bootcampItems.bootcamp',
-            'webinarItems.webinar'
+            'webinarItems.webinar',
+            'certificationProgramItems.certificationProgram'
         ])->findOrFail($id);
 
         if ($invoice->status !== 'paid') {
