@@ -375,9 +375,9 @@ export default function CreateCertificate({ designs, signs, courses, bootcamps, 
                                                                             onSelect={() => {
                                                                                 form.setValue(
                                                                                     getProgramFieldName() as
-                                                                                        | 'course_id'
-                                                                                        | 'bootcamp_id'
-                                                                                        | 'webinar_id',
+                                                                                    | 'course_id'
+                                                                                    | 'bootcamp_id'
+                                                                                    | 'webinar_id',
                                                                                     option.id,
                                                                                 );
                                                                                 setIsProgramPopoverOpen(false);
