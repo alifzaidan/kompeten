@@ -267,9 +267,162 @@
             clear: both;
         }
 
-        /* ===== Halaman 2 khusus bootcamp (style baru) ===== */
+        /* Second Page Styling */
+        .second-page-container {
+            width: 100%;
+            position: relative;
+            padding: 20mm;
+        }
+
+        .second-page-header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+        }
+
+        .second-title {
+            font-size: 52px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .second-subtitle {
+            font-size: 28px;
+            color: #4b5563;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .second-content-grid {
+            margin-top: 24px;
+            width: 100%;
+        }
+
+        .column-full {
+            width: 100%;
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 380px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-nilai {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-nilai th {
+            background-color: #1e40af;
+            color: white;
+            font-size: 20px;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .table-nilai td {
+            font-size: 20px;
+            padding: 14px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+
+        .second-page-footer {
+            position: absolute;
+            bottom: 20mm;
+            left: 20mm;
+            right: 20mm;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 15px;
+        }
+
+        .meta-text {
+            font-size: 20px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .meta-right {
+            float: right;
+            text-align: right;
+        }
+
+        .meta-left {
+            float: left;
+            text-align: left;
+        }
+
+        /* Transcript vs Syllabus Premium Design Differences */
+        .transcript-header {
+            border-bottom: 3px solid #1e40af;
+        }
+        
+        .syllabus-header {
+            border-bottom: 3px solid #059669; /* Green/emerald for syllabus */
+        }
+        
+        .second-page-header.transcript-header .second-title {
+            color: #1e40af;
+        }
+        
+        .second-page-header.syllabus-header .second-title {
+            color: #059669;
+        }
+        
+        .transcript-card {
+            border-left: 6px solid #1e40af;
+        }
+        
+        .syllabus-card {
+            border-left: 6px solid #059669; /* Green/emerald accent */
+        }
+        
+        .syllabus-grid {
+            width: 100%;
+        }
+        
+        .syllabus-col {
+            float: left;
+            width: 48%;
+        }
+        
+        .syllabus-col:first-child {
+            margin-right: 4%;
+        }
+        
+        .syllabus-item {
+            margin-bottom: 20px;
+            background: #f9fafb;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .item-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 6px;
+        }
+        
+        .item-desc {
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        
+        .row-summary td {
+            font-weight: bold;
+            background-color: #f3f4f6;
+            color: #1e40af;
+            border-top: 2px solid #1e40af;
+        }
+
         .curriculum-page {
-            page-break-before: always;
             width: 297mm;
             min-height: 210mm;
             @if(!empty($certificate->design->image_2))
@@ -277,7 +430,7 @@
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
-            @else background: #f3f4f6;
+            @else background: white;
             @endif color: #111827;
             position: relative;
         }
@@ -361,6 +514,12 @@
         .material-col-status {
             width: 120px;
             text-align: center;
+        }
+
+        th.material-col-score, th.material-col-grade {
+            text-align: center !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
         }
 
         .material-check {
@@ -489,101 +648,176 @@
     </div>
 
     {{-- Halaman 2 khusus bootcamp --}}
-    @if ($certificate->bootcamp_id && $certificate->bootcamp)
-        @php
-            $bootcamp = $certificate->bootcamp;
-            $schedules = $bootcamp->schedules ? $bootcamp->schedules->sortBy('schedule_date')->values() : collect();
+    @if ($certificate->page_count == 2)
+        @if ($certificate->second_page_grade)
+            @php
+                $gradesData = collect();
+                if ($participant && !empty($participant->grades)) {
+                    $gradesData = collect($participant->grades);
+                } else {
+                    $dummyAspects = !empty($certificate->assessment_subjects)
+                        ? $certificate->assessment_subjects
+                        : [
+                            'Tugas Akhir & Portofolio Aplikasi Real-World',
+                            'Evaluasi Teori, Kuis & Pemahaman Konseptual',
+                            'Keaktifan, Kolaborasi Proyek & Partisipasi Diskusi'
+                        ];
+                    foreach ($dummyAspects as $index => $subject) {
+                        $score = 0;
+                        if ($score >= 80) {
+                            $grade = 'A';
+                        } elseif ($score >= 70) {
+                            $grade = 'B';
+                        } elseif ($score >= 45) {
+                            $grade = 'C';
+                        } elseif ($score >= 25) {
+                            $grade = 'D';
+                        } else {
+                            $grade = 'E';
+                        }
 
-            // Periode
-            $periodText = '-';
-            if ($schedules->count() > 0) {
-                $firstDate = \Carbon\Carbon::parse($schedules->first()->schedule_date);
-                $lastDate = \Carbon\Carbon::parse($schedules->last()->schedule_date);
-                $periodText = $firstDate->isSameDay($lastDate)
-                    ? $firstDate->locale('id')->translatedFormat('d F Y')
-                    : $firstDate->locale('id')->translatedFormat('d F Y') .
-                    ' - ' .
-                    $lastDate->locale('id')->translatedFormat('d F Y');
-            } elseif (!empty($bootcamp->start_date)) {
-                $startDate = \Carbon\Carbon::parse($bootcamp->start_date);
-                $endDate = !empty($bootcamp->end_date) ? \Carbon\Carbon::parse($bootcamp->end_date) : null;
-                $periodText = $endDate
-                    ? $startDate->locale('id')->translatedFormat('d F Y') .
-                    ' - ' .
-                    $endDate->locale('id')->translatedFormat('d F Y')
-                    : $startDate->locale('id')->translatedFormat('d F Y');
-            }
-
-            // Materi dari <li> curriculum, fallback ke jadwal
-            $curriculumItems = collect();
-            if (!empty($bootcamp->curriculum)) {
-                preg_match_all('/<li[^>]*>(.*?)<\/li>/si', $bootcamp->curriculum, $matches);
-                if (!empty($matches[1])) {
-                    $curriculumItems = collect($matches[1])
-                        ->map(fn($item) => trim(preg_replace('/\s+/', ' ', strip_tags($item))))
-                        ->filter()
-                        ->values();
+                        $gradesData->push([
+                            'subject' => $subject,
+                            'score' => $score,
+                            'grade' => $grade
+                        ]);
+                    }
                 }
-            }
+            @endphp
 
-            $materials = $curriculumItems->isNotEmpty()
-                ? $curriculumItems
-                : $schedules
-                    ->map(function ($schedule) {
-                        $date = \Carbon\Carbon::parse($schedule->schedule_date)
-                            ->locale('id')
-                            ->translatedFormat('d F Y');
-                        $day = ucfirst($schedule->day);
-                        $time =
-                            \Carbon\Carbon::parse($schedule->start_time)->format('H:i') .
-                            ' - ' .
-                            \Carbon\Carbon::parse($schedule->end_time)->format('H:i') .
-                            ' WIB';
-                        return "Sesi {$day}, {$date} ({$time})";
-                    })
-                    ->values();
-        @endphp
+            @if ($gradesData->count() > 0)
+                @foreach ($gradesData->chunk(6) as $chunkIndex => $chunkGrades)
+                    <div class="curriculum-page" style="{{ $chunkIndex > 0 ? 'page-break-before: always;' : '' }}">
+                        <div class="curriculum-inner">
+                            @if ($chunkIndex === 0)
+                                <div class="material-title">TRANSKRIP EVALUASI KOMPETENSI</div>
+                                <div class="material-period">Bootcamp: {{ $data['program_name'] }}</div>
+                            @else
+                                <div style="margin-top: 80px;"></div>
+                            @endif
 
-        @if ($materials->count() > 0)
-            @foreach ($materials->chunk(6) as $chunkIndex => $chunkMaterials)
+                            <table class="material-table">
+                                <thead>
+                                    <tr>
+                                        <th class="material-col-no">No</th>
+                                        <th class="material-col-name">Aspek Penilaian / Kompetensi</th>
+                                        <th class="material-col-score" style="width: 120px; text-align: center;">Nilai</th>
+                                        <th class="material-col-grade" style="width: 120px; text-align: center;">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($chunkGrades as $index => $gradeItem)
+                                        <tr>
+                                            <td class="material-col-no">{{ ($chunkIndex * 6) + $loop->iteration }}</td>
+                                            <td class="material-col-name">{{ $gradeItem['subject'] }}</td>
+                                            <td class="material-col-status" style="width: 120px; text-align: center;">
+                                                {{ $gradeItem['score'] ?? '-' }}</td>
+                                            <td class="material-col-status" style="width: 120px; text-align: center; font-weight: bold;">
+                                                {{ $gradeItem['grade'] ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+        @elseif ($certificate->second_page_material)
+            @php
+                $bootcamp = $certificate->bootcamp;
+                $schedules = $bootcamp && $bootcamp->schedules ? $bootcamp->schedules->sortBy('schedule_date')->values() : collect();
+
+                // Periode
+                $periodText = '-';
+                if ($schedules->count() > 0) {
+                    $firstDate = \Carbon\Carbon::parse($schedules->first()->schedule_date);
+                    $lastDate = \Carbon\Carbon::parse($schedules->last()->schedule_date);
+                    $periodText = $firstDate->isSameDay($lastDate)
+                        ? $firstDate->locale('id')->translatedFormat('d F Y')
+                        : $firstDate->locale('id')->translatedFormat('d F Y') .
+                        ' - ' .
+                        $lastDate->locale('id')->translatedFormat('d F Y');
+                } elseif ($bootcamp && !empty($bootcamp->start_date)) {
+                    $startDate = \Carbon\Carbon::parse($bootcamp->start_date);
+                    $endDate = !empty($bootcamp->end_date) ? \Carbon\Carbon::parse($bootcamp->end_date) : null;
+                    $periodText = $endDate
+                        ? $startDate->locale('id')->translatedFormat('d F Y') .
+                        ' - ' .
+                        $endDate->locale('id')->translatedFormat('d F Y')
+                        : $startDate->locale('id')->translatedFormat('d F Y');
+                }
+
+                // Materi dari <li> curriculum, fallback ke jadwal
+                $curriculumItems = collect();
+                if ($bootcamp && !empty($bootcamp->curriculum)) {
+                    preg_match_all('/<li[^>]*>(.*?)<\/li>/si', $bootcamp->curriculum, $matches);
+                    if (!empty($matches[1])) {
+                        $curriculumItems = collect($matches[1])
+                            ->map(fn($item) => trim(preg_replace('/\s+/', ' ', strip_tags($item))))
+                            ->filter()
+                            ->values();
+                    }
+                }
+
+                $materials = $curriculumItems->isNotEmpty()
+                    ? $curriculumItems
+                    : $schedules
+                        ->map(function ($schedule) {
+                            $date = \Carbon\Carbon::parse($schedule->schedule_date)
+                                ->locale('id')
+                                ->translatedFormat('d F Y');
+                            $day = ucfirst($schedule->day);
+                            $time =
+                                \Carbon\Carbon::parse($schedule->start_time)->format('H:i') .
+                                ' - ' .
+                                \Carbon\Carbon::parse($schedule->end_time)->format('H:i') .
+                                ' WIB';
+                            return "Sesi {$day}, {$date} ({$time})";
+                        })
+                        ->values();
+            @endphp
+
+            @if ($materials->count() > 0)
+                @foreach ($materials->chunk(6) as $chunkIndex => $chunkMaterials)
+                    <div class="curriculum-page" style="{{ $chunkIndex > 0 ? 'page-break-before: always;' : '' }}">
+                        <div class="curriculum-inner">
+                            @if ($chunkIndex === 0)
+                                <div class="material-title">{{ $certificate->title }}</div>
+                                <div class="material-period">{{ $periodText }}</div>
+                            @else
+                                <div style="margin-top: 80px;"></div>
+                            @endif
+
+                            <table class="material-table">
+                                <thead>
+                                    <tr>
+                                        <th class="material-col-no">No</th>
+                                        <th class="material-col-name">Materi Pelatihan</th>
+                                        <th class="material-col-status">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($chunkMaterials as $index => $material)
+                                        <tr>
+                                            <td class="material-col-no">{{ ($chunkIndex * 6) + $loop->iteration }}</td>
+                                            <td class="material-col-name">{{ $material }}</td>
+                                            <td class="material-col-status"><span class="material-check">✓</span></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endforeach
+            @else
                 <div class="curriculum-page">
                     <div class="curriculum-inner">
-                        @if ($chunkIndex === 0)
-                            <div class="material-title">{{ $certificate->title }}</div>
-                            <div class="material-period">{{ $periodText }}</div>
-                        @else
-                            <div style="margin-top: 80px;"></div>
-                        @endif
-
-                        <table class="material-table">
-                            <thead>
-                                <tr>
-                                    <th class="material-col-no">No</th>
-                                    <th class="material-col-name">Materi Pelatihan</th>
-                                    <th class="material-col-status">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($chunkMaterials as $index => $material)
-                                    <tr>
-                                        <td class="material-col-no">{{ ($chunkIndex * 6) + $loop->iteration }}</td>
-                                        <td class="material-col-name">{{ $material }}</td>
-                                        <td class="material-col-status"><span class="material-check">✓</span></td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div class="material-title">{{ $certificate->title }}</div>
+                        <div class="material-period">{{ $periodText }}</div>
+                        <div class="material-empty">Materi belum tersedia.</div>
                     </div>
                 </div>
-            @endforeach
-        @else
-            <div class="curriculum-page">
-                <div class="curriculum-inner">
-                    <div class="material-title">{{ $certificate->title }}</div>
-                    <div class="material-period">{{ $periodText }}</div>
-                    <div class="material-empty">Materi belum tersedia.</div>
-                </div>
-            </div>
+            @endif
         @endif
     @endif
 </body>
