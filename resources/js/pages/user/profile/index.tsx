@@ -9,13 +9,15 @@ import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { BookTextIcon, ExternalLink, GraduationCap, MessageCircle, MonitorPlay, Play, Presentation } from 'lucide-react';
+import { BookTextIcon, BriefcaseBusiness, ExternalLink, GraduationCap, MessageCircle, MonitorPlay, Play, Presentation } from 'lucide-react';
 
 interface Product {
     id: string;
     title: string;
     slug: string;
-    type: 'course' | 'bootcamp' | 'webinar';
+    type: 'course' | 'bootcamp' | 'webinar' | 'certification-program';
+    routeParam?: string;
+    is_scholarship?: boolean;
     progress?: number;
     completed_at?: string;
     start_date?: string;
@@ -31,6 +33,7 @@ interface ProfileProps {
         courses: number;
         bootcamps: number;
         webinars: number;
+        certificationPrograms: number;
         total: number;
     };
     recentProducts: Product[];
@@ -45,6 +48,8 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                 return 'Bootcamp';
             case 'webinar':
                 return 'Webinar';
+            case 'certification-program':
+                return 'Sertifikasi Program';
             default:
                 return 'Produk';
         }
@@ -58,9 +63,19 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                 return <Presentation className="h-4 w-4" />;
             case 'webinar':
                 return <MonitorPlay className="h-4 w-4" />;
+            case 'certification-program':
+                return <BriefcaseBusiness className="h-4 w-4" />;
             default:
                 return <GraduationCap className="h-4 w-4" />;
         }
+    };
+
+    const getProductDetailHref = (product: Product) => {
+        if (product.type === 'certification-program') {
+            return route('profile.certification-program.detail', { program: product.slug });
+        }
+
+        return route(`profile.${product.type}.detail`, { [product.routeParam || product.type]: product.slug });
     };
 
     const getProgressBadge = (progress: number) => {
@@ -161,6 +176,18 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                 <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Webinar yang Anda ikuti</p>
                             </CardContent>
                         </Card>
+                        <Card className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b bg-gradient-to-br from-red-50 to-red-100/50 pb-2 dark:border-gray-700 dark:from-red-900/20 dark:to-red-900/10">
+                                <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">Sertifikasi</CardTitle>
+                                <div className="rounded-full bg-white p-2.5 shadow-sm dark:bg-gray-800">
+                                    <BriefcaseBusiness className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                </div>
+                            </CardHeader>
+                            <CardContent className="pt-4">
+                                <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.certificationPrograms}</div>
+                                <p className="text-muted-foreground text-xs">Program sertifikasi yang telah Anda beli</p>
+                            </CardContent>
+                        </Card>
                     </div>
 
                     <div>
@@ -185,7 +212,7 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                         <div className="flex items-center gap-2">
                                                             {getProductTypeIcon(product.type)}
                                                             <Link
-                                                                href={route(`profile.${product.type}.detail`, { [product.type]: product.slug })}
+                                                                href={getProductDetailHref(product)}
                                                                 className="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-400"
                                                             >
                                                                 {product.title}
@@ -198,6 +225,8 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                     <TableCell className="text-gray-700 dark:text-gray-300">
                                                         {product.type === 'course' ? (
                                                             <span className="text-gray-500 dark:text-gray-400">Belajar Mandiri</span>
+                                                        ) : product.type === 'certification-program' ? (
+                                                            <span className="text-gray-500">Pendaftaran Sertifikasi</span>
                                                         ) : (
                                                             formatSchedule(product)
                                                         )}
@@ -213,6 +242,10 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                                     </span>
                                                                 </div>
                                                             </div>
+                                                        ) : product.type === 'certification-program' ? (
+                                                            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                                                                {product.is_scholarship ? 'Beasiswa' : 'Reguler'}
+                                                            </Badge>
                                                         ) : (
                                                             <Badge
                                                                 variant="outline"
@@ -231,14 +264,27 @@ export default function Profile({ stats, recentProducts }: ProfileProps) {
                                                                         Belajar
                                                                     </Link>
                                                                 </Button>
+                                                            ) : product.type === 'certification-program' ? (
+                                                                <>
+                                                                    <Button asChild size="sm" variant="outline">
+                                                                        <Link href={getProductDetailHref(product)}>
+                                                                            <ExternalLink className="mr-1 h-4 w-4" />
+                                                                            Detail
+                                                                        </Link>
+                                                                    </Button>
+                                                                    {product.group_url && (
+                                                                        <Button asChild size="sm" variant="default">
+                                                                            <a href={product.group_url} target="_blank" rel="noopener noreferrer">
+                                                                                <MessageCircle className="mr-1 h-4 w-4" />
+                                                                                Grup WA
+                                                                            </a>
+                                                                        </Button>
+                                                                    )}
+                                                                </>
                                                             ) : (
                                                                 <>
                                                                     <Button asChild size="sm" variant="outline">
-                                                                        <Link
-                                                                            href={route(`profile.${product.type}.detail`, {
-                                                                                [product.type]: product.slug,
-                                                                            })}
-                                                                        >
+                                                                        <Link href={getProductDetailHref(product)}>
                                                                             <ExternalLink className="mr-1 h-4 w-4" />
                                                                             Detail
                                                                         </Link>

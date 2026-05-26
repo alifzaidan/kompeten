@@ -6,6 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     Banknote,
     BookText,
+    BriefcaseBusiness,
     Dock,
     DollarSign,
     FileText,
@@ -15,7 +16,6 @@ import {
     MonitorPlay,
     Presentation,
     Proportions,
-    ShieldCheck,
     SquareMousePointer,
     User,
     UserCheck,
@@ -78,16 +78,16 @@ const allNavItems: (NavItem & { roles: string[] })[] = [
         roles: ['admin', 'affiliate'],
     },
     {
+        title: 'Sertifikasi Program',
+        href: '/admin/certification-programs',
+        icon: BriefcaseBusiness,
+        roles: ['admin'],
+    },
+    {
         title: 'Paket Bundling',
         href: '/admin/bundles',
         icon: Gift,
         roles: ['admin', 'affiliate'],
-    },
-    {
-        title: 'Sertifikasi Kerjasama',
-        href: '/admin/partnership-products',
-        icon: ShieldCheck,
-        roles: ['admin'],
     },
     {
         title: 'Sertifikat',
