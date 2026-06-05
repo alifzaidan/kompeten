@@ -15,7 +15,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use ZipArchive;
 use App\Exports\CertificateGradesTemplateExport;
+use App\Exports\CertificateParticipantsTemplateExport;
 use App\Imports\CertificateGradesImport;
+use App\Imports\CertificateManualParticipantsImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 
@@ -480,6 +482,64 @@ class CertificateController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal mengimport nilai: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download template Excel untuk import manual peserta
+     */
+    public function downloadParticipantsTemplate(Certificate $certificate)
+    {
+        $filename = 'Template_Import_Peserta_' . str_replace(' ', '_', $certificate->title) . '.xlsx';
+        return Excel::download(new CertificateParticipantsTemplateExport(), $filename);
+    }
+
+    /**
+     * Import manual peserta dari file Excel (tanpa koneksi ke program)
+     */
+    public function importManualParticipants(Request $request, Certificate $certificate)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv,xls',
+        ], [
+            'file.required' => 'File Excel harus dipilih.',
+            'file.mimes' => 'File harus berformat Excel (.xlsx, .xls, .csv).',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $import = new CertificateManualParticipantsImport($certificate);
+            Excel::import($import, $request->file('file'));
+
+            $errors = $import->getErrors();
+            $successCount = $import->getSuccessCount();
+            $skippedCount = $import->getSkippedCount();
+            $createdUserCount = $import->getCreatedUserCount();
+
+            if (!empty($errors) && $successCount === 0) {
+                DB::rollBack();
+                $errorMessage = "Gagal mengimport peserta:\n" . implode("\n", $errors);
+                return redirect()->back()->with('error', $errorMessage);
+            }
+
+            DB::commit();
+
+            $message = $successCount . ' peserta berhasil diimport.';
+            if ($createdUserCount > 0) {
+                $message .= "\n" . $createdUserCount . ' akun user baru dibuat otomatis.';
+            }
+            if ($skippedCount > 0) {
+                $message .= "\n" . $skippedCount . ' peserta dilewati (sudah terdaftar).';
+            }
+            if (!empty($errors)) {
+                $message .= "\n\nBeberapa data tidak dapat diproses:\n" . implode("\n", $errors);
+            }
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal mengimport peserta: ' . $e->getMessage());
         }
     }
 }
