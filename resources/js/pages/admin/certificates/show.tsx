@@ -11,6 +11,7 @@ import { id } from 'date-fns/locale';
 import { Download, Eye, SquarePen, Trash } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import ImportManualParticipantsDialog from './import-manual-participants-dialog';
 import CertificateDetail from './show-details';
 import CertificateParticipants from './show-participants';
 
@@ -130,6 +131,8 @@ export default function ShowCertificate({ certificate, flash }: CertificateProps
                                         Edit Sertifikat
                                     </Link>
                                 </Button>
+
+                                <ImportManualParticipantsDialog certificateId={certificate.id} />
 
                                 <DeleteConfirmDialog
                                     trigger={
