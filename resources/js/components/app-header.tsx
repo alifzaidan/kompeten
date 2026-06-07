@@ -117,8 +117,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
             <div className="border-sidebar-border/80 bg-background fixed top-0 right-0 left-0 z-40 border-b shadow-xs">
                 <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                     <Link href="/" prefetch className="flex items-center space-x-2">
-                        <img src="/assets/images/logo-primary.png" alt="Kompeten" className="block w-32 fill-current dark:hidden" />
-                        <img src="/assets/images/logo-secondary.png" alt="Kompeten" className="hidden w-32 fill-current dark:block" />
+                        <img src="/assets/images/logo-primary.png" alt="Kompeten" className="block w-10 fill-current dark:hidden" />
+                        <img src="/assets/images/logo-secondary.png" alt="Kompeten" className="hidden w-10 fill-current dark:block" />
                     </Link>
 
                     <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
