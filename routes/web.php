@@ -319,6 +319,7 @@ Route::middleware(['auth', 'verified', 'role:admin|mentor|affiliate'])->prefix('
 });
 
 Route::post('/api/discount-codes/validate', [DiscountCodeController::class, 'validate'])->name('api.discount-codes.validate');
+Route::get('/doku/callback', [InvoiceController::class, 'dokuReturn'])->name('doku.callback.web');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
