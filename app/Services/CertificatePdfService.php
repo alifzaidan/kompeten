@@ -16,8 +16,6 @@ class CertificatePdfService
 
     public function __construct()
     {
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', '300');
         $options = new Options();
         $options->set('defaultFont', 'DejaVu Sans');
         $options->set('isRemoteEnabled', true);
@@ -61,7 +59,7 @@ class CertificatePdfService
             $certificateUrl = "https://kompetenidn.com/certificate/{$dummyData['certificate_code']}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
-            $html = $this->generateHtml($certificate, $dummyData, $qrCodeBase64, $certificateUrl);
+            $html = $this->generateHtml($certificate, $dummyData, $qrCodeBase64, $certificateUrl, null);
 
             $this->dompdf->loadHtml($html);
             $this->dompdf->setPaper('A4', 'landscape');
@@ -102,7 +100,7 @@ class CertificatePdfService
             $certificateUrl = "https://kompetenidn.com/certificate/{$participant->certificate_code}";
             $qrCodeBase64 = $this->generateQrCode($certificateUrl);
 
-            $html = $this->generateHtml($certificate, $participantData, $qrCodeBase64, $certificateUrl);
+            $html = $this->generateHtml($certificate, $participantData, $qrCodeBase64, $certificateUrl, $participant);
 
             $this->dompdf->loadHtml($html);
             $this->dompdf->setPaper('A4', 'landscape');
@@ -138,13 +136,14 @@ class CertificatePdfService
         }
     }
 
-    private function generateHtml(Certificate $certificate, array $data, $qrCode = null, $certificateUrl = null)
+    private function generateHtml(Certificate $certificate, array $data, $qrCode = null, $certificateUrl = null, $participant = null)
     {
         return View::make('certificates.template', [
             'certificate' => $certificate,
             'data' => $data,
             'qrCode' => $qrCode,
-            'certificateUrl' => $certificateUrl
+            'certificateUrl' => $certificateUrl,
+            'participant' => $participant
         ])->render();
     }
 
