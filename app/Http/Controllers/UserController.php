@@ -46,7 +46,6 @@ class UserController extends Controller
                         'bootcampItems.bootcamp.category:id,name',
                         'webinarItems.webinar.category:id,name',
                         'certificationProgramItems.certificationProgram.category:id,name',
-                        'privateItems.privateClass.category:id,name',
                     ])
                     ->latest('paid_at');
             }])
