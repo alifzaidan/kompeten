@@ -78,11 +78,6 @@ class UserController extends Controller
                         $purchasedCategories->push($item->certificationProgram->category->name);
                     }
                 }
-                foreach ($invoice->privateItems as $item) {
-                    if ($item->privateClass && $item->privateClass->category) {
-                        $purchasedCategories->push($item->privateClass->category->name);
-                    }
-                }
             }
 
             $purchasedItems = [];
