@@ -24,11 +24,13 @@ interface Product {
     end_date?: string;
     start_time?: string;
     registration_deadline?: string;
+    socialization_registration_deadline?: string;
     duration_days?: number;
     category?: Category;
     mentor?: Mentor;
     mentors?: Mentor[];
     type: 'course' | 'bootcamp' | 'webinar' | 'bundle' | 'certification-program';
+    program_type?: 'regular' | 'scholarship';
     created_at: string;
 }
 
@@ -261,6 +263,12 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                             const discount = calculateDiscount(product.strikethrough_price, product.price);
                             const mentors = product.mentors && product.mentors.length > 0 ? product.mentors : product.mentor ? [product.mentor] : [];
                             const hasProductAccess = hasAccess(product);
+                            const certDeadline =
+                                product.type === 'certification-program'
+                                    ? product.program_type === 'scholarship'
+                                        ? product.socialization_registration_deadline
+                                        : product.registration_deadline
+                                    : undefined;
 
                             return (
                                 <Link key={product.id} href={productUrl} className="h-full">
@@ -319,10 +327,10 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                 </div>
 
                                                 {getDateDisplay(product)}
-                                                {product.type === 'certification-program' && product.registration_deadline && (
+                                                {product.type === 'certification-program' && certDeadline && (
                                                     <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                                                         <Calendar className="h-3 w-3" />
-                                                        <span>Daftar s/d {new Date(product.registration_deadline).toLocaleDateString('id-ID')}</span>
+                                                        <span>Daftar s/d {new Date(certDeadline).toLocaleDateString('id-ID')}</span>
                                                     </div>
                                                 )}
 

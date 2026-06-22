@@ -32,6 +32,7 @@ interface Program {
     strikethrough_price?: number;
     thumbnail?: string | null;
     registration_deadline?: string;
+    socialization_registration_deadline?: string;
     mentor?: Mentor;
     mentors?: Mentor[];
 }
@@ -153,7 +154,8 @@ export default function CertificationProgramSection({ categories, programs, myPr
                 ) : (
                     visiblePrograms.map((program) => {
                         const displayPrice = program.type === 'scholarship' ? (program.scholarship_price ?? program.price) : program.price;
-                        const deadlineDate = program.registration_deadline ? new Date(program.registration_deadline) : null;
+                        const deadline = program.type === 'scholarship' ? program.socialization_registration_deadline : program.registration_deadline;
+                        const deadlineDate = deadline ? new Date(deadline) : null;
                         const hasAccess = hasProgramAccess(program.id);
                         const discount =
                             program.strikethrough_price && program.strikethrough_price > displayPrice
