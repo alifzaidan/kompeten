@@ -41,12 +41,6 @@ const serviceItems = [
         icon: MonitorPlay,
         description: 'Seminar online dengan berbagai topik up to date',
     },
-    {
-        title: 'Private Class',
-        href: '/private',
-        icon: BookText,
-        description: 'Pendampingan intensif 1-on-1 secara online atau offline',
-    },
 ];
 
 const activeItemStyles = 'text-primary bg-primary/10 dark:text-white dark:bg-primary/50';

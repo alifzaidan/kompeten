@@ -40,6 +40,11 @@ interface Certificate {
     header_bottom?: string | null;
     issued_date?: string | null;
     period?: string | null;
+    is_independent?: boolean;
+    page_count?: number | string | null;
+    second_page_grade?: boolean;
+    second_page_material?: boolean;
+    assessment_subjects?: string[] | null;
     design?: { id: string; name: string; image_1: string };
     sign?: { id: string; name: string; image: string };
     course?: { id: string; title: string };
