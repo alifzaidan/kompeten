@@ -103,6 +103,9 @@ Route::get('/bundle/{bundle:slug}', [UserBundleController::class, 'detail'])->na
 Route::get('/certification-programs', [UserCertificationProgramController::class, 'index'])->name('certification-programs.index');
 Route::get('/certification-programs/{program:slug}', [UserCertificationProgramController::class, 'detail'])->name('certification-programs.detail');
 Route::get('/certificate/{code}', [CertificateParticipantController::class, 'show'])->name('certificate.participant.detail');
+Route::get('/certificate/{code}/pdf', [CertificateParticipantController::class, 'viewPdf'])->name('certificate.participant.pdf');
+Route::get('/certificate/{code}/download', [CertificateParticipantController::class, 'downloadPdf'])->name('certificate.participant.download.public');
+Route::get('/check-certificate', [CertificateParticipantController::class, 'checkForm'])->name('certificates.check');
 Route::get('/article', [UserArticleController::class, 'index'])->name('article.index');
 Route::get('/article/{slug}', [UserArticleController::class, 'show'])->name('article.show');
 Route::get('/mentor', [UserMentorController::class, 'index'])->name('mentor.index');
