@@ -50,7 +50,7 @@ export default function HeroSection({ program, onRegisterClick }: { program: Cer
                     <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Button onClick={onRegisterClick}>Daftar Sekarang</Button>
                         <Button variant="outline" asChild>
-                            <a href="https://wa.me/+6285142505794" target="_blank" rel="noopener noreferrer">
+                            <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
                                 Hubungi Kami
                             </a>
                         </Button>
