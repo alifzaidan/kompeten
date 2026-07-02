@@ -71,9 +71,10 @@ interface DetailProps {
     relatedPrograms: RelatedProgram[];
     myProgramIds: string[];
     scholarshipApplication?: { status: string } | null;
+    approvedScholarshipProgramIds?: string[];
 }
 
-export default function Detail({ program, relatedPrograms, myProgramIds, scholarshipApplication }: DetailProps) {
+export default function Detail({ program, relatedPrograms, myProgramIds, scholarshipApplication, approvedScholarshipProgramIds = [] }: DetailProps) {
     const isEnrolled = myProgramIds.includes(program.id);
     const [activeTab, setActiveTab] = useState('tentang');
 
@@ -168,7 +169,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
                 </TabsContent>
             </Tabs>
 
-            <RelatedPrograms relatedPrograms={relatedPrograms} />
+            <RelatedPrograms relatedPrograms={relatedPrograms} approvedScholarshipProgramIds={approvedScholarshipProgramIds} />
         </div>
     );
 }
