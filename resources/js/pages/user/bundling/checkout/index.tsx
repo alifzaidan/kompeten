@@ -67,6 +67,7 @@ type RegisterForm = {
     email: string;
     phone_number: string;
     instance: string;
+    city: string;
     password: string;
     password_confirmation: string;
 };
@@ -88,7 +89,7 @@ interface DiscountData {
 export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, referralInfo }: CheckoutBundleProps) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
-    const isProfileComplete = isLoggedIn && auth.user?.phone_number;
+    const isProfileComplete = isLoggedIn && auth.user?.phone_number && auth.user?.instance && auth.user?.city;
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -161,6 +162,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
         email: '',
         phone_number: '',
         instance: '',
+        city: '',
         password: '',
         password_confirmation: '',
     });
@@ -183,6 +185,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                     setData('name', response.data.name || '');
                     setData('phone_number', response.data.phone_number || '');
                     setData('instance', response.data.instance || '');
+                    setData('city', response.data.city || '');
                 } else {
                     setEmailExists(false);
                 }
@@ -240,7 +243,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
 
         // Jika belum login, lakukan registrasi/login terlebih dahulu
         if (!isLoggedIn) {
-            if (!data.email || !data.name || !data.phone_number || (!emailExists && !data.instance)) {
+            if (!data.email || !data.name || !data.phone_number || !data.instance || !data.city) {
                 toast.error('Lengkapi data terlebih dahulu');
                 return;
             }
@@ -252,6 +255,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                     const response = await axios.post('/auto-login', {
                         email: data.email,
                         phone_number: data.phone_number,
+                        instance: data.instance,
+                        city: data.city,
                     });
 
                     if (!response.data.success) {
@@ -280,6 +285,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                         name: data.name,
                         email: data.email,
                         phone_number: data.phone_number,
+                        instance: data.instance,
+                        city: data.city,
                         password: data.phone_number,
                         password_confirmation: data.phone_number,
                     });
@@ -321,7 +328,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
 
         // Validasi profil setelah login
         if (!isProfileComplete) {
-            toast.error('Profil Anda belum lengkap! Harap lengkapi nomor telepon terlebih dahulu.');
+            toast.error('Profil Anda belum lengkap! Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu.');
             window.location.href = route('profile.edit', { redirect: window.location.href });
             return;
         }
@@ -601,7 +608,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                             <div className="text-center">
                                 <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan pembelian
+                                    Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu untuk melanjutkan pembelian
                                 </p>
                             </div>
                             <Button asChild className="w-full" size="lg">
@@ -776,6 +783,8 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                                         setEmailExists(true);
                                                         setData('name', response.data.name || '');
                                                         setData('phone_number', response.data.phone_number || '');
+                                                        setData('instance', response.data.instance || '');
+                                                        setData('city', response.data.city || '');
                                                         toast.success('Email ditemukan!');
                                                     } else {
                                                         setEmailExists(false);
@@ -828,7 +837,7 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                             autoComplete="tel"
                                             value={data.phone_number}
                                             onChange={(e) => setData('phone_number', e.target.value)}
-                                            disabled={processing || emailExists}
+                                            disabled={processing}
                                             placeholder="08xxxxxxxxxx"
                                         />
                                         {!emailExists && (
@@ -853,11 +862,26 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                             autoComplete="organization"
                                             value={data.instance}
                                             onChange={(e) => setData('instance', e.target.value)}
-                                            disabled={processing || emailExists}
+                                            disabled={processing}
                                             placeholder="Instansi atau perusahaan Anda"
                                             required
                                         />
                                         <InputError message={errors.instance} />
+                                    </div>
+
+                                    <div className="grid gap-2 pb-2">
+                                        <Label htmlFor="city">Kota Domisili</Label>
+                                        <Input
+                                            id="city"
+                                            type="text"
+                                            tabIndex={5}
+                                            value={data.city}
+                                            onChange={(e) => setData('city', e.target.value)}
+                                            disabled={processing}
+                                            placeholder="Kota domisili Anda"
+                                            required
+                                        />
+                                        <InputError message={errors.city} />
                                     </div>
                                 </div>
                             </form>
