@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Package } from 'lucide-react';
+import { Calendar, Package } from 'lucide-react';
 
 interface Bundle {
     title: string;
     short_description?: string | null;
     registration_deadline?: string | null;
+    batch?: string | null;
     bundle_items_count: number;
     price: number;
     strikethrough_price: number;
@@ -52,6 +53,12 @@ export default function HeroSection({ bundle, discountPercentage, onRegisterClic
                             <Package className="mr-1 inline-block h-4 w-4" />
                             {bundle.bundle_items_count} Program
                         </span>
+                        {bundle.batch && (
+                            <span className="rounded-full border border-orange-300 bg-orange-100 px-4 py-1 text-sm font-medium text-orange-700 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                <Calendar className="mr-1 inline-block h-4 w-4" />
+                                {bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`}
+                            </span>
+                        )}
                         {discountPercentage > 0 && (
                             <span className="rounded-full border border-red-300 bg-red-100 px-4 py-1 text-sm font-medium text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
                                 Hemat {discountPercentage}%

@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { SharedData } from '@/types';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { BadgeCheck, Check, Hourglass, LoaderCircle, Package, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
+import { BadgeCheck, Calendar, Check, Hourglass, LoaderCircle, Package, RefreshCw, ShoppingCart, User, X } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -33,6 +33,7 @@ interface Bundle {
     short_description?: string | null;
     description?: string | null;
     thumbnail?: string | null;
+    batch?: string | null;
     price: number;
     strikethrough_price: number;
     registration_deadline?: string | null;
@@ -661,13 +662,28 @@ export default function CheckoutBundle({ bundle, hasAccess, pendingInvoice, refe
                                         />
                                     </div>
                                     <div className="flex-1">
-                                        <span className="mb-2 inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                                            Paket Bundling
-                                        </span>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            <span className="inline-block rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                                Paket Bundling
+                                            </span>
+                                            {bundle.batch && (
+                                                <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                                    Batch {bundle.batch}
+                                                </span>
+                                            )}
+                                        </div>
                                         <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{bundle.title}</h3>
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                            <Package size={16} />
-                                            <span>{bundle.bundle_items_count} Program</span>
+                                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="flex items-center gap-2">
+                                                <Package size={16} />
+                                                <span>{bundle.bundle_items_count} Program</span>
+                                            </div>
+                                            {bundle.batch && (
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar size={16} />
+                                                    <span>Batch {bundle.batch}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

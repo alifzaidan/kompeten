@@ -29,6 +29,7 @@ interface Bundle {
     price: number;
     strikethrough_price: number;
     registration_deadline: string | null;
+    batch?: string | null;
     status: 'draft' | 'published' | 'archived';
     bundle_items: BundleItem[];
     bundle_items_count: number;
@@ -119,7 +120,7 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                         )}
 
                                         {/* Items Count Badge */}
-                                        <div className="absolute bottom-3 left-3">
+                                        <div className="absolute bottom-3 left-3 flex items-center gap-2">
                                             <Badge
                                                 variant="secondary"
                                                 className="bg-white/90 text-gray-900 backdrop-blur-sm dark:bg-gray-900/90 dark:text-white"
@@ -127,11 +128,21 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                                 <Package size={12} className="mr-1" />
                                                 {bundle.bundle_items_count} Program
                                             </Badge>
+                                            {bundle.batch && (
+                                                <Badge className="border-orange-300 bg-orange-100 text-orange-700 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                                                    Batch {bundle.batch}
+                                                </Badge>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Content */}
                                     <div className="flex flex-1 flex-col p-4">
+                                        {bundle.batch && (
+                                            <span className="mb-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
+                                                Batch {bundle.batch}
+                                            </span>
+                                        )}
                                         <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-gray-900 dark:text-white">{bundle.title}</h3>
 
                                         {bundle.short_description && (

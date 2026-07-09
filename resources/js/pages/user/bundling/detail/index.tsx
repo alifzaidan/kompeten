@@ -38,6 +38,7 @@ interface Bundle {
     description?: string | null;
     benefits?: string | null;
     thumbnail?: string | null;
+    batch?: string | null;
     price: number;
     strikethrough_price: number;
     registration_deadline?: string | null;
