@@ -233,15 +233,15 @@ class InvoiceController extends Controller
             $userId = Auth::id();
             $type = $validated['type'];
             $itemId = $validated['id'];
-            $isScholarship = (bool)($validated['isScholarship'] ?? false);
+            $isScholarship = (bool) ($validated['isScholarship'] ?? false);
             $itemPrice = null;
 
-            $discountAmount = (float)($validated['discount_amount'] ?? 0);
-            $nettAmount = (float)$validated['nett_amount'];
-            $totalAmount = (float)$validated['total_amount'];
+            $discountAmount = (float) ($validated['discount_amount'] ?? 0);
+            $nettAmount = (float) $validated['nett_amount'];
+            $totalAmount = (float) $validated['total_amount'];
 
             $discountCodeId = $validated['discount_code_id'] ?? null;
-            $discountCodeAmount = (float)($validated['discount_code_amount'] ?? 0);
+            $discountCodeAmount = (float) ($validated['discount_code_amount'] ?? 0);
 
             $referredByUserId = $this->resolveAffiliateReferrerId($userId, true);
 
@@ -367,7 +367,7 @@ class InvoiceController extends Controller
             $fee = 5000;
             $expectedTotal = $expectedNett + $fee;
 
-            if ((float)$validated['transaction_fee'] !== (float)$fee) {
+            if ((float) $validated['transaction_fee'] !== (float) $fee) {
                 throw new \Exception('Biaya transaksi tidak valid');
             }
 
@@ -488,12 +488,12 @@ class InvoiceController extends Controller
             $userId = Auth::id();
             $bundleId = $validated['bundle_id'];
 
-            $discountAmount = (float)($validated['discount_amount'] ?? 0);
-            $nettAmount = (float)$validated['nett_amount'];
-            $totalAmount = (float)$validated['total_amount'];
+            $discountAmount = (float) ($validated['discount_amount'] ?? 0);
+            $nettAmount = (float) $validated['nett_amount'];
+            $totalAmount = (float) $validated['total_amount'];
 
             $discountCodeId = $validated['discount_code_id'] ?? null;
-            $discountCodeAmount = (float)($validated['discount_code_amount'] ?? 0);
+            $discountCodeAmount = (float) ($validated['discount_code_amount'] ?? 0);
 
             $referredByUserId = $this->resolveAffiliateReferrerId($userId, true);
 
@@ -552,7 +552,7 @@ class InvoiceController extends Controller
             $transactionFee = 5000;
             $expectedTotal = $expectedNettAmount + $transactionFee;
 
-            if ((float)$validated['transaction_fee'] !== (float)$transactionFee) {
+            if ((float) $validated['transaction_fee'] !== (float) $transactionFee) {
                 throw new \Exception('Biaya transaksi tidak valid');
             }
 
@@ -734,7 +734,7 @@ class InvoiceController extends Controller
                 'table' => 'invoices',
                 'field' => 'invoice_code',
                 'length' => 11,
-                'reset_on_prefix_change'  => true,
+                'reset_on_prefix_change' => true,
                 'prefix' => 'KMP-' . date('y')
             ]);
 
@@ -1075,13 +1075,13 @@ class InvoiceController extends Controller
             }
 
             $successStatuses = ['SUCCESS', 'PAID', 'COMPLETED', 'SETTLED', 'CAPTURED'];
-            $isSuccess = in_array(strtoupper((string)$status), $successStatuses);
+            $isSuccess = in_array(strtoupper((string) $status), $successStatuses);
 
             if ($isSuccess && $invoice->status === 'pending') {
                 $invoice->update([
-                    'paid_at'         => Carbon::now('Asia/Jakarta'),
-                    'status'          => 'paid',
-                    'payment_method'  => $channel,
+                    'paid_at' => Carbon::now('Asia/Jakarta'),
+                    'status' => 'paid',
+                    'payment_method' => $channel,
                     'payment_channel' => $channel,
                 ]);
 
@@ -1100,15 +1100,15 @@ class InvoiceController extends Controller
 
                 Log::info('DOKU Callback: Payment successful', [
                     'invoice_code' => $invoiceCode,
-                    'invoice_id'   => $invoice->id,
-                    'type'         => $invoice->getInvoiceType(),
+                    'invoice_id' => $invoice->id,
+                    'type' => $invoice->getInvoiceType(),
                 ]);
             } elseif (!$isSuccess && $invoice->status === 'pending') {
                 $invoice->update(['status' => 'failed']);
                 $this->sendWhatsAppNotification($invoice);
                 Log::info('DOKU Callback: Payment failed', [
                     'invoice_code' => $invoiceCode,
-                    'status'       => $status,
+                    'status' => $status,
                 ]);
             }
 
@@ -1407,7 +1407,7 @@ class InvoiceController extends Controller
             $bundle = $typeInfo['item'];
             $hasGroupUrl = false;
             $groupLinks = "";
-            
+
             foreach ($bundle->bundleItems as $item) {
                 $program = $item->bundleable;
                 if ($program && !empty($program->group_url)) {
@@ -1755,7 +1755,10 @@ class InvoiceController extends Controller
             'bootcamp_id',
             'webinar_id',
             'course_id',
-            'bundle_id'
+            'bundle_id',
+            'certification_program_id',
+            'title',
+            'user_name'
         ]);
         $filename = 'Laporan_Transaksi';
 
