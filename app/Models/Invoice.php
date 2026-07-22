@@ -16,11 +16,6 @@ class Invoice extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function referrer()
-    {
-        return $this->belongsTo(User::class, 'referred_by_user_id');
-    }
-
     public function courseItems()
     {
         return $this->hasMany(EnrollmentCourse::class);
@@ -34,6 +29,11 @@ class Invoice extends Model
     public function webinarItems()
     {
         return $this->hasMany(EnrollmentWebinar::class);
+    }
+
+    public function privateItems()
+    {
+        return $this->hasMany(EnrollmentPrivate::class);
     }
 
     public function certificationProgramItems()
@@ -59,11 +59,6 @@ class Invoice extends Model
     public function discountCode()
     {
         return $this->hasOneThrough(DiscountCode::class, DiscountUsage::class, 'invoice_id', 'id', 'id', 'discount_code_id');
-    }
-
-    public function affiliateEarnings()
-    {
-        return $this->hasMany(AffiliateEarning::class, 'invoice_id');
     }
 
     protected function casts(): array
@@ -92,6 +87,10 @@ class Invoice extends Model
             return 'webinar';
         }
 
+        if ($this->privateItems->count() > 0) {
+            return 'private';
+        }
+
         if ($this->certificationProgramItems->count() > 0) {
             return 'certification_program';
         }
@@ -109,6 +108,7 @@ class Invoice extends Model
             'courses' => $this->courseItems()->with('course')->get(),
             'bootcamps' => $this->bootcampItems()->with('bootcamp')->get(),
             'webinars' => $this->webinarItems()->with('webinar')->get(),
+            'privates' => $this->privateItems()->with('privateClass', 'privateClassSchedule')->get(),
             'certification_programs' => $this->certificationProgramItems()->with('certificationProgram')->get(),
         ];
     }
@@ -139,6 +139,14 @@ class Invoice extends Model
                 'type' => 'webinar',
                 'enrollment' => $item,
                 'item' => $item->webinar,
+            ];
+        }));
+
+        $items = $items->merge($this->privateItems()->with('privateClass', 'privateClassSchedule')->get()->map(function ($item) {
+            return [
+                'type' => 'private',
+                'enrollment' => $item,
+                'item' => $item->privateClass,
             ];
         }));
 
@@ -180,6 +188,9 @@ class Invoice extends Model
             case 'webinar':
                 return $this->webinarItems()->where('webinar_id', $productId)->exists();
 
+            case 'private':
+                return $this->privateItems()->where('private_class_id', $productId)->exists();
+
             case 'bundle':
                 return $this->bundleEnrollments()->where('bundle_id', $productId)->exists();
 
@@ -198,6 +209,7 @@ class Invoice extends Model
         $count += $this->courseItems->count();
         $count += $this->bootcampItems->count();
         $count += $this->webinarItems->count();
+        $count += $this->privateItems->count();
         $count += $this->certificationProgramItems->count();
 
         // Count items from bundles
@@ -228,5 +240,10 @@ class Invoice extends Model
             'expired' => 'gray',
             default => 'gray',
         };
+    }
+
+    public function referralUser()
+    {
+        return $this->belongsTo(User::class, 'referral_user_id');
     }
 }

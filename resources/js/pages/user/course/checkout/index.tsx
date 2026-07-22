@@ -3,9 +3,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import UserLayout from '@/layouts/user-layout';
 import { SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { BadgeCheck, Check, Hourglass, ShoppingCart, User, X } from 'lucide-react';
+import { BadgeCheck, Calendar, Check, Hourglass, RotateCcw, ShoppingCart, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 interface Course {
@@ -416,202 +417,131 @@ export default function CheckoutCourse({
         const loginUrl = route('login', { redirect: currentUrl });
 
         return (
-            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-                <Head title="Login Required" />
-                <section className="flex min-h-screen items-center justify-center px-4 py-12">
-                    <div className="w-full max-w-md">
-                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="rounded-full bg-blue-100 p-6 dark:bg-blue-900/30">
-                                <User size={48} className="text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="text-center">
-                                <h2 className="mb-2 text-2xl font-bold">Login Diperlukan</h2>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Silakan login terlebih dahulu untuk melanjutkan checkout kelas
-                                    {referralInfo.hasActive && '. Kode referral Anda akan tetap tersimpan'}
-                                </p>
-                            </div>
-                            <div className="flex w-full gap-3">
-                                <Button asChild className="flex-1" size="lg">
-                                    <a href={loginUrl}>Login</a>
-                                </Button>
-                                <Button asChild variant="outline" className="flex-1" size="lg">
-                                    <Link href={route('register', referralInfo.code ? { ref: referralInfo.code } : {})}>Daftar</Link>
-                                </Button>
-                            </div>
-                        </div>
+            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 py-12">
+                <Head title="Login Diperlukan" />
+                <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xs text-center space-y-6">
+                    <div className="mx-auto w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                        <User size={32} />
                     </div>
-                </section>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Login Diperlukan</h2>
+                        <p className="text-sm text-gray-500">
+                            Silakan login terlebih dahulu untuk melanjutkan checkout kelas
+                            {referralInfo.hasActive && '. Kode referral Anda akan tetap tersimpan'}
+                        </p>
+                    </div>
+                    <div className="flex gap-4">
+                        <Button asChild className="flex-1 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold">
+                            <a href={loginUrl}>Login</a>
+                        </Button>
+                        <Button asChild variant="outline" className="flex-1 rounded-full border-gray-200 text-gray-700">
+                            <Link href={route('register', referralInfo.code ? { ref: referralInfo.code } : {})}>Daftar</Link>
+                        </Button>
+                    </div>
+                </div>
             </div>
         );
     }
 
     if (!isProfileComplete) {
         return (
-            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-                <Head title="Checkout Kelas" />
-                <section className="flex min-h-screen items-center justify-center px-4 py-12">
-                    <div className="w-full max-w-md">
-                        <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border bg-white/95 p-8 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="rounded-full bg-orange-100 p-6 dark:bg-orange-900/30">
-                                <User size={48} className="text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <div className="text-center">
-                                <h2 className="mb-2 text-2xl font-bold">Profil Belum Lengkap</h2>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan checkout
-                                </p>
-                            </div>
-                            <Button asChild className="w-full" size="lg">
-                                <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
-                            </Button>
-                        </div>
+            <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 py-12">
+                <Head title="Profil Belum Lengkap" />
+                <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xs text-center space-y-6">
+                    <div className="mx-auto w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
+                        <User size={32} />
                     </div>
-                </section>
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Profil Belum Lengkap</h2>
+                        <p className="text-sm text-gray-500">
+                            Harap lengkapi nomor telepon terlebih dahulu untuk melanjutkan checkout kelas.
+                        </p>
+                    </div>
+                    <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
+                        <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
+                    </Button>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
+        <UserLayout>
             <Head title="Checkout Kelas" />
-
-            <section className="mx-auto w-full max-w-7xl px-4 py-12">
-                <div className="mb-8 px-4">
-                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+            <div className="min-h-screen w-full bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat py-8 px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto w-full max-w-7xl">
+                    {/* Breadcrumb */}
+                    <div className="text-xs md:text-sm text-gray-500 mb-2 flex items-center gap-1.5 font-medium">
                         <Link href="/course" className="hover:text-orange-600">
                             Kelas
                         </Link>
-                        <span>/</span>
-                        <Link href={`/course/${course.slug}`} className="hover:text-orange-600">
+                        <span className="text-gray-400">/</span>
+                        <Link href={`/course/${course.slug}`} className="hover:text-orange-600 truncate max-w-[200px] sm:max-w-none">
                             {course.title}
                         </Link>
-                        <span>/</span>
-                        <span className="text-gray-900 dark:text-white">Checkout</span>
+                        <span className="text-gray-400">/</span>
+                        <span className="text-gray-900 font-medium">Checkout</span>
                     </div>
-                    <h1 className="mt-8 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">Checkout</h1>
-                </div>
 
-                <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Product Info */}
-                    <div className={!pendingInvoice ? 'lg:col-span-2' : 'lg:col-span-3'}>
-                        <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                            <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                <div className="flex items-center gap-2 text-gray-900 dark:text-white">
-                                    <ShoppingCart className="h-5 w-5" />
-                                    <h2 className="text-lg font-semibold">Detail Pesanan</h2>
+                    {/* Page Title */}
+                    <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-6">
+                        Checkout Kelas
+                    </h1>
+
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
+                        {/* Left Column */}
+                        <div className="lg:col-span-2">
+                            {/* Detail Pesanan Card */}
+                            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
+                                <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
+                                    <ShoppingCart className="h-5 w-5 text-gray-900" />
+                                    <h3 className="font-bold text-gray-900 text-lg">Detail Pesanan</h3>
                                 </div>
-                            </div>
-                            <div className="p-6">
-                                <div className="flex gap-4">
-                                    <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                                        <img
-                                            src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
-                                            alt={course.title}
-                                            className="h-full w-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <span className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                                    <img
+                                        src={course.thumbnail ? `/storage/${course.thumbnail}` : '/assets/images/placeholder.png'}
+                                        alt={course.title}
+                                        className="w-32 h-20 sm:w-40 sm:h-24 rounded-xl object-cover border border-gray-100"
+                                    />
+                                    <div className="flex-1 text-center sm:text-left">
+                                        <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-2">
                                             Kelas Online
                                         </span>
-                                        <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">{course.title}</h3>
-                                        <div className="flex items-center gap-2">{getLevelBadge(course.level)}</div>
+                                        <h4 className="text-base md:text-lg font-bold text-gray-900 leading-snug">
+                                            {course.title}
+                                        </h4>
+                                        <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-gray-500 font-medium mt-2">
+                                            <Calendar className="h-4 w-4" />
+                                            <span>Akses Selamanya • Belajar Mandiri (Self-paced)</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Payment Channels Section */}
-                        {/* {!isFree && channels.length > 0 && !pendingInvoice && !hasAccess && (
-                            <div className="mt-6 overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Metode Pembayaran</h2>
+                        {/* Right Column */}
+                        <div className="lg:col-span-1">
+                            {hasAccess ? (
+                                <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-xs">
+                                    <BadgeCheck size={64} className="text-green-500" />
+                                    <h2 className="text-xl font-bold">Anda Sudah Memiliki Akses</h2>
+                                    <p className="text-sm text-gray-500">Anda sudah terdaftar di kelas ini. Silakan mulai belajar.</p>
+                                    <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
+                                        <a href={`/profile/my-courses/${course.slug}`}>Masuk ke Kelas</a>
+                                    </Button>
                                 </div>
-                                <div className="p-6">
-                                    <div className="grid gap-3">
-                                        {channels.map((channel) => (
-                                            <div
-                                                key={channel.code}
-                                                onClick={() => setSelectedChannel(channel)}
-                                                className={`group cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                                                    selectedChannel?.code === channel.code
-                                                        ? 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/20'
-                                                        : 'border-gray-200 hover:border-orange-300 dark:border-gray-700 dark:hover:border-orange-600'
-                                                }`}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex flex-1 items-center gap-4">
-                                                        <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-700">
-                                                            <img
-                                                                src={channel.icon_url}
-                                                                alt={channel.name}
-                                                                className="h-full w-full object-contain p-1"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="font-semibold text-gray-900 dark:text-white">{channel.name}</p>
-                                                            <p className="text-xs text-gray-600 dark:text-gray-400">{channel.group}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all"
-                                                        style={{
-                                                            borderColor: selectedChannel?.code === channel.code ? '#ea580c' : '#d1d5db',
-                                                            backgroundColor: selectedChannel?.code === channel.code ? '#ea580c' : 'transparent',
-                                                        }}
-                                                    >
-                                                        {selectedChannel?.code === channel.code && <Check className="h-3 w-3 text-white" />}
-                                                    </div>
-                                                </div>
-                                                {selectedChannel?.code === channel.code && (
-                                                    <div className="mt-4 border-t border-orange-200 pt-4 dark:border-orange-900">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-semibold text-gray-600 dark:text-white">Biaya Admin</span>
-                                                            <span className="font-semibold text-orange-600">
-                                                                Rp {calculateAdminFee(channel).toLocaleString('id-ID')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )} */}
-                    </div>
-
-                    {/* Payment Section */}
-                    <div className={!pendingInvoice ? 'lg:col-span-1' : 'lg:col-span-3'}>
-                        {hasAccess ? (
-                            <div className="flex h-full flex-col items-center justify-center space-y-4 rounded-2xl border bg-white/95 p-6 text-center shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div className="rounded-full bg-green-100 p-4 dark:bg-green-900/30">
-                                    <BadgeCheck size={48} className="text-green-600 dark:text-green-400" />
-                                </div>
-                                <div>
-                                    <h2 className="mb-2 text-xl font-bold">Sudah Memiliki Akses</h2>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Anda sudah terdaftar di kelas ini. Silakan lanjutkan belajar.
-                                    </p>
-                                </div>
-                                <Button asChild className="w-full" size="lg">
-                                    <a href={`/profile/my-courses/${course.slug}`}>Masuk ke Kelas</a>
-                                </Button>
-                            </div>
-                        ) : pendingInvoice ? (
-                            <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                <div
-                                    className="border-b p-4 dark:bg-yellow-900/20"
-                                    style={{
-                                        backgroundColor: (() => {
-                                            const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
-                                            const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
-                                            return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
-                                        })(),
-                                    }}
-                                >
-                                    <div className="flex items-center gap-2">
+                            ) : pendingInvoice ? (
+                                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-6">
+                                    <div
+                                        className="rounded-xl p-4 flex items-center gap-2"
+                                        style={{
+                                            backgroundColor: (() => {
+                                                const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
+                                                const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
+                                                return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
+                                            })(),
+                                        }}
+                                    >
                                         {(() => {
                                             const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
                                             const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
@@ -619,52 +549,45 @@ export default function CheckoutCourse({
                                                 return (
                                                     <>
                                                         <X className="h-5 w-5 text-red-600" />
-                                                        <h2 className="text-lg font-semibold text-red-700 dark:text-red-300">Pembayaran Gagal</h2>
+                                                        <h4 className="font-bold text-red-700">Pembayaran Gagal</h4>
                                                     </>
                                                 );
                                             }
                                             return (
                                                 <>
-                                                    <Hourglass className="h-5 w-5 text-yellow-600" />
-                                                    <h2 className="text-lg font-semibold text-yellow-900 dark:text-yellow-200">
-                                                        Pembayaran Tertunda
-                                                    </h2>
+                                                    <Hourglass className="h-5 w-5 text-yellow-600 animate-pulse" />
+                                                    <h4 className="font-bold text-yellow-950">Pembayaran Tertunda</h4>
                                                 </>
                                             );
                                         })()}
                                     </div>
-                                </div>
 
-                                <div className="space-y-6 p-6">
-                                    {/* Invoice Info */}
-                                    <div className="space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">No. Invoice</span>
-                                            <span className="font-semibold text-gray-900 dark:text-white">{pendingInvoice.invoice_code}</span>
+                                    <div className="space-y-4">
+                                        <div className="space-y-2 rounded-xl bg-gray-50/50 p-4 border border-gray-100 text-sm">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-500">No. Invoice</span>
+                                                <span className="font-semibold text-gray-800">{pendingInvoice.invoice_code}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-500">Metode Pembayaran</span>
+                                                <span className="font-semibold text-gray-800">DOKU</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-500">Total Pembayaran</span>
+                                                <span className="text-lg font-bold text-[#FA5F25]">
+                                                    Rp {pendingInvoice.amount.toLocaleString('id-ID')}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
-                                            <span className="font-semibold text-gray-900 dark:text-white">DOKU</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-600 dark:text-gray-400">Total Pembayaran</span>
-                                            <span className="text-xl font-bold text-orange-600">
-                                                Rp {pendingInvoice.amount.toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
-                                    </div>
 
-                                    {(() => {
-                                        const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
-                                        const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
+                                        {(() => {
+                                            const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
+                                            const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
 
-                                        // Pesan expired
-                                        if (isExpired) {
-                                            return (
-                                                <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-                                                    <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                                                        Waktu pembayaran telah habis. Jika Anda sudah membayar atau butuh bantuan, silakan hubungi
-                                                        admin melalui&nbsp;
+                                            if (isExpired) {
+                                                return (
+                                                    <div className="rounded-xl bg-red-50 p-4 text-xs text-red-700 leading-relaxed">
+                                                        Waktu pembayaran telah habis. Jika Anda sudah membayar atau butuh bantuan, silakan hubungi admin melalui{' '}
                                                         <a
                                                             href="https://wa.me/6289528514480"
                                                             target="_blank"
@@ -672,58 +595,50 @@ export default function CheckoutCourse({
                                                             className="font-bold text-orange-600 underline"
                                                         >
                                                             WhatsApp Admin
-                                                        </a>
-                                                        .
-                                                    </p>
-                                                </div>
-                                            );
-                                        }
+                                                        </a>.
+                                                    </div>
+                                                );
+                                            }
 
-                                        // Jika belum expired, tampilkan tombol lanjut pembayaran
-                                        return (
-                                            <>
-                                                <Button onClick={continuePendingPayment} className="w-full" size="lg" type="button">
+                                            return (
+                                                <Button onClick={continuePendingPayment} className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs" type="button">
                                                     Lanjutkan Pembayaran
                                                 </Button>
-                                            </>
-                                        );
-                                    })()}
+                                            );
+                                        })()}
 
-                                    <Button onClick={() => window.location.reload()} variant="outline" className="w-full" size="lg">
-                                        Cek Status Pembayaran
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleCheckout}>
-                                <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:bg-gray-800/95">
-                                    <div className="border-b bg-gray-50/80 p-4 dark:bg-gray-900/80">
-                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {isFree ? 'Detail Pendaftaran' : 'Ringkasan Pembayaran'}
-                                        </h2>
+                                        <Button onClick={() => window.location.reload()} variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
+                                            Cek Status Pembayaran
+                                        </Button>
                                     </div>
-
-                                    <div className="space-y-4 p-6">
-                                        {isFree ? (
-                                            <div className="rounded-lg bg-green-50 p-6 text-center dark:bg-green-900/20">
-                                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">KELAS GRATIS</p>
-                                                <p className="mt-2 text-sm text-green-700 dark:text-green-300">Dapatkan akses penuh secara gratis</p>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleCheckout} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
+                                    <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pembayaran</h3>
+                                    
+                                    {isFree ? (
+                                        <div className="space-y-2 text-center py-2">
+                                            <div className="flex items-center justify-between p-2">
+                                                <span className="w-full text-xl font-bold text-green-600">KELAS ONLINE GRATIS</span>
                                             </div>
-                                        ) : (
-                                            <>
-                                                {/* Promo Code */}
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="promo-code" className="text-sm font-medium">
-                                                        Punya Kode Promo?
-                                                    </Label>
-                                                    <div className="relative">
+                                            <p className="text-sm text-gray-600">Dapatkan akses langsung secara gratis ke materi pembelajaran kelas ini.</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Input Kode Promo */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="promo-code" className="font-semibold text-gray-700">
+                                                    Punya Kode Promo?
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                    <div className="relative flex-1">
                                                         <Input
                                                             id="promo-code"
                                                             type="text"
                                                             placeholder="Masukkan kode promo"
                                                             value={promoCode}
                                                             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                            className="pr-10"
+                                                            className="rounded-xl pr-10"
                                                         />
                                                         {promoLoading && (
                                                             <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
@@ -733,132 +648,129 @@ export default function CheckoutCourse({
                                                         {!promoLoading && promoCode && (
                                                             <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
                                                                 {discountData?.valid ? (
-                                                                    <Check className="h-5 w-5 text-green-600" />
+                                                                    <Check className="h-4 w-4 text-green-600" />
                                                                 ) : promoError ? (
-                                                                    <X className="h-5 w-5 text-red-600" />
+                                                                    <X className="h-4 w-4 text-red-600" />
                                                                 ) : null}
                                                             </div>
                                                         )}
                                                     </div>
-                                                    {promoError && <p className="text-sm text-red-600">{promoError}</p>}
-                                                    {discountData?.valid && (
-                                                        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
-                                                            <div className="flex items-center gap-2">
-                                                                <Check className="h-4 w-4 text-green-600" />
-                                                                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                                                                    Promo "{discountData.discount_code.code}" diterapkan!
-                                                                </p>
-                                                            </div>
-                                                            <p className="mt-1 text-xs text-green-600 dark:text-green-300">
-                                                                {discountData.discount_code.name}
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            setPromoCode('');
+                                                            setDiscountData(null);
+                                                            setPromoError('');
+                                                        }}
+                                                        className="h-10 w-10 shrink-0 border border-orange-200 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                {promoError && (
+                                                    <p className="text-sm text-red-600">{promoError}</p>
+                                                )}
+                                                {discountData?.valid && (
+                                                    <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <Check className="h-4 w-4 text-green-600" />
+                                                            <p className="text-sm font-medium text-green-800">
+                                                                Promo "{discountData.discount_code.code}" berhasil diterapkan!
                                                             </p>
                                                         </div>
-                                                    )}
-                                                </div>
-
-                                                <Separator />
-
-                                                {/* Price Breakdown */}
-                                                <div className="space-y-3">
-                                                    {course.strikethrough_price > 0 && (
-                                                        <>
-                                                            <div className="flex items-center justify-between text-sm">
-                                                                <span className="text-gray-600 dark:text-gray-400">Harga Asli</span>
-                                                                <span className="font-medium text-gray-500 line-through dark:text-gray-400">
-                                                                    Rp {course.strikethrough_price.toLocaleString('id-ID')}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center justify-between text-sm">
-                                                                <span className="text-gray-600 dark:text-gray-400">Diskon</span>
-                                                                <span className="font-semibold text-red-600">
-                                                                    -Rp {(course.strikethrough_price - course.price).toLocaleString('id-ID')}
-                                                                </span>
-                                                            </div>
-                                                        </>
-                                                    )}
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-600 dark:text-gray-400">Harga Kelas</span>
-                                                        <span className="font-semibold text-gray-900 dark:text-white">
-                                                            Rp {course.price.toLocaleString('id-ID')}
-                                                        </span>
+                                                        <p className="mt-1 text-xs text-green-600">
+                                                            {discountData.discount_code.name}
+                                                        </p>
                                                     </div>
+                                                )}
+                                            </div>
 
-                                                    {discountData?.valid && (
-                                                        <div className="flex items-center justify-between text-sm">
-                                                            <span className="text-gray-600 dark:text-gray-400">
-                                                                Diskon Promo ({discountData.discount_code.code})
-                                                            </span>
-                                                            <span className="font-semibold text-green-600">
-                                                                -Rp {discountData.discount_amount.toLocaleString('id-ID')}
+                                            <div className="space-y-2 pt-2 text-sm">
+                                                {course.strikethrough_price > 0 && (
+                                                    <>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600">Harga Asli</span>
+                                                            <span className="font-semibold text-gray-500 line-through">
+                                                                Rp {course.strikethrough_price.toLocaleString('id-ID')}
                                                             </span>
                                                         </div>
-                                                    )}
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600">Diskon</span>
+                                                            <span className="font-semibold text-red-500">
+                                                                -Rp {(course.strikethrough_price - course.price).toLocaleString('id-ID')}
+                                                            </span>
+                                                        </div>
+                                                        <Separator className="my-2" />
+                                                    </>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-600">Harga Kelas</span>
+                                                    <span className="font-semibold text-gray-800">Rp {course.price.toLocaleString('id-ID')}</span>
+                                                </div>
 
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi</span>
-                                                        <span className="font-medium text-gray-900 dark:text-white">
-                                                            Rp {transactionFee.toLocaleString('id-ID')}
-                                                        </span>
-                                                    </div>
-
-                                                    <Separator />
-
+                                                {/* Promo Discount */}
+                                                {discountData?.valid && (
                                                     <div className="flex items-center justify-between">
-                                                        <span className="font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
-                                                        <span className="text-2xl font-bold text-orange-600">
-                                                            Rp {totalPrice.toLocaleString('id-ID')}
+                                                        <span className="text-gray-600">Diskon Promo ({discountData.discount_code.code})</span>
+                                                        <span className="font-semibold text-green-600">
+                                                            -Rp {discountData.discount_amount.toLocaleString('id-ID')}
                                                         </span>
                                                     </div>
+                                                )}
+
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-600">Biaya Transaksi</span>
+                                                    <span className="font-semibold text-gray-800">Rp {transactionFee.toLocaleString('id-ID')}</span>
                                                 </div>
-                                            </>
-                                        )}
-
-                                        {!isFree && (
-                                            <>
-                                                <Separator />
-                                                <div className="flex items-start gap-3">
-                                                    <Checkbox
-                                                        id="terms"
-                                                        checked={termsAccepted}
-                                                        onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                                                        className="mt-1"
-                                                    />
-                                                    <Label htmlFor="terms" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                                                        Saya menyetujui{' '}
-                                                        <a
-                                                            href="/terms-and-conditions"
-                                                            target="_blank"
-                                                            className="font-medium text-orange-600 hover:underline"
-                                                        >
-                                                            syarat dan ketentuan
-                                                        </a>{' '}
-                                                        yang berlaku
-                                                    </Label>
+                                                <Separator className="my-2" />
+                                                <div className="flex items-center justify-between text-base">
+                                                    <span className="font-bold text-gray-900">Total Pembayaran</span>
+                                                    <span className="text-[#FA5F25] text-xl font-bold">Rp {totalPrice.toLocaleString('id-ID')}</span>
                                                 </div>
-                                            </>
-                                        )}
+                                            </div>
+                                        </>
+                                    )}
 
-                                        <Button className="w-full" type="submit" disabled={(isFree ? false : !termsAccepted) || loading} size="lg">
-                                            {loading ? (
-                                                <span className="flex items-center gap-2">
-                                                    <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                                                    Memproses...
-                                                </span>
-                                            ) : isFree ? (
-                                                'Dapatkan Akses Gratis'
-                                            ) : (
-                                                'Bayar Sekarang'
-                                            )}
-                                        </Button>
-
-                                        <p className="text-center text-xs text-gray-500 dark:text-gray-400">Pembayaran aman dan terenkripsi 🔒</p>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
+                                    {!isFree && (
+                                        <div className="flex items-start gap-3 pt-2">
+                                            <Checkbox
+                                                id="terms"
+                                                checked={termsAccepted}
+                                                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                                                className="mt-0.5"
+                                            />
+                                            <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
+                                                Saya menyetujui{' '}
+                                                <a
+                                                    href="/terms-and-conditions"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-orange-600 hover:underline font-semibold"
+                                                >
+                                                    syarat dan ketentuan
+                                                </a>{' '}
+                                                yang berlaku
+                                            </Label>
+                                        </div>
+                                    )}
+                                    <Button
+                                        className="w-full"
+                                        type="submit"
+                                        disabled={(isFree ? false : !termsAccepted) || loading}
+                                    >
+                                        {loading ? 'Memproses...' : isFree ? 'Dapatkan Akses Gratis Sekarang' : 'Bayar Sekarang'}
+                                    </Button>
+                                    <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
+                                        Pembayaran aman dan terenkripsi 🔒
+                                    </p>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </section>
-        </div>
+            </div>
+        </UserLayout>
     );
 }
