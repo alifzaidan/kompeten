@@ -413,8 +413,8 @@ export default function Register({
             const originalDiscountAmount =
                 program.strikethrough_price && program.strikethrough_price > 0 ? program.strikethrough_price - program.price : 0;
             const promoDiscountAmount = discountData?.valid ? discountData.discount_amount : 0;
-            const activeFinalPrice = displayPrice - promoDiscountAmount;
-            const transactionFee = 5000;
+            const activeFinalPrice = Math.max(0, displayPrice - promoDiscountAmount);
+            const transactionFee = displayPrice > 0 ? 5000 : 0;
             const invoiceData: Record<string, string | number> = {
                 type: 'certification_program',
                 id: program.id,
@@ -1036,34 +1036,63 @@ export default function Register({
                                 )}
                                 </div>
 
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">Tipe</span>
-                                    <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
-                                        <GraduationCap size={12} className="mr-1" />
-                                        {isScholarship ? 'Beasiswa' : 'Reguler'}
-                                    </Badge>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
+                                        <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
+                                            <GraduationCap size={12} className="mr-1" />
+                                            {isScholarship ? 'Beasiswa' : 'Reguler'}
+                                        </Badge>
+                                    </div>
+
+                                    {displayPrice > 0 && (
+                                        <>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
+                                            </div>
+
+                                            {discountData?.valid && (
+                                                <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                    <span>Diskon Promo ({discountData.discount_code.code})</span>
+                                                    <span>-{formatRupiah(discountData.discount_amount)}</span>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 <Separator />
 
-                                {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
-                                    <p className="text-right text-sm text-red-500 line-through">{formatRupiah(program.strikethrough_price)}</p>
-                                )}
-                                {discountData?.valid ? (
-                                <div className="space-y-1 text-right">
-                                    <p className="text-sm text-gray-500 line-through dark:text-gray-400">{formatRupiah(displayPrice)}</p>
-                                    <p className="text-3xl font-bold text-green-600 italic dark:text-green-400">
-                                        {displayPrice - discountData.discount_amount <= 0 ? 'GRATIS' : formatRupiah(displayPrice - discountData.discount_amount)}
-                                    </p>
-                                    <p className="text-xs text-green-600 dark:text-green-500">Sudah termasuk diskon {discountData.discount_code.formatted_value}</p>
+                                <div className="space-y-1">
+                                    {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                        <p className="text-right text-sm text-red-500 line-through">
+                                            {formatRupiah(program.strikethrough_price + (displayPrice > 0 ? 5000 : 0))}
+                                        </p>
+                                    )}
+                                    <div className="flex items-baseline justify-between">
+                                        <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                        <div className="text-right">
+                                            {displayPrice > 0 ? (
+                                                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                                    {formatRupiah(Math.max(0, displayPrice - (discountData?.valid ? discountData.discount_amount : 0)) + 5000)}
+                                                </p>
+                                            ) : (
+                                                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {discountData?.valid && (
+                                        <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                            Sudah termasuk diskon {discountData.discount_code.formatted_value}
+                                        </p>
+                                    )}
                                 </div>
-                                ) : displayPrice > 0 ? (
-                                    <p className="text-right text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                        {formatRupiah(displayPrice)}
-                                    </p>
-                                ) : (
-                                    <p className="text-right text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
-                                )}
 
                                 {deadline && (
                                     <div className="flex items-start gap-2 text-sm">
