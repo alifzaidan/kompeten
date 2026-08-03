@@ -532,12 +532,17 @@ export default function Register({
             const originalDiscountAmount =
                 program.strikethrough_price && program.strikethrough_price > 0 ? program.strikethrough_price - program.price : 0;
             const promoDiscountAmount = discountData?.valid ? discountData.discount_amount : 0;
+<<<<<<< HEAD
             const activeFinalPrice = displayPrice - promoDiscountAmount;
             
             const pointsDeduction = overridePointsChecked !== undefined ? (overridePointsChecked ? (overridePointsToUse || 0) : 0) : (pointsChecked ? pointsToUse : 0);
             const finalNettAmount = activeFinalPrice - pointsDeduction;
             const activeTotalPrice = finalNettAmount;
 
+=======
+            const activeFinalPrice = Math.max(0, displayPrice - promoDiscountAmount);
+            const transactionFee = displayPrice > 0 ? 5000 : 0;
+>>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829
             const invoiceData: Record<string, string | number> = {
                 type: 'certification_program',
                 id: program.id,
@@ -1334,14 +1339,47 @@ export default function Register({
                                     )}
                                 </div>
 
+<<<<<<< HEAD
                                 <div className="mb-4 flex items-center justify-between text-sm">
                                     <span className="text-gray-600 font-medium">Tipe</span>
                                     <Badge className={isScholarship ? 'bg-purple-100 text-purple-700' : ''}>
                                         <GraduationCap size={12} className="mr-1" />
                                         {isScholarship ? 'Beasiswa' : 'Reguler'}
                                     </Badge>
+=======
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
+                                        <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
+                                            <GraduationCap size={12} className="mr-1" />
+                                            {isScholarship ? 'Beasiswa' : 'Reguler'}
+                                        </Badge>
+                                    </div>
+
+                                    {displayPrice > 0 && (
+                                        <>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
+                                            </div>
+
+                                            {discountData?.valid && (
+                                                <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                    <span>Diskon Promo ({discountData.discount_code.code})</span>
+                                                    <span>-{formatRupiah(discountData.discount_amount)}</span>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
+                                            </div>
+                                        </>
+                                    )}
+>>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829
                                 </div>
                                 <Separator />
+<<<<<<< HEAD
                                 {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-600">Harga Normal</span>
@@ -1385,6 +1423,31 @@ export default function Register({
                                                 {displayPrice > 0 ? formatRupiah(displayPrice) : 'GRATIS'}
                                             </span>
                                         </div>
+=======
+
+                                <div className="space-y-1">
+                                    {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                        <p className="text-right text-sm text-red-500 line-through">
+                                            {formatRupiah(program.strikethrough_price + (displayPrice > 0 ? 5000 : 0))}
+                                        </p>
+                                    )}
+                                    <div className="flex items-baseline justify-between">
+                                        <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                        <div className="text-right">
+                                            {displayPrice > 0 ? (
+                                                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                                    {formatRupiah(Math.max(0, displayPrice - (discountData?.valid ? discountData.discount_amount : 0)) + 5000)}
+                                                </p>
+                                            ) : (
+                                                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {discountData?.valid && (
+                                        <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                            Sudah termasuk diskon {discountData.discount_code.formatted_value}
+                                        </p>
+>>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829
                                     )}
                                 </div>
 
