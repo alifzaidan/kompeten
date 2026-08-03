@@ -31,10 +31,7 @@ class Invoice extends Model
         return $this->hasMany(EnrollmentWebinar::class);
     }
 
-    public function privateItems()
-    {
-        return $this->hasMany(EnrollmentPrivate::class);
-    }
+
 
     public function certificationProgramItems()
     {
@@ -87,9 +84,7 @@ class Invoice extends Model
             return 'webinar';
         }
 
-        if ($this->privateItems->count() > 0) {
-            return 'private';
-        }
+
 
         if ($this->certificationProgramItems->count() > 0) {
             return 'certification_program';
@@ -108,7 +103,6 @@ class Invoice extends Model
             'courses' => $this->courseItems()->with('course')->get(),
             'bootcamps' => $this->bootcampItems()->with('bootcamp')->get(),
             'webinars' => $this->webinarItems()->with('webinar')->get(),
-            'privates' => $this->privateItems()->with('privateClass', 'privateClassSchedule')->get(),
             'certification_programs' => $this->certificationProgramItems()->with('certificationProgram')->get(),
         ];
     }
@@ -142,13 +136,7 @@ class Invoice extends Model
             ];
         }));
 
-        $items = $items->merge($this->privateItems()->with('privateClass', 'privateClassSchedule')->get()->map(function ($item) {
-            return [
-                'type' => 'private',
-                'enrollment' => $item,
-                'item' => $item->privateClass,
-            ];
-        }));
+
 
         $items = $items->merge($this->certificationProgramItems()->with('certificationProgram')->get()->map(function ($item) {
             return [
@@ -188,8 +176,7 @@ class Invoice extends Model
             case 'webinar':
                 return $this->webinarItems()->where('webinar_id', $productId)->exists();
 
-            case 'private':
-                return $this->privateItems()->where('private_class_id', $productId)->exists();
+
 
             case 'bundle':
                 return $this->bundleEnrollments()->where('bundle_id', $productId)->exists();
@@ -209,7 +196,6 @@ class Invoice extends Model
         $count += $this->courseItems->count();
         $count += $this->bootcampItems->count();
         $count += $this->webinarItems->count();
-        $count += $this->privateItems->count();
         $count += $this->certificationProgramItems->count();
 
         // Count items from bundles

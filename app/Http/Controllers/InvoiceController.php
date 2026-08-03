@@ -17,12 +17,9 @@ use App\Models\EnrollmentBootcamp;
 use App\Models\EnrollmentBundle;
 use App\Models\EnrollmentCertificationProgram;
 use App\Models\EnrollmentCourse;
-use App\Models\EnrollmentPrivate;
 use App\Models\EnrollmentWebinar;
 use App\Models\FreeEnrollmentRequirement;
 use App\Models\Invoice;
-use App\Models\PrivateClass;
-use App\Models\PrivateClassSchedule;
 use App\Models\User;
 use App\Models\Webinar;
 use App\Traits\WablasTrait;
@@ -35,18 +32,9 @@ use Inertia\Inertia;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-use Xendit\Configuration;
-use Xendit\Invoice\CreateInvoiceRequest;
-use Xendit\Invoice\InvoiceApi;
-
 class InvoiceController extends Controller
 {
     use WablasTrait;
-
-    public function __construct()
-    {
-        Configuration::setXenditKey(config('xendit.API_KEY'));
-    }
 
     public function index(Request $request)
     {
@@ -63,8 +51,6 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'privateItems.privateClass',
-            'privateItems.privateClassSchedule',
             'certificationProgramItems.certificationProgram',
             'bundleEnrollments.bundle'
         ]);
@@ -124,7 +110,6 @@ class InvoiceController extends Controller
         $courseTransactions = $invoices->filter(fn($inv) => $inv->courseItems->count() > 0)->count();
         $bootcampTransactions = $invoices->filter(fn($inv) => $inv->bootcampItems->count() > 0)->count();
         $webinarTransactions = $invoices->filter(fn($inv) => $inv->webinarItems->count() > 0)->count();
-        $privateTransactions = $invoices->filter(fn($inv) => $inv->privateItems->count() > 0)->count();
         $bundleTransactions = $invoices->filter(fn($inv) => $inv->bundleEnrollments->count() > 0)->count();
 
         $affiliateTransactions = $invoices->filter(fn($inv) => $inv->referred_by_user_id !== null)->count();
@@ -185,7 +170,6 @@ class InvoiceController extends Controller
                 'course' => $courseTransactions,
                 'bootcamp' => $bootcampTransactions,
                 'webinar' => $webinarTransactions,
-                'private' => $privateTransactions,
                 'bundle' => $bundleTransactions,
             ],
             'period' => [
@@ -216,8 +200,6 @@ class InvoiceController extends Controller
             $userId = Auth::id();
             $type = $request->input('type', 'course');
             $itemId = $request->input('id');
-            $privateClassScheduleId = $request->input('private_class_schedule_id');
-            $selectedPrivateSchedule = null;
             $isScholarship = false;
             $itemPrice = null;
 
@@ -241,23 +223,6 @@ class InvoiceController extends Controller
                 $item = Webinar::findOrFail($itemId);
                 $enrollmentTable = EnrollmentWebinar::class;
                 $enrollmentField = 'webinar_id';
-            } elseif ($type === 'private') {
-                $item = PrivateClass::findOrFail($itemId);
-                $enrollmentTable = EnrollmentPrivate::class;
-                $enrollmentField = 'private_class_id';
-
-                if (!$privateClassScheduleId) {
-                    throw new \Exception('Jadwal private class wajib dipilih');
-                }
-
-                $selectedPrivateSchedule = PrivateClassSchedule::where('id', $privateClassScheduleId)
-                    ->where('private_class_id', $item->id)
-                    ->where('is_active', true)
-                    ->first();
-
-                if (!$selectedPrivateSchedule) {
-                    throw new \Exception('Jadwal private class tidak valid atau sudah tidak aktif');
-                }
             } elseif ($type === 'certification_program') {
                 $item = CertificationProgram::findOrFail($itemId);
                 $enrollmentTable = EnrollmentCertificationProgram::class;
@@ -309,53 +274,6 @@ class InvoiceController extends Controller
                 }
             } else {
                 throw new \Exception('Tipe pembelian tidak valid');
-            }
-
-            if ($type === 'private') {
-                if ($item->status !== 'published') {
-                    throw new \Exception('Private class tidak tersedia untuk checkout');
-                }
-
-                $effectiveDeadline = $selectedPrivateSchedule?->registration_deadline ?? $item->registration_deadline;
-                if ($effectiveDeadline && now()->gt($effectiveDeadline)) {
-                    throw new \Exception('Pendaftaran jadwal private class sudah ditutup');
-                }
-
-                $maxParticipants = max((int) ($selectedPrivateSchedule?->max_participants ?? 1), 1);
-
-                $alreadyPaidByUser = EnrollmentPrivate::where('private_class_schedule_id', $selectedPrivateSchedule->id)
-                    ->whereHas('invoice', function ($query) use ($userId) {
-                        $query->where('user_id', $userId)->where('status', 'paid');
-                    })
-                    ->exists();
-
-                if ($alreadyPaidByUser) {
-                    throw new \Exception('Anda sudah terdaftar pada jadwal private class ini.');
-                }
-
-                $paidCount = EnrollmentPrivate::where('private_class_schedule_id', $selectedPrivateSchedule->id)
-                    ->whereHas('invoice', function ($query) {
-                        $query->where('status', 'paid');
-                    })
-                    ->count();
-
-                if ($paidCount >= $maxParticipants) {
-                    throw new \Exception('Slot private class pada jadwal terpilih sudah penuh.');
-                }
-
-                $activePendingCount = EnrollmentPrivate::where('private_class_schedule_id', $selectedPrivateSchedule->id)
-                    ->whereHas('invoice', function ($query) {
-                        $query->where('status', 'pending')
-                            ->where(function ($q) {
-                                $q->whereNull('expires_at')
-                                    ->orWhere('expires_at', '>', now());
-                            });
-                    })
-                    ->count();
-
-                if (($paidCount + $activePendingCount) >= $maxParticipants) {
-                    throw new \Exception('Slot private class pada jadwal terpilih sedang dipesan. Silakan coba jadwal lain.');
-                }
             }
 
             $itemPrice = $item->price;
@@ -454,9 +372,7 @@ class InvoiceController extends Controller
 
             $items = [
                 [
-                    'name' => $type === 'private' && $selectedPrivateSchedule
-                        ? $item->title . ' (' . Carbon::parse($selectedPrivateSchedule->start_time)->format('d M Y H:i') . ')'
-                        : $item->title,
+                    'name' => $item->title,
                     'price' => $item->strikethrough_price > 0 ? $item->strikethrough_price : $itemPrice,
                     'quantity' => 1,
                 ]
@@ -467,7 +383,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'AKS-' . date('y')
+                'prefix' => 'KMT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -498,31 +414,24 @@ class InvoiceController extends Controller
                 $discountCode->incrementUsage();
             }
 
-            $xendit_create_invoice = new CreateInvoiceRequest([
-                'external_id' => $invoice_code,
-                'customer' => [
-                    'given_names' => Auth::user()->name,
-                    'email' => Auth::user()->email,
-                    'mobile_number' => Auth::user()->phone_number,
-                ],
-                'customer_notification_preference' => [
-                    'invoice_created' => ['email', 'whatsapp'],
-                    'invoice_reminder' => ['email', 'whatsapp'],
-                    'invoice_paid' => ['email'],
-                ],
-                'description' => 'Invoice pembayaran transaksi produk ' . $item->title . ' untuk user ' . Auth::user()->name,
-                'amount' => $totalAmount,
-                'items' => $items,
-                'fees' => $fees,
-                'failure_redirect_url' => route('invoice.show', ['id' => $invoice->id]),
-                'success_redirect_url' => route('invoice.show', ['id' => $invoice->id]),
-            ]);
+            $dokuService = app(\App\Services\DokuService::class);
+            $dokuResponse = $dokuService->createCheckout(
+                $invoice_code,
+                $totalAmount,
+                [
+                    'customer_id' => 'USER-' . $userId,
+                    'customer_name' => Auth::user()->name,
+                    'customer_email' => Auth::user()->email,
+                    'customer_phone' => Auth::user()->phone_number,
+                    'item_name' => $item->title,
+                    'item_description' => 'Pembayaran ' . $type . ' ' . $item->title,
+                ]
+            );
 
-            $xendit_api_instance = new InvoiceApi();
-            $xendit_invoice = $xendit_api_instance->createInvoice($xendit_create_invoice);
+            $paymentUrl = $dokuResponse['response']['payment']['url'] ?? '';
 
             $invoice->update([
-                'invoice_url' => $xendit_invoice['invoice_url'],
+                'invoice_url' => $paymentUrl,
             ]);
 
             $enrollmentData = [
@@ -532,10 +441,6 @@ class InvoiceController extends Controller
                 'completed_at' => null,
                 'progress' => 0,
             ];
-
-            if ($type === 'private') {
-                $enrollmentData['private_class_schedule_id'] = $selectedPrivateSchedule->id;
-            }
 
             if ($type === 'certification_program') {
                 $enrollmentData['is_scholarship'] = $isScholarship;
@@ -551,7 +456,7 @@ class InvoiceController extends Controller
 
             return response()->json([
                 'success' => true,
-                'payment_url' => $xendit_invoice['invoice_url'],
+                'payment_url' => $paymentUrl,
                 'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->invoice_code
             ], 200);
@@ -665,7 +570,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change' => true,
-                'prefix' => 'AKS-' . date('y')
+                'prefix' => 'KMT-' . date('y')
             ]);
 
             $expiresAt = Carbon::now()->addHours(24);
@@ -716,39 +621,31 @@ class InvoiceController extends Controller
             }
             $fees[] = ['type' => 'Biaya Transaksi', 'value' => $transactionFee];
 
-            // Create Xendit invoice
-            $xendit_create_invoice = new CreateInvoiceRequest([
-                'external_id' => $invoice_code,
-                'customer' => [
-                    'given_names' => Auth::user()->name,
-                    'email' => Auth::user()->email,
-                    'mobile_number' => Auth::user()->phone_number,
-                ],
-                'customer_notification_preference' => [
-                    'invoice_created' => ['email', 'whatsapp'],
-                    'invoice_reminder' => ['email', 'whatsapp'],
-                    'invoice_paid' => ['email'],
-                ],
-                'description' => 'Invoice pembayaran Paket Bundling: ' . $bundle->title,
-                'amount' => $totalAmount,
-                'items' => $items,
-                'fees' => $fees,
-                'failure_redirect_url' => route('invoice.show', ['id' => $invoice->id]),
-                'success_redirect_url' => route('invoice.show', ['id' => $invoice->id]),
-            ]);
+            $dokuService = app(\App\Services\DokuService::class);
+            $dokuResponse = $dokuService->createCheckout(
+                $invoice_code,
+                $totalAmount,
+                [
+                    'customer_id' => 'USER-' . $userId,
+                    'customer_name' => Auth::user()->name,
+                    'customer_email' => Auth::user()->email,
+                    'customer_phone' => Auth::user()->phone_number,
+                    'item_name' => $bundle->title,
+                    'item_description' => 'Pembayaran Paket Bundling: ' . $bundle->title,
+                ]
+            );
 
-            $xendit_api_instance = new InvoiceApi();
-            $xendit_invoice = $xendit_api_instance->createInvoice($xendit_create_invoice);
+            $paymentUrl = $dokuResponse['response']['payment']['url'] ?? '';
 
             $invoice->update([
-                'invoice_url' => $xendit_invoice['invoice_url'],
+                'invoice_url' => $paymentUrl,
             ]);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'payment_url' => $xendit_invoice['invoice_url'],
+                'payment_url' => $paymentUrl,
                 'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->invoice_code
             ], 200);
@@ -772,9 +669,8 @@ class InvoiceController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'type' => 'required|string|in:course,bootcamp,webinar,private',
+                'type' => 'required|string|in:course,bootcamp,webinar',
                 'id' => 'required',
-                'private_class_schedule_id' => 'nullable|required_if:type,private|uuid',
 
                 // New generic proof keys (preferred)
                 'requirement_1_proof' => 'nullable|image|max:2048',
@@ -790,8 +686,6 @@ class InvoiceController extends Controller
             $userId = Auth::id();
             $type = $request->input('type', 'course');
             $itemId = $request->input('id');
-            $privateClassScheduleId = $request->input('private_class_schedule_id');
-            $selectedPrivateSchedule = null;
 
             $referralCode = session('referral_code');
             $referredByUserId = null;
@@ -819,65 +713,20 @@ class InvoiceController extends Controller
                 $item = Webinar::findOrFail($itemId);
                 $enrollmentTable = EnrollmentWebinar::class;
                 $enrollmentField = 'webinar_id';
-            } elseif ($type === 'private') {
-                $item = PrivateClass::findOrFail($itemId);
-                $enrollmentTable = EnrollmentPrivate::class;
-                $enrollmentField = 'private_class_id';
-
-                $selectedPrivateSchedule = PrivateClassSchedule::where('id', $privateClassScheduleId)
-                    ->where('private_class_id', $item->id)
-                    ->where('is_active', true)
-                    ->first();
-
-                if (!$selectedPrivateSchedule) {
-                    throw new \Exception('Jadwal private class tidak valid atau sudah tidak aktif');
-                }
             } else {
                 throw new \Exception('Tipe pendaftaran tidak valid');
-            }
-
-            if ($type === 'private') {
-                if ($item->status !== 'published') {
-                    throw new \Exception('Private class tidak tersedia untuk pendaftaran');
-                }
-
-                $effectiveDeadline = $selectedPrivateSchedule?->registration_deadline ?? $item->registration_deadline;
-                if ($effectiveDeadline && now()->gt($effectiveDeadline)) {
-                    throw new \Exception('Pendaftaran jadwal private class sudah ditutup');
-                }
-
-                $maxParticipants = max((int) ($selectedPrivateSchedule?->max_participants ?? 1), 1);
-
-                $hasPaidEnrollment = EnrollmentPrivate::where('private_class_schedule_id', $selectedPrivateSchedule->id)
-                    ->whereHas('invoice', function ($query) {
-                        $query->where('status', 'paid');
-                    })
-                    ->count();
-
-                if ($hasPaidEnrollment >= $maxParticipants || $maxParticipants <= 0) {
-                    throw new \Exception('Slot private class pada jadwal terpilih sudah terisi.');
-                }
             }
 
             if ($item->price > 0) {
                 throw new \Exception('Item ini tidak gratis');
             }
 
-            if ($type === 'private') {
-                $existingEnrollment = $enrollmentTable::where('private_class_schedule_id', $selectedPrivateSchedule->id)
-                    ->whereHas('invoice', function ($query) use ($userId) {
-                        $query->where('user_id', $userId)
-                            ->where('status', 'paid');
-                    })
-                    ->first();
-            } else {
-                $existingEnrollment = $enrollmentTable::where($enrollmentField, $item->id)
-                    ->whereHas('invoice', function ($query) use ($userId) {
-                        $query->where('user_id', $userId)
-                            ->where('status', 'paid');
-                    })
-                    ->first();
-            }
+            $existingEnrollment = $enrollmentTable::where($enrollmentField, $item->id)
+                ->whereHas('invoice', function ($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                        ->where('status', 'paid');
+                })
+                ->first();
 
             if ($existingEnrollment) {
                 throw new \Exception('Anda sudah terdaftar untuk item ini');
@@ -888,7 +737,7 @@ class InvoiceController extends Controller
                 'field' => 'invoice_code',
                 'length' => 11,
                 'reset_on_prefix_change'  => true,
-                'prefix' => 'AKS-' . date('y')
+                'prefix' => 'KMT-' . date('y')
             ]);
 
             $invoice = Invoice::create([
@@ -908,7 +757,6 @@ class InvoiceController extends Controller
             $enrollment = $enrollmentTable::create([
                 'invoice_id' => $invoice->id,
                 $enrollmentField => $item->id,
-                'private_class_schedule_id' => $type === 'private' ? $selectedPrivateSchedule->id : null,
                 'price' => 0,
                 'completed_at' => null,
                 'progress' => 0,
@@ -962,8 +810,6 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'privateItems.privateClass',
-            'privateItems.privateClassSchedule',
             'certificationProgramItems.certificationProgram'
         ])->findOrFail($id);
         return Inertia::render('user/checkout/success', ['invoice' => $invoice]);
@@ -988,7 +834,7 @@ class InvoiceController extends Controller
 
             $invoice = $query->firstOrFail();
 
-            $this->expireInvoiceInXendit($invoice->invoice_code);
+            $this->expireInvoiceInDoku($invoice->invoice_code);
 
             if ($invoice->discountUsage) {
                 $discountCode = $invoice->discountUsage->discountCode;
@@ -1010,9 +856,7 @@ class InvoiceController extends Controller
                 EnrollmentWebinar::where('invoice_id', $invoice->id)->delete();
             }
 
-            if ($invoice->privateItems->count() > 0) {
-                EnrollmentPrivate::where('invoice_id', $invoice->id)->delete();
-            }
+
 
             if ($invoice->certificationProgramItems->count() > 0) {
                 EnrollmentCertificationProgram::where('invoice_id', $invoice->id)->delete();
@@ -1093,22 +937,14 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Expire invoice di Xendit menggunakan external_id
+     * Expire invoice di Doku menggunakan external_id
      */
-    private function expireInvoiceInXendit($externalId)
+    private function expireInvoiceInDoku($externalId)
     {
         try {
-            $xendit_api_instance = new InvoiceApi();
-
-            $invoices = $xendit_api_instance->getInvoices(null, null, $externalId);
-
-            if (!empty($invoices) && isset($invoices[0]['id'])) {
-                $xenditInvoiceId = $invoices[0]['id'];
-
-                $xendit_api_instance->expireInvoice($xenditInvoiceId);
-            }
+            app(\App\Services\DokuService::class)->cancelInvoice($externalId);
         } catch (\Exception $e) {
-            Log::error('Failed to expire invoice in Xendit: ' . $e->getMessage(), [
+            Log::error('Failed to expire invoice in Doku: ' . $e->getMessage(), [
                 'external_id' => $externalId
             ]);
         }
@@ -1120,11 +956,11 @@ class InvoiceController extends Controller
     public function expireOldInvoices()
     {
         $expiredInvoices = Invoice::where('status', 'pending')
-            ->where('expires_at', '<', Carbon::now())
-            ->get();
+             ->where('expires_at', '<', Carbon::now())
+             ->get();
 
         foreach ($expiredInvoices as $invoice) {
-            $this->expireInvoiceInXendit($invoice->invoice_code);
+            $this->expireInvoiceInDoku($invoice->invoice_code);
             $invoice->update(['status' => 'failed']);
 
             if ($invoice->points_redeemed > 0) {
@@ -1158,8 +994,6 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'privateItems.privateClass',
-            'privateItems.privateClassSchedule',
             'certificationProgramItems.certificationProgram',
             'bundleEnrollments.bundle.bundleItems.bundleable'
         ])->where('invoice_code', $request->external_id)->first();
@@ -1240,6 +1074,117 @@ class InvoiceController extends Controller
         }
     }
 
+    public function callbackDoku(Request $request)
+    {
+        Log::info('=== DOKU CALLBACK RECEIVED ===', [
+            'headers' => $request->headers->all(),
+            'payload' => $request->all()
+        ]);
+
+        try {
+            $dokuService = app(\App\Services\DokuService::class);
+            if (!$dokuService->verifyCallback($request)) {
+                return response()->json(['message' => 'unauthorized'], 401);
+            }
+
+            $invoiceCode = $request->input('order.invoice_number');
+            $invoice = Invoice::with([
+                'user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'certificationProgramItems.certificationProgram',
+                'bundleEnrollments.bundle.bundleItems.bundleable'
+            ])->where('invoice_code', $invoiceCode)->first();
+
+            if (!$invoice) {
+                return response()->json(['message' => 'Invoice Not Found'], 404);
+            }
+
+            // Hanya proses jika status invoice masih pending untuk menghindari duplikasi
+            if ($invoice->status !== 'pending') {
+                return response()->json(['message' => 'Invoice already processed'], 200);
+            }
+
+            $isSuccess = ($request->input('transaction.status') === 'SUCCESS');
+
+            if ($isSuccess) {
+                $invoice->update([
+                    'paid_at' => Carbon::now('Asia/Jakarta'),
+                    'status' => 'paid',
+                    'payment_method' => $request->input('payment.payment_method', 'DOKU'),
+                    'payment_channel' => $request->input('payment.payment_channel', 'DOKU')
+                ]);
+
+                if ($invoice->bundleEnrollments->count() > 0) {
+                    Log::info('Processing bundle enrollments (Doku)', [
+                        'invoice_code' => $invoice->invoice_code,
+                        'bundle_count' => $invoice->bundleEnrollments->count()
+                    ]);
+
+                    foreach ($invoice->bundleEnrollments as $bundleEnrollment) {
+                        $bundleEnrollment->createIndividualEnrollments();
+
+                        $bundle = $bundleEnrollment->bundle;
+
+                        Log::info('Processing bundle items (Doku)', [
+                            'bundle_id' => $bundle->id,
+                            'items_count' => $bundle->bundleItems->count()
+                        ]);
+
+                        foreach ($bundle->bundleItems as $item) {
+                            $type = $item->getTypeSlug();
+                            $this->addToCertificateParticipants($type, $item->bundleable_id, $invoice->user_id);
+
+                            Log::info('Added to certificate (Doku)', [
+                                'type' => $type,
+                                'item_id' => $item->bundleable_id,
+                                'user_id' => $invoice->user_id
+                            ]);
+                        }
+                    }
+                }
+
+                $this->recordAffiliateCommission($invoice);
+                $this->addEnrollmentToCertificateParticipants($invoice);
+
+                // Fire event for referral/rewards points
+                event(new \App\Events\TransactionPaid($invoice));
+
+                // Kirim WhatsApp setelah pembayaran berhasil
+                $this->sendWhatsAppNotification($invoice);
+            } else {
+                $invoice->update(['status' => 'failed']);
+
+                // Kirim WhatsApp untuk pembayaran gagal (opsional)
+                $this->sendWhatsAppPaymentFailed($invoice);
+            }
+
+            return response()->json(['message' => 'Success'], 200);
+
+        } catch (\Throwable $e) {
+            Log::error('DOKU CALLBACK ERROR: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Callback processing error',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function dokuReturn(Request $request)
+    {
+        $invoiceCode = $request->query('invoice_number');
+        $invoice = Invoice::where('invoice_code', $invoiceCode)->first();
+
+        if ($invoice) {
+            return redirect()->route('invoice.show', ['id' => $invoice->id]);
+        }
+
+        return redirect()->route('home');
+    }
+
     /**
      * Kirim notifikasi WhatsApp setelah pembayaran berhasil
      *
@@ -1308,8 +1253,6 @@ class InvoiceController extends Controller
                 $itemType = 'Bootcamp';
             } elseif ($invoice->webinarItems->count() > 0) {
                 $itemType = 'Webinar';
-            } elseif ($invoice->privateItems->count() > 0) {
-                $itemType = 'Private Class';
             } elseif ($invoice->certificationProgramItems->count() > 0) {
                 $itemType = 'Sertifikasi Program';
             }
@@ -1398,16 +1341,6 @@ class InvoiceController extends Controller
                 'menu' => 'Webinar Saya',
                 'title' => $itemData->webinar->title,
                 'item' => $itemData->webinar
-            ];
-        } elseif ($invoice->privateItems->count() > 0) {
-            $itemType = 'private';
-            $itemData = $invoice->privateItems()->with('privateClass', 'privateClassSchedule')->first();
-            $typeInfo = [
-                'icon' => '🎓',
-                'name' => 'Private Class',
-                'menu' => 'Dashboard',
-                'title' => $itemData->privateClass->title,
-                'item' => $itemData->privateClass
             ];
         } elseif ($invoice->certificationProgramItems->count() > 0) {
             $itemType = 'certification_program';
@@ -1515,36 +1448,7 @@ class InvoiceController extends Controller
                 $message .= "• Bergabung dengan group untuk mendapatkan info penting dan diskusi\n";
                 $message .= "• Aktif mengikuti seluruh kegiatan bootcamp\n\n";
             }
-        } elseif ($itemType === 'private') {
-            $privateClass = $typeInfo['item'];
-            $privateSchedule = $itemData?->privateClassSchedule;
 
-            if ($privateSchedule) {
-                $startTime = Carbon::parse($privateSchedule->start_time);
-                $endTime = Carbon::parse($privateSchedule->end_time);
-                $message .= "*Jadwal Private Class:*\n";
-                $message .= "📅 {$startTime->format('d M Y')}\n";
-                $message .= "🕐 {$startTime->format('H:i')} - {$endTime->format('H:i')} WIB\n\n";
-            } elseif (!empty($privateClass->start_time)) {
-                $startTime = Carbon::parse($privateClass->start_time);
-                $message .= "*Jadwal Private Class:*\n";
-                $message .= "📅 {$startTime->format('d M Y')}\n";
-                $message .= "🕐 {$startTime->format('H:i')} WIB\n\n";
-            }
-
-            if (!empty($privateClass->mode)) {
-                $modeText = $privateClass->mode === 'offline' ? 'Offline' : 'Online';
-                $message .= "📍 Mode: *{$modeText}*\n";
-                if ($privateClass->mode === 'offline' && !empty($privateClass->location)) {
-                    $message .= "📌 Lokasi: {$privateClass->location}\n";
-                }
-                $message .= "\n";
-            }
-
-            if (!empty($privateClass->group_url)) {
-                $message .= "*Join Group Private Class:*\n";
-                $message .= "👥 {$privateClass->group_url}\n\n";
-            }
         } elseif ($itemType === 'certification_program') {
             $program = $typeInfo['item'];
 
@@ -1654,9 +1558,10 @@ class InvoiceController extends Controller
     {
         $buyer = $invoice->user;
 
-        // Cek apakah pembeli ini direferensikan oleh seseorang
-        if ($buyer && $buyer->referred_by_user_id) {
-            $affiliate = User::find($buyer->referred_by_user_id);
+        $referredByUserId = $invoice->referred_by_user_id ?? ($buyer ? ($buyer->referred_by_user_id ?? null) : null);
+
+        if ($referredByUserId) {
+            $affiliate = User::find($referredByUserId);
 
             // Memastikan afiliasi ada, aktif, dan memiliki rate komisi
             if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
@@ -1752,7 +1657,7 @@ class InvoiceController extends Controller
      */
     private function addEnrollmentToCertificateParticipants(Invoice $invoice)
     {
-        $invoice->load(['courseItems', 'bootcampItems', 'webinarItems', 'privateItems', 'bundleEnrollments.bundle.bundleItems.bundleable']);
+        $invoice->load(['courseItems', 'bootcampItems', 'webinarItems', 'bundleEnrollments.bundle.bundleItems.bundleable']);
 
         foreach ($invoice->courseItems as $courseItem) {
             $this->addToCertificateParticipants('course', $courseItem->course_id, $invoice->user_id);
@@ -1802,8 +1707,6 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'privateItems.privateClass',
-            'privateItems.privateClassSchedule',
             'certificationProgramItems.certificationProgram'
         ])->findOrFail($id);
 

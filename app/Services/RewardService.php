@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\PointTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class RewardService
 {
@@ -100,11 +101,15 @@ class RewardService
                 }
             }
 
-            // Save the referral connection permanently on the buyer's user record
-            if (empty($buyer->referred_by_user_id)) {
-                $buyer->update([
-                    'referred_by_user_id' => $referrer->id
-                ]);
+            // Save the referral connection permanently on the buyer's user record if column exists
+            if (Schema::hasColumn('users', 'referred_by_user_id')) {
+                if (empty($buyer->referred_by_user_id)) {
+                    $buyer->update([
+                        'referred_by_user_id' => $referrer->id
+                    ]);
+                }
+            } else {
+                Log::info('users table does not have referred_by_user_id column, skipped user record update.');
             }
 
             // Get reward configurations
