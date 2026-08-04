@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:public/build/assets/about-section-CXeDd8xZ.js
-import{j as e}from"./app-bkdCF5BO.js";/* empty css            */function a({bundle:t}){return e.jsx("section",{className:"mx-auto w-full space-y-4 md:p-4",children:e.jsx("div",{className:"rounded-2xl bg-neutral-100 p-6",children:e.jsx("div",{className:"prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300",dangerouslySetInnerHTML:{__html:t.description||"<p>Deskripsi tidak tersedia.</p>"}})})})}export{a as default};
-========
-import{j as e}from"./app-DkSOBXqF.js";/* empty css            */function a({bundle:t}){return e.jsx("section",{className:"mx-auto w-full space-y-4 md:p-4",children:e.jsx("div",{className:"rounded-2xl bg-neutral-100 p-6",children:e.jsx("div",{className:"prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300",dangerouslySetInnerHTML:{__html:t.description||"<p>Deskripsi tidak tersedia.</p>"}})})})}export{a as default};
->>>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829:public/build/assets/about-section-DRHx-n9g.js

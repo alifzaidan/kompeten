@@ -1,5 +1,0 @@
-<<<<<<<< HEAD:public/build/assets/transition-panel-CYrCMGxr.js
-import{j as i}from"./app-bkdCF5BO.js";import{c as o}from"./utils-C_V_Y4iL.js";import{A as s}from"./index-C1cGyjjw.js";import{m as c}from"./proxy-ZpBO3R3i.js";function u({children:r,className:n,transition:a,variants:m,activeIndex:e,...t}){return i.jsx("div",{className:o("relative",n),children:i.jsx(s,{initial:!1,mode:"popLayout",custom:t.custom,children:i.jsx(c.div,{variants:m,transition:a,initial:"enter",animate:"center",exit:"exit",...t,children:r[e]},e)})})}export{u as T};
-========
-import{j as i}from"./app-DkSOBXqF.js";import{c as o}from"./utils-DtgXnHdN.js";import{A as s}from"./index-DigFmxYn.js";import{m as c}from"./proxy-CWyEsaMG.js";function u({children:r,className:n,transition:a,variants:m,activeIndex:e,...t}){return i.jsx("div",{className:o("relative",n),children:i.jsx(s,{initial:!1,mode:"popLayout",custom:t.custom,children:i.jsx(c.div,{variants:m,transition:a,initial:"enter",animate:"center",exit:"exit",...t,children:r[e]},e)})})}export{u as T};
->>>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829:public/build/assets/transition-panel-Cevti-gU.js

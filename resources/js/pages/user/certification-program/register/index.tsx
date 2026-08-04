@@ -175,10 +175,11 @@ export default function Register({
 
     const basePrice = displayPrice;
     const discountAmount = discountData?.valid ? discountData.discount_amount : 0;
-    const maxPointsAllowed = basePrice - discountAmount;
+    const maxPointsAllowed = Math.max(0, basePrice - discountAmount);
 
-    const finalCertificationPrice = basePrice - discountAmount - (pointsChecked ? pointsToUse : 0);
-    const totalPrice = finalCertificationPrice;
+    const transactionFee = displayPrice > 0 ? 5000 : 0;
+    const finalCertificationPrice = Math.max(0, basePrice - discountAmount - (pointsChecked ? pointsToUse : 0));
+    const totalPrice = displayPrice > 0 ? finalCertificationPrice + transactionFee : 0;
 
     const updateGuestForm = (field: keyof GuestFormData, value: string) => {
         setGuestFormData((prev) => ({ ...prev, [field]: value }));
@@ -532,23 +533,19 @@ export default function Register({
             const originalDiscountAmount =
                 program.strikethrough_price && program.strikethrough_price > 0 ? program.strikethrough_price - program.price : 0;
             const promoDiscountAmount = discountData?.valid ? discountData.discount_amount : 0;
-<<<<<<< HEAD
-            const activeFinalPrice = displayPrice - promoDiscountAmount;
-            
-            const pointsDeduction = overridePointsChecked !== undefined ? (overridePointsChecked ? (overridePointsToUse || 0) : 0) : (pointsChecked ? pointsToUse : 0);
-            const finalNettAmount = activeFinalPrice - pointsDeduction;
-            const activeTotalPrice = finalNettAmount;
-
-=======
             const activeFinalPrice = Math.max(0, displayPrice - promoDiscountAmount);
             const transactionFee = displayPrice > 0 ? 5000 : 0;
->>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829
+
+            const pointsDeduction = overridePointsChecked !== undefined ? (overridePointsChecked ? (overridePointsToUse || 0) : 0) : (pointsChecked ? pointsToUse : 0);
+            const finalNettAmount = Math.max(0, activeFinalPrice - pointsDeduction);
+            const activeTotalPrice = displayPrice > 0 ? finalNettAmount + transactionFee : 0;
+
             const invoiceData: Record<string, string | number> = {
                 type: 'certification_program',
                 id: program.id,
                 discount_amount: originalDiscountAmount + promoDiscountAmount,
                 nett_amount: finalNettAmount,
-                transaction_fee: 0,
+                transaction_fee: transactionFee,
                 total_amount: activeTotalPrice,
                 isScholarship: isScholarship ? 1 : 0,
                 points_redeemed: pointsDeduction,
@@ -1339,14 +1336,6 @@ export default function Register({
                                     )}
                                 </div>
 
-<<<<<<< HEAD
-                                <div className="mb-4 flex items-center justify-between text-sm">
-                                    <span className="text-gray-600 font-medium">Tipe</span>
-                                    <Badge className={isScholarship ? 'bg-purple-100 text-purple-700' : ''}>
-                                        <GraduationCap size={12} className="mr-1" />
-                                        {isScholarship ? 'Beasiswa' : 'Reguler'}
-                                    </Badge>
-=======
                                 <div className="space-y-2 text-sm">
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
@@ -1363,10 +1352,17 @@ export default function Register({
                                                 <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
                                             </div>
 
-                                            {discountData?.valid && (
+                                            {codeType === 'voucher' && discountData?.valid && (
                                                 <div className="flex items-center justify-between text-green-600 dark:text-green-400">
                                                     <span>Diskon Promo ({discountData.discount_code.code})</span>
                                                     <span>-{formatRupiah(discountData.discount_amount)}</span>
+                                                </div>
+                                            )}
+
+                                            {pointsChecked && pointsToUse > 0 && !pointsError && (
+                                                <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                    <span>Potongan Poin</span>
+                                                    <span>-{formatRupiah(pointsToUse)}</span>
                                                 </div>
                                             )}
 
@@ -1376,54 +1372,8 @@ export default function Register({
                                             </div>
                                         </>
                                     )}
->>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829
                                 </div>
                                 <Separator />
-<<<<<<< HEAD
-                                {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600">Harga Normal</span>
-                                        <span className="font-semibold text-gray-500 line-through">{formatRupiah(program.strikethrough_price)}</span>
-                                    </div>
-                                )}
-                                
-                                <div className="space-y-2 text-sm pt-2">
-                                    {codeType === 'voucher' && discountData?.valid ? (
-                                        <>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-gray-600">Harga Program</span>
-                                                <span className="font-semibold text-gray-500 line-through">{formatRupiah(displayPrice)}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-base">
-                                                <span className="font-bold text-gray-900">Total Pembayaran</span>
-                                                <span className="text-[#FA5F25] text-xl font-bold italic">
-                                                    {displayPrice - discountData.discount_amount <= 0 ? 'GRATIS' : formatRupiah(displayPrice - discountData.discount_amount)}
-                                                </span>
-                                            </div>
-                                            <p className="text-[10px] text-green-600 text-right">Sudah termasuk diskon {discountData.discount_code.formatted_value}</p>
-                                        </>
-                                    ) : pointsChecked && pointsToUse > 0 && !pointsError ? (
-                                        <>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-gray-600">Harga Program</span>
-                                                <span className="font-semibold text-gray-500 line-through">{formatRupiah(displayPrice)}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-base">
-                                                <span className="font-bold text-gray-900">Total Pembayaran</span>
-                                                <span className="text-[#FA5F25] text-xl font-bold italic">
-                                                    {displayPrice - pointsToUse <= 0 ? 'GRATIS' : formatRupiah(displayPrice - pointsToUse)}
-                                                </span>
-                                            </div>
-                                            <p className="text-[10px] text-green-600 text-right">Sudah termasuk potongan poin {formatRupiah(pointsToUse)}</p>
-                                        </>
-                                    ) : (
-                                        <div className="flex items-center justify-between text-base">
-                                            <span className="font-bold text-gray-900">Total Pembayaran</span>
-                                            <span className="text-[#FA5F25] text-xl font-bold italic">
-                                                {displayPrice > 0 ? formatRupiah(displayPrice) : 'GRATIS'}
-                                            </span>
-                                        </div>
-=======
 
                                 <div className="space-y-1">
                                     {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
@@ -1436,18 +1386,22 @@ export default function Register({
                                         <div className="text-right">
                                             {displayPrice > 0 ? (
                                                 <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                                    {formatRupiah(Math.max(0, displayPrice - (discountData?.valid ? discountData.discount_amount : 0)) + 5000)}
+                                                    {totalPrice <= 0 ? 'GRATIS' : formatRupiah(totalPrice)}
                                                 </p>
                                             ) : (
                                                 <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
                                             )}
                                         </div>
                                     </div>
-                                    {discountData?.valid && (
+                                    {codeType === 'voucher' && discountData?.valid && (
                                         <p className="text-right text-xs text-green-600 dark:text-green-500">
                                             Sudah termasuk diskon {discountData.discount_code.formatted_value}
                                         </p>
->>>>>>> b2c56d86446cd87c2a69571375bc1e7e7f84d829
+                                    )}
+                                    {pointsChecked && pointsToUse > 0 && !pointsError && (
+                                        <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                            Sudah termasuk potongan poin {formatRupiah(pointsToUse)}
+                                        </p>
                                     )}
                                 </div>
 
