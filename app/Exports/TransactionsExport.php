@@ -46,8 +46,9 @@ class TransactionsExport implements
     public function query()
     {
         $query = Invoice::with([
-            'user',
-            'referrer',
+            'user.referrer',
+            'referredByUser',
+            'referralUser',
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',

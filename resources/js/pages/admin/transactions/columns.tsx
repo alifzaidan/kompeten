@@ -22,6 +22,7 @@ interface User {
     id: string;
     name: string;
     phone_number: string | null;
+    referrer?: Referrer | null;
 }
 
 interface Course {
@@ -68,7 +69,11 @@ interface CertificationProgramItem {
 export interface Invoice {
     id: string;
     user: User;
-    referrer: Referrer | null;
+    referrer?: Referrer | null;
+    referred_by_user?: User | null;
+    referredByUser?: User | null;
+    referral_user?: User | null;
+    referralUser?: User | null;
     invoice_code: string;
     invoice_url: string | null;
     nett_amount: number;
@@ -260,9 +265,30 @@ export const columns: ColumnDef<Invoice>[] = [
         },
     },
     {
-        accessorKey: 'referrer.name',
+        id: 'affiliate',
+        accessorFn: (row) => {
+            const inv = row as any;
+            return inv.referred_by_user?.name || inv.referredByUser?.name || inv.user?.referrer?.name || inv.referrer?.name || '-';
+        },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Afiliasi" />,
-        cell: ({ row }) => <p>{row.original.referrer?.name || '-'}</p>,
+        cell: ({ row }) => {
+            const inv = row.original as any;
+            const name = inv.referred_by_user?.name || inv.referredByUser?.name || inv.user?.referrer?.name || inv.referrer?.name || '-';
+            return <p>{name}</p>;
+        },
+    },
+    {
+        id: 'referral_code_user',
+        accessorFn: (row) => {
+            const inv = row as any;
+            return inv.referral_user?.name || inv.referralUser?.name || '-';
+        },
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Kode Referral" />,
+        cell: ({ row }) => {
+            const inv = row.original as any;
+            const name = inv.referral_user?.name || inv.referralUser?.name || '-';
+            return <p>{name}</p>;
+        },
     },
     {
         accessorKey: 'status',

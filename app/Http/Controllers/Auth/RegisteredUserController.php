@@ -50,18 +50,6 @@ class RegisteredUserController extends Controller
             // 'affiliate_code' => 'nullable|string|exists:users,affiliate_code',
         ]);
 
-        // $affiliateCode = $request->affiliate_code
-        //     ?? session('referral_code')
-        //     ?? 'KMP2025';
-
-        // $referred_by_user_id = null;
-        // if ($affiliateCode) {
-        //     $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
-        //     if ($affiliateUser) {
-        //         $referred_by_user_id = $affiliateUser->id;
-        //     }
-        // }
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -69,7 +57,6 @@ class RegisteredUserController extends Controller
             'instance' => $request->instance,
             'city' => $request->city,
             'password' => Hash::make($request->password),
-            // 'referred_by_user_id' => $referred_by_user_id,
         ]);
 
         $user->assignRole('user');
@@ -77,8 +64,6 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
-
-        // session()->forget('referral_code');
 
         return to_route('home');
         // return to_route('verification.notice')->with('status', 'Pendaftaran berhasil! Silakan periksa email Anda untuk tautan verifikasi.');

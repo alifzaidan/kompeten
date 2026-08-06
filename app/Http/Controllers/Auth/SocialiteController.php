@@ -74,23 +74,13 @@ class SocialiteController extends Controller
                     throw new \Exception('Akun dengan provider ini sudah terhubung ke user lain.');
                 }
             } else {
-                $referralCode = session('referral_code', 'KMP2025');
-                $referrer = User::where('affiliate_code', $referralCode)->first();
-
-                if (!$referrer) {
-                    $referrer = User::where('affiliate_code', 'KMP2025')->first();
-                }
-
                 $user = User::create([
                     $provider_id_column => $socialiteId,
                     'name' => $socialiteUser->getName() ?? $socialiteUser->getNickname(),
                     'email' => $socialiteEmail,
                     'avatar' => $socialiteUser->getAvatar(),
                     'password' => Hash::make(Str::random(24)),
-                    'referred_by_user_id' => $referrer?->id,
                 ]);
-
-                session()->forget('referral_code');
             }
         }
 

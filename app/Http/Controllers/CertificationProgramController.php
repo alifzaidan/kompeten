@@ -195,8 +195,9 @@ class CertificationProgramController extends Controller
         }
 
         $transactionQuery = Invoice::with([
-            'user',
-            'referrer',
+            'user.referrer',
+            'referredByUser',
+            'referralUser',
             'certificationProgramItems' => function ($query) use ($id) {
                 $query->where('certification_program_id', $id);
             }

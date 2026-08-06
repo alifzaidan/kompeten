@@ -48,6 +48,8 @@ class InvoiceController extends Controller
         // Buat query dasar
         $invoicesQuery = Invoice::with([
             'user.referrer',
+            'referredByUser',
+            'referralUser',
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
@@ -341,6 +343,17 @@ class InvoiceController extends Controller
                 $expectedNettAmount = $expectedNettAmount - $pointsRedeemed;
             }
 
+            $buyer = Auth::user();
+            $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
+            if (!$referredByUserId && ($sessionRef = session('referral_code'))) {
+                $affiliateUser = User::where('affiliate_code', $sessionRef)
+                    ->orWhere('referral_code', $sessionRef)
+                    ->first();
+                if ($affiliateUser && $affiliateUser->id !== $userId) {
+                    $referredByUserId = $affiliateUser->id;
+                }
+            }
+
             $referralUserId = null;
             $referralCode = $request->input('referral_code');
             if ($referralCode) {
@@ -356,6 +369,18 @@ class InvoiceController extends Controller
                 }
                 
                 $referralUserId = $validationResult['referrer']->id;
+            }
+
+            if (!$referredByUserId && $referralUserId) {
+                $referredByUserId = $referralUserId;
+            }
+
+            if (!$referredByUserId) {
+                $defaultAffiliate = User::whereIn('affiliate_code', ['KMP2025', 'AKS2025'])->first()
+                    ?? User::role('affiliate')->first();
+                if ($defaultAffiliate && $defaultAffiliate->id !== $userId) {
+                    $referredByUserId = $defaultAffiliate->id;
+                }
             }
 
             $expectedTotal = $expectedNettAmount > 0 ? $expectedNettAmount + $transactionFee : 0;
@@ -400,12 +425,13 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::create([
                 'user_id' => $userId,
+                'referred_by_user_id' => $referredByUserId,
+                'referral_user_id' => $referralUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => $discountAmount,
                 'amount' => $totalAmount,
                 'nett_amount' => $nettAmount,
                 'points_redeemed' => $pointsRedeemed,
-                'referral_user_id' => $referralUserId,
                 'expires_at' => $expiresAt,
             ]);
 
@@ -535,6 +561,17 @@ class InvoiceController extends Controller
                 $expectedNettAmount = $expectedNettAmount - $pointsRedeemed;
             }
 
+            $buyer = Auth::user();
+            $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
+            if (!$referredByUserId && ($sessionRef = session('referral_code'))) {
+                $affiliateUser = User::where('affiliate_code', $sessionRef)
+                    ->orWhere('referral_code', $sessionRef)
+                    ->first();
+                if ($affiliateUser && $affiliateUser->id !== $userId) {
+                    $referredByUserId = $affiliateUser->id;
+                }
+            }
+
             $referralUserId = null;
             $referralCode = $request->input('referral_code');
             if ($referralCode) {
@@ -550,6 +587,18 @@ class InvoiceController extends Controller
                 }
                 
                 $referralUserId = $validationResult['referrer']->id;
+            }
+
+            if (!$referredByUserId && $referralUserId) {
+                $referredByUserId = $referralUserId;
+            }
+
+            if (!$referredByUserId) {
+                $defaultAffiliate = User::whereIn('affiliate_code', ['KMP2025', 'AKS2025'])->first()
+                    ?? User::role('affiliate')->first();
+                if ($defaultAffiliate && $defaultAffiliate->id !== $userId) {
+                    $referredByUserId = $defaultAffiliate->id;
+                }
             }
 
             $expectedTotal = $expectedNettAmount > 0 ? $expectedNettAmount + $transactionFee : 0;
@@ -588,12 +637,13 @@ class InvoiceController extends Controller
             // Create invoice
             $invoice = Invoice::create([
                 'user_id' => $userId,
+                'referred_by_user_id' => $referredByUserId,
+                'referral_user_id' => $referralUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => $discountAmount,
                 'amount' => $totalAmount,
                 'nett_amount' => $nettAmount,
                 'points_redeemed' => $pointsRedeemed,
-                'referral_user_id' => $referralUserId,
                 'expires_at' => $expiresAt,
             ]);
 
@@ -697,13 +747,24 @@ class InvoiceController extends Controller
             $type = $request->input('type', 'course');
             $itemId = $request->input('id');
 
-            $referralCode = session('referral_code');
-            $referredByUserId = null;
+            $buyer = Auth::user();
+            $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
 
-            if ($referralCode && $referralCode !== 'AKS2025') {
-                $referrer = User::where('affiliate_code', $referralCode)->first();
+            $referralCode = session('referral_code');
+            if (!$referredByUserId && $referralCode) {
+                $referrer = User::where('affiliate_code', $referralCode)
+                    ->orWhere('referral_code', $referralCode)
+                    ->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
+                }
+            }
+
+            if (!$referredByUserId) {
+                $defaultAffiliate = User::whereIn('affiliate_code', ['KMP2025', 'AKS2025'])->first()
+                    ?? User::role('affiliate')->first();
+                if ($defaultAffiliate && $defaultAffiliate->id !== $userId) {
+                    $referredByUserId = $defaultAffiliate->id;
                 }
             }
 
@@ -753,6 +814,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'user_id' => $userId,
                 'referred_by_user_id' => $referredByUserId,
+                'referral_user_id' => $referredByUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => 0,
                 'amount' => 0,
