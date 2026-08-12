@@ -115,6 +115,8 @@ interface InvoiceData {
     total_amount: number;
     discount_code_id?: string;
     discount_code_amount?: number;
+    referral_code?: string;
+    affiliate_code?: string;
 }
 
 export default function CheckoutCourse({
@@ -166,9 +168,9 @@ export default function CheckoutCourse({
         const refFromUrl = urlParams.get('ref');
 
         if (refFromUrl) {
-            sessionStorage.setItem('referral_code', refFromUrl);
-        } else if (referralInfo.code) {
-            sessionStorage.setItem('referral_code', referralInfo.code);
+            sessionStorage.setItem('affiliate_code', refFromUrl);
+        } else if (referralInfo?.code) {
+            sessionStorage.setItem('affiliate_code', referralInfo.code);
         }
     }, [referralInfo]);
 
@@ -261,6 +263,7 @@ export default function CheckoutCourse({
             {
                 type: 'course',
                 id: course.id,
+                affiliate_code: sessionStorage.getItem('affiliate_code') || referralInfo?.code || '',
             },
             {
                 onError: (errors) => {
@@ -311,6 +314,8 @@ export default function CheckoutCourse({
                 invoiceData.discount_code_id = discountData.discount_code.id;
                 invoiceData.discount_code_amount = discountData.discount_amount;
             }
+
+            invoiceData.affiliate_code = sessionStorage.getItem('affiliate_code') || referralInfo?.code || '';
 
             try {
                 const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;

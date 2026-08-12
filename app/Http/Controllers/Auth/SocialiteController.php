@@ -15,7 +15,7 @@ class SocialiteController extends Controller
     public function redirectToGoogle()
     {
         if (request()->has('ref')) {
-            session(['referral_code' => request('ref')]);
+            session(['affiliate_code' => request('ref')]);
         }
 
         return Socialite::driver('google')->redirect();
@@ -24,7 +24,7 @@ class SocialiteController extends Controller
     public function redirectToGitHub()
     {
         if (request()->has('ref')) {
-            session(['referral_code' => request('ref')]);
+            session(['affiliate_code' => request('ref')]);
         }
 
         return Socialite::driver('github')->redirect();
@@ -74,12 +74,22 @@ class SocialiteController extends Controller
                     throw new \Exception('Akun dengan provider ini sudah terhubung ke user lain.');
                 }
             } else {
+                $affiliateCode = session('affiliate_code');
+                $referredByUserId = null;
+                if ($affiliateCode) {
+                    $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
+                    if ($affiliateUser) {
+                        $referredByUserId = $affiliateUser->id;
+                    }
+                }
+
                 $user = User::create([
                     $provider_id_column => $socialiteId,
                     'name' => $socialiteUser->getName() ?? $socialiteUser->getNickname(),
                     'email' => $socialiteEmail,
                     'avatar' => $socialiteUser->getAvatar(),
                     'password' => Hash::make(Str::random(24)),
+                    'referred_by_user_id' => $referredByUserId,
                 ]);
             }
         }

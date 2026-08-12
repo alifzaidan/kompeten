@@ -345,10 +345,9 @@ class InvoiceController extends Controller
 
             $buyer = Auth::user();
             $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
-            if (!$referredByUserId && ($sessionRef = session('referral_code'))) {
-                $affiliateUser = User::where('affiliate_code', $sessionRef)
-                    ->orWhere('referral_code', $sessionRef)
-                    ->first();
+            $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
+            if (!$referredByUserId && $affiliateCode) {
+                $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
                 if ($affiliateUser && $affiliateUser->id !== $userId) {
                     $referredByUserId = $affiliateUser->id;
                 }
@@ -369,10 +368,6 @@ class InvoiceController extends Controller
                 }
                 
                 $referralUserId = $validationResult['referrer']->id;
-            }
-
-            if (!$referredByUserId && $referralUserId) {
-                $referredByUserId = $referralUserId;
             }
 
             if (!$referredByUserId) {
@@ -563,10 +558,9 @@ class InvoiceController extends Controller
 
             $buyer = Auth::user();
             $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
-            if (!$referredByUserId && ($sessionRef = session('referral_code'))) {
-                $affiliateUser = User::where('affiliate_code', $sessionRef)
-                    ->orWhere('referral_code', $sessionRef)
-                    ->first();
+            $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
+            if (!$referredByUserId && $affiliateCode) {
+                $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
                 if ($affiliateUser && $affiliateUser->id !== $userId) {
                     $referredByUserId = $affiliateUser->id;
                 }
@@ -587,10 +581,6 @@ class InvoiceController extends Controller
                 }
                 
                 $referralUserId = $validationResult['referrer']->id;
-            }
-
-            if (!$referredByUserId && $referralUserId) {
-                $referredByUserId = $referralUserId;
             }
 
             if (!$referredByUserId) {
@@ -750,11 +740,9 @@ class InvoiceController extends Controller
             $buyer = Auth::user();
             $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
 
-            $referralCode = session('referral_code');
-            if (!$referredByUserId && $referralCode) {
-                $referrer = User::where('affiliate_code', $referralCode)
-                    ->orWhere('referral_code', $referralCode)
-                    ->first();
+            $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
+            if (!$referredByUserId && $affiliateCode) {
+                $referrer = User::where('affiliate_code', $affiliateCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
                 }
@@ -765,6 +753,16 @@ class InvoiceController extends Controller
                     ?? User::role('affiliate')->first();
                 if ($defaultAffiliate && $defaultAffiliate->id !== $userId) {
                     $referredByUserId = $defaultAffiliate->id;
+                }
+            }
+
+            $referralUserId = null;
+            $referralCode = $request->input('referral_code');
+            if ($referralCode) {
+                $referralService = app(\App\Services\ReferralService::class);
+                $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
+                if ($validationResult['valid']) {
+                    $referralUserId = $validationResult['referrer']->id;
                 }
             }
 
@@ -814,7 +812,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'user_id' => $userId,
                 'referred_by_user_id' => $referredByUserId,
-                'referral_user_id' => $referredByUserId,
+                'referral_user_id' => $referralUserId,
                 'invoice_code' => $invoice_code,
                 'discount_amount' => 0,
                 'amount' => 0,
