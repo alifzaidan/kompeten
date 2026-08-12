@@ -46,14 +46,9 @@ class RegisteredUserController extends Controller
             'affiliate_code' => 'nullable|string',
         ]);
 
-        $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
-        $referredByUserId = null;
-
+        $affiliateCode = $request->input('affiliate_code');
         if ($affiliateCode) {
-            $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
-            if ($affiliateUser) {
-                $referredByUserId = $affiliateUser->id;
-            }
+            session(['affiliate_code' => $affiliateCode]);
         }
 
         $user = User::create([
@@ -63,7 +58,6 @@ class RegisteredUserController extends Controller
             'instance' => $request->instance,
             'city' => $request->city,
             'password' => Hash::make($request->password),
-            'referred_by_user_id' => $referredByUserId,
         ]);
 
         $user->assignRole('user');

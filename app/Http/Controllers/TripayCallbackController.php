@@ -347,7 +347,7 @@ class TripayCallbackController extends Controller
     {
         $affiliate = null;
 
-        $referredByUserId = $invoice->referred_by_user_id ?? ($invoice->user ? $invoice->user->referred_by_user_id : null);
+        $referredByUserId = $invoice->referred_by_user_id;
         if ($referredByUserId) {
             $candidate = User::find($referredByUserId);
             if ($candidate && ($candidate->hasRole('affiliate') || $candidate->affiliate_status === 'Active')) {

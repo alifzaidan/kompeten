@@ -344,9 +344,9 @@ class InvoiceController extends Controller
             }
 
             $buyer = Auth::user();
-            $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
+            $referredByUserId = null;
             $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
-            if (!$referredByUserId && $affiliateCode) {
+            if ($affiliateCode) {
                 $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
                 if ($affiliateUser && $affiliateUser->id !== $userId) {
                     $referredByUserId = $affiliateUser->id;
@@ -557,9 +557,9 @@ class InvoiceController extends Controller
             }
 
             $buyer = Auth::user();
-            $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
+            $referredByUserId = null;
             $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
-            if (!$referredByUserId && $affiliateCode) {
+            if ($affiliateCode) {
                 $affiliateUser = User::where('affiliate_code', $affiliateCode)->first();
                 if ($affiliateUser && $affiliateUser->id !== $userId) {
                     $referredByUserId = $affiliateUser->id;
@@ -738,10 +738,10 @@ class InvoiceController extends Controller
             $itemId = $request->input('id');
 
             $buyer = Auth::user();
-            $referredByUserId = $buyer ? $buyer->referred_by_user_id : null;
+            $referredByUserId = null;
 
             $affiliateCode = $request->input('affiliate_code') ?? session('affiliate_code');
-            if (!$referredByUserId && $affiliateCode) {
+            if ($affiliateCode) {
                 $referrer = User::where('affiliate_code', $affiliateCode)->first();
                 if ($referrer && $referrer->id !== $userId) {
                     $referredByUserId = $referrer->id;
@@ -1684,7 +1684,7 @@ class InvoiceController extends Controller
     {
         $buyer = $invoice->user;
 
-        $referredByUserId = $invoice->referred_by_user_id ?? ($buyer ? ($buyer->referred_by_user_id ?? null) : null);
+        $referredByUserId = $invoice->referred_by_user_id;
 
         if ($referredByUserId) {
             $affiliate = User::find($referredByUserId);

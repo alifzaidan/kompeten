@@ -25,7 +25,6 @@ class User extends Authenticatable
     protected $fillable = [
         'google_id',
         'github_id',
-        'referred_by_user_id',
         'name',
         'email',
         'phone_number',
@@ -95,10 +94,6 @@ class User extends Authenticatable
         $this->notify(new CustomVerifyEmailNotification());
     }
 
-    public function referrer()
-    {
-        return $this->belongsTo(User::class, 'referred_by_user_id');
-    }
 
     public function courses()
     {

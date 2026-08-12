@@ -101,16 +101,6 @@ class RewardService
                 }
             }
 
-            // Save the referral connection permanently on the buyer's user record if column exists
-            if (Schema::hasColumn('users', 'referred_by_user_id')) {
-                if (empty($buyer->referred_by_user_id)) {
-                    $buyer->update([
-                        'referred_by_user_id' => $referrer->id
-                    ]);
-                }
-            } else {
-                Log::info('users table does not have referred_by_user_id column, skipped user record update.');
-            }
 
             // Get reward configurations
             $referrerRewardAmount = (int) Setting::get('referral_reward', 5000);
