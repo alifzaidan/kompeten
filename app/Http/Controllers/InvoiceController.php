@@ -47,6 +47,7 @@ class InvoiceController extends Controller
 
         // Buat query dasar
         $invoicesQuery = Invoice::with([
+            'user',
             'referredByUser',
             'referralUser',
             'courseItems.course',

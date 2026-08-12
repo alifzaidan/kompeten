@@ -176,6 +176,7 @@ class WebinarController extends Controller
         $webinar = Webinar::with(['category', 'user', 'tools'])->findOrFail($id);
 
         $transactionQuery = Invoice::with([
+            'user',
             'referredByUser',
             'referralUser',
             'webinarItems' => function ($query) use ($id) {

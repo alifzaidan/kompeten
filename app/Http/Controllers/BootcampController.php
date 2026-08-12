@@ -230,6 +230,7 @@ class BootcampController extends Controller
         $bootcamp = Bootcamp::with(['category', 'mentors', 'schedules', 'tools'])->findOrFail($id);
 
         $transactionQuery = Invoice::with([
+            'user',
             'referredByUser',
             'referralUser',
             'bootcampItems' => function ($query) use ($id) {
