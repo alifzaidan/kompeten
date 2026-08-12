@@ -46,7 +46,6 @@ class TransactionsExport implements
     public function query()
     {
         $query = Invoice::with([
-            'user.referrer',
             'referredByUser',
             'referralUser',
             'courseItems.course',
@@ -250,7 +249,7 @@ class TransactionsExport implements
             $invoice->nett_amount === 0 ? 'Gratis' : 'Berbayar',
             $invoice->payment_method ?? '-',
             $invoice->payment_channel ?? '-',
-            $invoice->referrer->name ?? '-',
+            $invoice->referredByUser->name ?? $invoice->referralUser->name ?? '-',
             $invoice->created_at ? $invoice->created_at->format('d M Y, H:i') : '-',
             $invoice->paid_at ? Carbon::parse($invoice->paid_at)->format('d M Y, H:i') : '-',
         ];

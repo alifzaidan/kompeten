@@ -199,7 +199,6 @@ class CourseController extends Controller
         $course = Course::with(['category', 'user', 'tools', 'images', 'modules.lessons.quizzes.questions'])->findOrFail($id);
 
         $transactions = Invoice::with([
-            'user.referrer',
             'referredByUser',
             'referralUser'
         ])
