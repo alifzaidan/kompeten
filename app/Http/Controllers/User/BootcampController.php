@@ -163,7 +163,7 @@ class BootcampController extends Controller
     }
 
     /**
-     * Handle referral code dari URL parameter
+     * Handle referral/affiliate code dari URL parameter
      */
     private function handleReferralCode(Request $request): void
     {
@@ -171,19 +171,20 @@ class BootcampController extends Controller
 
         if ($referralCode) {
             session([
-                'referral_code' => $referralCode,
+                'affiliate_code' => $referralCode,
             ]);
         }
     }
 
     /**
-     * Get referral info untuk frontend
+     * Get referral/affiliate info untuk frontend
      */
     private function getReferralInfo(): array
     {
+        $code = session('affiliate_code');
         return [
-            'code' => session('referral_code'),
-            'hasActive' => session('referral_code') && session('referral_code') !== 'KMP2025',
+            'code' => $code,
+            'hasActive' => !empty($code) && !in_array($code, ['KMP2025', 'ATM2025', 'AKS2025']),
         ];
     }
 }

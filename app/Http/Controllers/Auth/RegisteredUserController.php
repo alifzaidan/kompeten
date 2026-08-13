@@ -23,14 +23,10 @@ class RegisteredUserController extends Controller
         $referralCode = $request->query('ref');
 
         if ($referralCode) {
-            session(['referral_code' => $referralCode]);
+            session(['affiliate_code' => $referralCode]);
         }
 
-        // $affiliateCode = $referralCode ?? session('referral_code');
-
-        return Inertia::render('auth/register', [
-            // 'affiliate_code' => $affiliateCode,
-        ]);
+        return Inertia::render('auth/register');
     }
 
     /**
@@ -47,8 +43,13 @@ class RegisteredUserController extends Controller
             'instance' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            // 'affiliate_code' => 'nullable|string|exists:users,affiliate_code',
+            'affiliate_code' => 'nullable|string',
         ]);
+
+        $affiliateCode = $request->input('affiliate_code');
+        if ($affiliateCode) {
+            session(['affiliate_code' => $affiliateCode]);
+        }
 
         $user = User::create([
             'name' => $request->name,

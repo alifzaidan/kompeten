@@ -80,8 +80,7 @@ class UserApiController extends Controller
      */
     public function show(string $id)
     {
-        $user = User::with(['referrer'])
-            ->role('user')
+        $user = User::role('user')
             ->find($id);
 
         if (!$user) {

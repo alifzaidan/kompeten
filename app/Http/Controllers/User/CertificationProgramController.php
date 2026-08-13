@@ -454,25 +454,26 @@ class CertificationProgramController extends Controller
     }
 
     /**
-     * Get referral info untuk frontend
+     * Get referral/affiliate info untuk frontend
      */
     private function getReferralInfo(): array
     {
+        $code = session('affiliate_code');
         return [
-            'code' => session('referral_code'),
-            'hasActive' => session('referral_code') && session('referral_code') !== 'ATM2025',
+            'code' => $code,
+            'hasActive' => !empty($code) && !in_array($code, ['KMP2025', 'ATM2025', 'AKS2025']),
         ];
     }
 
     /**
-     * Handle referral code dari URL parameter
+     * Handle referral/affiliate code dari URL parameter
      */
     private function handleReferralCode(Request $request): void
     {
         $referralCode = $request->query('ref');
         if ($referralCode) {
             session([
-                'referral_code' => $referralCode,
+                'affiliate_code' => $referralCode,
             ]);
         }
     }

@@ -15,7 +15,7 @@ class SocialiteController extends Controller
     public function redirectToGoogle()
     {
         if (request()->has('ref')) {
-            session(['referral_code' => request('ref')]);
+            session(['affiliate_code' => request('ref')]);
         }
 
         return Socialite::driver('google')->redirect();
@@ -24,7 +24,7 @@ class SocialiteController extends Controller
     public function redirectToGitHub()
     {
         if (request()->has('ref')) {
-            session(['referral_code' => request('ref')]);
+            session(['affiliate_code' => request('ref')]);
         }
 
         return Socialite::driver('github')->redirect();

@@ -23,7 +23,7 @@ class HomeController extends Controller
         $referralCode = $request->query('ref');
 
         if ($referralCode) {
-            session(['referral_code' => $referralCode]);
+            session(['affiliate_code' => $referralCode]);
         }
 
         $tools = Tool::all();
@@ -322,8 +322,8 @@ class HomeController extends Controller
             'allProducts' => $allProducts,
             'activePromotion' => $activePromotion,
             'referralInfo' => [
-                'code' => session('referral_code'),
-                'hasActive' => session('referral_code') && session('referral_code') !== 'KMP2025',
+                'code' => session('affiliate_code'),
+                'hasActive' => session('affiliate_code') && !in_array(session('affiliate_code'), ['KMP2025', 'ATM2025', 'AKS2025']),
             ],
         ]);
     }
