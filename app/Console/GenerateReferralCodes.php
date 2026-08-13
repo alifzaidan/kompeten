@@ -16,6 +16,13 @@ class GenerateReferralCodes extends Command
     protected $signature = 'app:generate-referral-codes';
 
     /**
+     * The command aliases.
+     *
+     * @var array
+     */
+    protected $aliases = ['app:generate-referral-code'];
+
+    /**
      * The console command description.
      *
      * @var string
@@ -27,8 +34,13 @@ class GenerateReferralCodes extends Command
      */
     public function handle()
     {
-        $users = User::whereNull('referral_code')->get();
+        $this->info('--> Command generate referral code MULAI berjalan...');
+        \Illuminate\Support\Facades\Log::info('Command generate-referral-codes dipanggil.');
+
+        $users = User::whereNull('referral_code')->orWhere('referral_code', '')->get();
         $count = $users->count();
+
+        $this->info("Jumlah user tanpa referral code: {$count}");
 
         if ($count === 0) {
             $this->info('Semua user sudah memiliki referral code.');
