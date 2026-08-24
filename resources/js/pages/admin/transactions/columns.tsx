@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { FileText, Trash } from 'lucide-react';
 import { useState } from 'react';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Referrer {
     id: string;
@@ -88,10 +89,12 @@ export interface Invoice {
 }
 
 function ActionsCell({ row }: { row: Row<Invoice> }) {
+    const { canManage } = usePermission();
+    const canManageTransactions = canManage('transactions');
     const invoice = row.original;
     const user = invoice.user;
-    let whatsappUrl = '';
 
+    let whatsappUrl: string | null = null;
     if (user?.phone_number) {
         let phoneNumber = user.phone_number.replace(/\D/g, '');
         if (phoneNumber.startsWith('0')) {
@@ -148,7 +151,7 @@ function ActionsCell({ row }: { row: Row<Invoice> }) {
                 </Tooltip>
             )}
 
-            {invoice.status === 'pending' && (
+            {canManageTransactions && invoice.status === 'pending' && (
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <div>

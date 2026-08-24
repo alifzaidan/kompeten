@@ -34,7 +34,11 @@ interface CertificateSignProps {
     };
 }
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function CertificateSigns({ signs, flash, filters }: CertificateSignProps) {
+    const { canManage } = usePermission();
+    const canManageCertificate = canManage('certificates');
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -55,15 +59,17 @@ export default function CertificateSigns({ signs, flash, filters }: CertificateS
                         <h1 className="text-2xl font-semibold">Tanda Tangan Sertifikat</h1>
                         <p className="text-muted-foreground text-sm">Daftar semua tanda tangan sertifikat.</p>
                     </div>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="hover:cursor-pointer">
-                                Tambah Tanda Tangan
-                                <Plus />
-                            </Button>
-                        </DialogTrigger>
-                        <CreateSign setOpen={setOpen} />
-                    </Dialog>
+                    {canManageCertificate && (
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="hover:cursor-pointer">
+                                    Tambah Tanda Tangan
+                                    <Plus />
+                                </Button>
+                            </DialogTrigger>
+                            <CreateSign setOpen={setOpen} />
+                        </Dialog>
+                    )}
                 </div>
 
                 <DataTable columns={columns} pagination={signs} filters={filters} />

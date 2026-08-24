@@ -134,7 +134,7 @@ export default function ScholarshipApply({ program }: { program: Program }) {
                         <div className="to-primary rounded-lg bg-gradient-to-tl from-black p-4 text-white shadow-lg">
                             <p className="mb-3 text-xs font-semibold md:text-sm">📞 Untuk informasi lebih lanjut, silakan hubungi:</p>
                             <div className="space-y-1">
-                                <p className="text-sm">📧 <span className="font-medium">aksarateknologimandiri@gmail.com</span></p>
+                                <p className="text-sm">📧 <span className="font-medium">kompetenidn@gmail.com</span></p>
                                 <p className="text-sm">💬 <span className="font-medium">+6289528514480</span></p>
                             </div>
                         </div>

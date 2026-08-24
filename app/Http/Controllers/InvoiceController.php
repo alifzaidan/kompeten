@@ -1855,8 +1855,8 @@ class InvoiceController extends Controller
                 'name' => 'Kompeten',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
                 'phone' => '+6285142505794',
-                'email' => 'aksarateknologi@gmail.com',
-                'website' => 'www.Kompeten.id'
+                'email' => 'kompetenidn@gmail.com',
+                'website' => 'https://kompetenidn.com/'
             ]
         ];
 

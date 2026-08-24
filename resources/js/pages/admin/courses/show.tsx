@@ -70,12 +70,17 @@ interface CourseProps {
     };
 }
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function ShowCourse({ course, transactions, ratings, certificate, flash }: CourseProps) {
     const { auth } = usePage<SharedData>().props;
+    const { can, canManage, isAdmin } = usePermission();
     const role = auth.role[0];
-    const isAdmin = role === 'admin';
     const isMentor = role === 'mentor';
     const isAffiliate = role === 'affiliate';
+    const canManageCourse = canManage('courses') && !isAffiliate;
+    const canManageCertificate = can('certificates.manage');
+    const canViewCertificate = can('certificates.view') || canManageCertificate;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -176,7 +181,7 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                         )}
                     </Tabs>
 
-                    {!isAffiliate && (
+                    {canManageCourse && (
                         <div>
                             <h2 className="my-2 text-lg font-medium">Edit & Kustom</h2>
                             <div className="space-y-4 rounded-lg border p-4">
@@ -227,7 +232,7 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                         onConfirm={handleDelete}
                                     />
                                 </div>
-                                {isAdmin && (
+                                {canViewCertificate && (
                                     <>
                                         <Separator />
                                         {certificate ? (
@@ -237,7 +242,7 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                                     Lihat Data Sertifikat
                                                 </Link>
                                             </Button>
-                                        ) : (
+                                        ) : canManageCertificate ? (
                                             <Button asChild className="w-full" variant="outline">
                                                 <Link
                                                     href={route('certificates.create', {
@@ -249,12 +254,12 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                                     Buat Sertifikat
                                                 </Link>
                                             </Button>
-                                        )}
+                                        ) : null}
                                     </>
                                 )}
                             </div>
 
-                            {isAdmin && (
+                            {canViewCertificate && (
                                 <div className="mt-4 space-y-4 rounded-lg border p-4">
                                     <h3 className="text-sm font-medium">Informasi Sertifikat</h3>
                                     {certificate ? (

@@ -11,13 +11,19 @@ import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Edit, Trash } from 'lucide-react';
 import { useState } from 'react';
+import { usePermission } from '@/hooks/use-permission';
 import EditTool from './edit';
 
 export default function ToolsActions({ tool }: { tool: Tool }) {
+    const { canManage } = usePermission();
     const [open, setOpen] = useState(false);
     const handleDelete = () => {
         router.delete(route('tools.destroy', tool.id));
     };
+
+    if (!canManage('tools')) {
+        return <span className="text-xs text-muted-foreground">-</span>;
+    }
 
     return (
         <div className="flex items-center justify-center gap-2">
