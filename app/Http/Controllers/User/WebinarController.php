@@ -114,39 +114,45 @@ class WebinarController extends Controller
         $hasAccess = false;
         $pendingInvoice = null;
 
-        $userId = Auth::id();
+        if (Auth::check()) {
+            $userId = Auth::id();
 
-        $hasAccess = Invoice::where('user_id', $userId)
-            ->where('status', 'paid')
-            ->whereHas('webinarItems', function ($query) use ($webinar) {
-                $query->where('webinar_id', $webinar->id);
-            })
-            ->exists();
-
-        if (!$hasAccess) {
-            $invoice = Invoice::where('user_id', $userId)
-                ->where('status', 'pending')
+            $hasAccess = Invoice::where('user_id', $userId)
+                ->where('status', 'paid')
                 ->whereHas('webinarItems', function ($query) use ($webinar) {
                     $query->where('webinar_id', $webinar->id);
                 })
-                ->latest()
-                ->first();
+                ->exists();
 
-            if ($invoice) {
-                $pendingInvoice = [
-                    'id' => $invoice->id,
-                    'invoice_code' => $invoice->invoice_code,
-                    'status' => $invoice->status,
-                    'amount' => $invoice->amount,
-                    'payment_method' => $invoice->payment_method,
-                    'payment_channel' => $invoice->payment_channel,
-                    'invoice_url' => $invoice->invoice_url,
-                    'va_number' => $invoice->va_number,
-                    'qr_code_url' => $invoice->qr_code_url,
-                    'bank_name' => $invoice->bank_name ?? null,
-                    'created_at' => $invoice->created_at,
-                    'expires_at' => $invoice->expires_at,
-                ];
+            if (!$hasAccess) {
+                $invoice = Invoice::where('user_id', $userId)
+                    ->where('status', 'pending')
+                    ->whereHas('webinarItems', function ($query) use ($webinar) {
+                        $query->where('webinar_id', $webinar->id);
+                    })
+                    ->where(function ($query) {
+                        $query->whereNull('expires_at')
+                            ->orWhere('expires_at', '>', now());
+                    })
+                    ->latest()
+                    ->first();
+
+                if ($invoice) {
+                    $pendingInvoice = [
+                        'id' => $invoice->id,
+                        'invoice_code' => $invoice->invoice_code,
+                        'status' => $invoice->status,
+                        'amount' => $invoice->amount,
+                        'payment_method' => $invoice->payment_method,
+                        'payment_channel' => $invoice->payment_channel,
+                        'invoice_url' => $invoice->invoice_url,
+                        'va_number' => $invoice->va_number,
+                        'qr_code_url' => $invoice->qr_code_url,
+                        'bank_name' => $invoice->bank_name ?? null,
+                        'created_at' => $invoice->created_at,
+                        'expires_at' => $invoice->expires_at,
+                    ];
+                }
             }
         }
 

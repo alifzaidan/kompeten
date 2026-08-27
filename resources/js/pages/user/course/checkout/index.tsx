@@ -6,8 +6,10 @@ import { Separator } from '@/components/ui/separator';
 import UserLayout from '@/layouts/user-layout';
 import { SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { BadgeCheck, Calendar, Check, Hourglass, RotateCcw, ShoppingCart, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Course {
     id: string;
@@ -140,6 +142,7 @@ export default function CheckoutCourse({
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [promoCode, setPromoCode] = useState('');
     const [discountData, setDiscountData] = useState<DiscountData | null>(null);
     const [promoLoading, setPromoLoading] = useState(false);
@@ -297,7 +300,7 @@ export default function CheckoutCourse({
             return handleFreeCheckout(e);
         }
 
-        const submitPayment = async (retryCount = 0): Promise<void> => {
+        const submitPayment = async (): Promise<void> => {
             const originalDiscountAmount = course.strikethrough_price > 0 ? course.strikethrough_price - course.price : 0;
             const promoDiscountAmount = discountData?.discount_amount || 0;
 
@@ -318,33 +321,11 @@ export default function CheckoutCourse({
             invoiceData.affiliate_code = sessionStorage.getItem('affiliate_code') || referralInfo?.code || '';
 
             try {
-                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                const response = await axios.post(route('invoice.store'), invoiceData);
+                const data = response.data;
 
-                const res = await fetch(route('invoice.store'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || '',
-                        Accept: 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(invoiceData),
-                });
-
-                if (res.status === 419 && retryCount < 2) {
-                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
-                    await refreshCSRFToken();
-                    return submitPayment(retryCount + 1);
-                }
-
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    if (data.payment_url) {
-                        window.location.href = data.payment_url;
-                    } else {
-                        throw new Error('Payment URL not received');
-                    }
+                if (data.success && data.payment_url) {
+                    window.location.href = data.payment_url;
                 } else {
                     throw new Error(data.message || 'Gagal membuat invoice.');
                 }
@@ -357,8 +338,12 @@ export default function CheckoutCourse({
         try {
             await submitPayment();
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Terjadi kesalahan saat proses pembayaran.';
-            alert(message);
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message || 'Terjadi kesalahan saat proses pembayaran.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Terjadi kesalahan saat proses pembayaran.';
+            toast.error(message);
             setLoading(false);
         }
     };
@@ -540,7 +525,7 @@ export default function CheckoutCourse({
                                     <div
                                         className="rounded-xl p-4 flex items-center gap-2"
                                         style={{
-                                            backgroundColor: (() => {
+                                             backgroundColor: (() => {
                                                 const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
                                                 const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
                                                 return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
@@ -612,9 +597,41 @@ export default function CheckoutCourse({
                                             );
                                         })()}
 
-                                        <Button onClick={() => window.location.reload()} variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
-                                            Cek Status Pembayaran
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1 py-6 rounded-full border-gray-200 text-gray-700">
+                                                Cek Status
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1 py-6 rounded-full border-red-200 text-red-600 hover:bg-red-50"
+                                                disabled={cancellingInvoice}
+                                                onClick={async () => {
+                                                    if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                        setCancellingInvoice(true);
+                                                        try {
+                                                            const res = await axios.post(route('invoice.cancel', pendingInvoice.id));
+                                                            if (res.data?.success) {
+                                                                toast.success('Pesanan berhasil dibatalkan.');
+                                                                window.location.reload();
+                                                            } else {
+                                                                toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
+                                                                setCancellingInvoice(false);
+                                                            }
+                                                        } catch (err: unknown) {
+                                                            if (axios.isAxiosError(err)) {
+                                                                toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                            } else {
+                                                                toast.error('Gagal membatalkan pesanan.');
+                                                            }
+                                                            setCancellingInvoice(false);
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             ) : (

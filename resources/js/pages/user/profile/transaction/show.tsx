@@ -12,6 +12,7 @@ import {
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
+import axios from 'axios';
 import { AlertTriangle, CheckCircle2, Clock, ExternalLink, FileText, Home, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -56,6 +57,16 @@ interface CertificationProgramItem {
     };
 }
 
+interface BundleItem {
+    id: string;
+    bundle: {
+        id: string;
+        title: string;
+        slug: string;
+        thumbnail?: string;
+    };
+}
+
 interface Invoice {
     id: string;
     invoice_code: string;
@@ -72,6 +83,8 @@ interface Invoice {
     bootcamp_items?: BootcampItem[];
     webinar_items?: WebinarItem[];
     certificationProgramItems?: CertificationProgramItem[];
+    bundle_enrollments?: BundleItem[];
+    bundleEnrollments?: BundleItem[];
 }
 
 interface Props {
@@ -92,6 +105,7 @@ export default function TransactionShow({ invoice }: Props) {
             const course = invoice.course_items[0].course;
             return {
                 type: 'course',
+                routeParam: 'course',
                 name: course.title,
                 slug: course.slug,
                 thumbnail: course.thumbnail,
@@ -103,6 +117,7 @@ export default function TransactionShow({ invoice }: Props) {
             const bootcamp = invoice.bootcamp_items[0].bootcamp;
             return {
                 type: 'bootcamp',
+                routeParam: 'bootcamp',
                 name: bootcamp.title,
                 slug: bootcamp.slug,
                 thumbnail: bootcamp.thumbnail,
@@ -114,6 +129,7 @@ export default function TransactionShow({ invoice }: Props) {
             const webinar = invoice.webinar_items[0].webinar;
             return {
                 type: 'webinar',
+                routeParam: 'webinar',
                 name: webinar.title,
                 slug: webinar.slug,
                 thumbnail: webinar.thumbnail,
@@ -133,6 +149,18 @@ export default function TransactionShow({ invoice }: Props) {
                 publicRoute: 'certification-programs.detail',
                 badge: 'Sertifikasi Program',
             };
+        } else if ((invoice.bundle_enrollments && invoice.bundle_enrollments.length > 0) || (invoice.bundleEnrollments && invoice.bundleEnrollments.length > 0)) {
+            const bundleItem = (invoice.bundle_enrollments || invoice.bundleEnrollments)![0];
+            return {
+                type: 'bundle',
+                routeParam: 'bundle',
+                name: bundleItem.bundle?.title || 'Paket Bundling',
+                slug: bundleItem.bundle?.slug || '',
+                thumbnail: bundleItem.bundle?.thumbnail || '',
+                profileRoute: 'profile.index',
+                publicRoute: 'bundle.detail',
+                badge: 'Paket Bundling',
+            };
         }
         return null;
     };
@@ -144,24 +172,19 @@ export default function TransactionShow({ invoice }: Props) {
         setDialogOpen(false);
 
         try {
-            const res = await fetch(route('invoice.cancel', { id: invoice.id }), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-                },
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
+            const res = await axios.post(route('invoice.cancel', { id: invoice.id }));
+            if (res.data?.success) {
                 toast.success('Pesanan berhasil dibatalkan dan invoice telah dinonaktifkan.');
                 window.location.reload();
             } else {
-                toast.error(data.message || 'Gagal membatalkan pesanan.');
+                toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
             }
-        } catch {
-            toast.error('Terjadi kesalahan saat membatalkan pesanan.');
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err)) {
+                toast.error(err.response?.data?.message || 'Terjadi kesalahan saat membatalkan pesanan.');
+            } else {
+                toast.error('Terjadi kesalahan saat membatalkan pesanan.');
+            }
         } finally {
             setCancelLoading(false);
         }
@@ -453,9 +476,17 @@ export default function TransactionShow({ invoice }: Props) {
                                         <>
                                             <Button asChild className="w-full" size="lg">
                                                 <Link
-                                                    href={route(productInfo.publicRoute, {
-                                                        [productInfo.routeParam || productInfo.type]: productInfo.slug,
-                                                    })}
+                                                    href={
+                                                        productInfo.type === 'bundle'
+                                                            ? '/profile'
+                                                            : productInfo.profileRoute
+                                                              ? route(productInfo.profileRoute, {
+                                                                    [productInfo.routeParam || productInfo.type]: productInfo.slug,
+                                                                })
+                                                              : route(productInfo.publicRoute, {
+                                                                    [productInfo.routeParam || productInfo.type]: productInfo.slug,
+                                                                })
+                                                    }
                                                 >
                                                     <ExternalLink className="mr-2 h-5 w-5" />
                                                     Akses {productInfo.badge}
@@ -482,7 +513,15 @@ export default function TransactionShow({ invoice }: Props) {
 
                                             {productInfo && (
                                                 <Button asChild variant="outline" className="w-full" size="lg">
-                                                    <Link href={route(productInfo.publicRoute, { [productInfo.type]: productInfo.slug })}>
+                                                    <Link
+                                                        href={
+                                                            productInfo.type === 'bundle'
+                                                                ? `/bundle/${productInfo.slug}`
+                                                                : route(productInfo.publicRoute, {
+                                                                      [productInfo.routeParam || productInfo.type]: productInfo.slug,
+                                                                  })
+                                                        }
+                                                    >
                                                         <ExternalLink className="mr-2 h-5 w-5" />
                                                         Lihat Detail Produk
                                                     </Link>

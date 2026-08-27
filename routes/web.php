@@ -48,6 +48,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -118,6 +119,67 @@ Route::post('/auto-login', function (Request $request) {
         ], 500);
     }
 })->name('auto-login');
+
+Route::post('/auto-register', function (Request $request) {
+    try {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
+            'phone_number' => 'required|string|max:20',
+            'instance' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'affiliate_code' => 'nullable|string',
+        ]);
+
+        $affiliateCode = $request->input('affiliate_code');
+        if ($affiliateCode) {
+            session(['affiliate_code' => $affiliateCode]);
+        }
+
+        $password = $request->input('password', $request->phone_number);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone_number' => $request->phone_number,
+            'instance' => $request->instance,
+            'city' => $request->city,
+            'password' => Hash::make($password),
+        ]);
+
+        $user->assignRole('user');
+
+        event(new \Illuminate\Auth\Events\Registered($user));
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registrasi berhasil',
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'instance' => $user->instance,
+                'city' => $user->city,
+            ]
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => collect($e->errors())->flatten()->first() ?? 'Data tidak valid',
+            'errors' => $e->errors(),
+        ], 422);
+    } catch (\Exception $e) {
+        Log::error('Auto-register error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+})->name('auto-register');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/terms-and-conditions', [LegalController::class, 'termsAndConditions'])->name('terms-and-conditions');

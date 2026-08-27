@@ -50,6 +50,18 @@ interface ReferralInfo {
     hasActive: boolean;
 }
 
+interface PendingInvoice {
+    id: string;
+    invoice_code: string;
+    status: string;
+    amount: number;
+    payment_method: string;
+    payment_channel?: string;
+    invoice_url?: string | null;
+    created_at: string;
+    expires_at: string;
+}
+
 interface GuestFormData {
     name: string;
     email: string;
@@ -116,11 +128,13 @@ export default function RegisterWebinar({
     webinar,
     hasAccess,
     pendingInvoiceUrl,
+    pendingInvoice,
     referralInfo,
 }: {
     webinar: Webinar;
     hasAccess: boolean;
     pendingInvoiceUrl?: string | null;
+    pendingInvoice?: PendingInvoice | null;
     referralInfo: ReferralInfo;
 }) {
     const { auth } = usePage<SharedData>().props;
@@ -129,6 +143,7 @@ export default function RegisterWebinar({
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cancellingInvoice, setCancellingInvoice] = useState(false);
 
     // Referral & Points State
     const [codeType, setCodeType] = useState<'voucher' | 'referral'>('voucher');
@@ -345,42 +360,24 @@ export default function RegisterWebinar({
         return () => clearTimeout(timer);
     }, [guestFormData.email, isLoggedIn]);
 
-    const refreshCSRFToken = useCallback(async (): Promise<string> => {
-        try {
-            const response = await fetch('/csrf-token', {
-                method: 'GET',
-                credentials: 'same-origin',
-            });
-            const data = await response.json();
+    const formatExpiryTime = (expiresAt?: string | null): { time: string; status: 'expired' | 'urgent' | 'normal' } => {
+        if (!expiresAt) return { time: 'Normal', status: 'normal' };
+        const now = new Date();
+        const expiry = new Date(expiresAt);
+        const diff = expiry.getTime() - now.getTime();
 
-            // Update meta tag
-            const metaTag = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-            if (metaTag) {
-                metaTag.content = data.token;
-            }
-
-            return data.token;
-        } catch (error) {
-            console.error('Failed to refresh CSRF token:', error);
-            throw error;
+        if (diff <= 0) {
+            return { time: 'Sudah kadaluarsa', status: 'expired' };
         }
-    }, []);
 
-    const savePendingCheckout = () => {
-        const pendingCheckoutData: PendingCheckoutData = {
-            webinarId: webinar.id,
-            timestamp: Date.now(),
-            promoCode,
-            discountData,
-            termsAccepted,
-            isFree,
-            codeType,
-            referralValid: codeType === 'referral' && !!referralData?.valid,
-            pointsChecked,
-            pointsToUse,
-        };
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-        sessionStorage.setItem('pendingCheckoutWebinar', JSON.stringify(pendingCheckoutData));
+        if (hours < 1) {
+            return { time: `${minutes} menit lagi`, status: 'urgent' };
+        }
+
+        return { time: `${hours} jam ${minutes} menit lagi`, status: hours < 3 ? 'urgent' : 'normal' };
     };
 
     const ensureAuthenticated = async (): Promise<boolean> => {
@@ -417,8 +414,6 @@ export default function RegisterWebinar({
                 if (!loginData.success) {
                     throw new Error(loginData.message || 'Gagal login otomatis.');
                 }
-
-                toast.success('Login berhasil. Melanjutkan checkout...');
             } else {
                 if (!guestFormData.name) {
                     toast.error('Nama wajib diisi.');
@@ -426,7 +421,7 @@ export default function RegisterWebinar({
                     return false;
                 }
 
-                await axios.post(route('register'), {
+                const regResponse = await axios.post(route('auto-register'), {
                     name: guestFormData.name,
                     email: guestFormData.email,
                     phone_number: guestFormData.phone_number,
@@ -437,12 +432,12 @@ export default function RegisterWebinar({
                     affiliate_code: sessionStorage.getItem('affiliate_code') || referralInfo?.code || '',
                 });
 
-                toast.success('Registrasi berhasil. Melanjutkan checkout...');
+                if (regResponse.data && regResponse.data.success === false) {
+                    throw new Error(regResponse.data.message || 'Gagal registrasi.');
+                }
             }
 
-            savePendingCheckout();
-            window.location.reload();
-            return false;
+            return true;
         } catch (error: unknown) {
             setLoading(false);
             if (axios.isAxiosError(error)) {
@@ -457,18 +452,12 @@ export default function RegisterWebinar({
     const submitPayment = useCallback(
         async (
             activeDiscountData: DiscountData | null,
-            overrideCodeType?: 'voucher' | 'referral',
-            overridePromoCode?: string,
-            overrideReferralValid?: boolean,
-            overridePointsChecked?: boolean,
-            overridePointsToUse?: number,
-            retryCount = 0
         ): Promise<void> => {
             const originalDiscountAmount = webinar.strikethrough_price > 0 ? webinar.strikethrough_price - webinar.price : 0;
-            const promoDiscountAmount = activeDiscountData?.discount_amount || 0;
+            const promoDiscountAmount = activeDiscountData?.valid ? activeDiscountData.discount_amount : 0;
             const activeFinalPrice = basePrice - promoDiscountAmount;
             
-            const pointsDeduction = overridePointsChecked !== undefined ? (overridePointsChecked ? (overridePointsToUse || 0) : 0) : (pointsChecked ? pointsToUse : 0);
+            const pointsDeduction = pointsChecked ? pointsToUse : 0;
             const finalNettAmount = activeFinalPrice - pointsDeduction;
             const activeTotalPrice = isFree ? 0 : finalNettAmount + transactionFee;
 
@@ -487,51 +476,17 @@ export default function RegisterWebinar({
                 invoiceData.discount_code_amount = activeDiscountData.discount_amount;
             }
 
-            const currentCodeType = overrideCodeType || codeType;
-            const currentPromoCode = overridePromoCode || promoCode;
-            const isReferralValid = overrideReferralValid !== undefined ? overrideReferralValid : referralData?.valid;
-
-            if (currentCodeType === 'referral' && isReferralValid) {
-                invoiceData.referral_code = currentPromoCode;
+            if (codeType === 'referral' && referralData?.valid) {
+                invoiceData.referral_code = promoCode;
             }
             invoiceData.affiliate_code = sessionStorage.getItem('affiliate_code') || referralInfo?.code || '';
 
             try {
-                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                const response = await axios.post(route('invoice.store'), invoiceData);
+                const data = response.data;
 
-                const res = await fetch(route('invoice.store'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || '',
-                        Accept: 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(invoiceData),
-                });
-
-                if (res.status === 419 && retryCount < 2) {
-                    await refreshCSRFToken();
-                    return submitPayment(
-                        activeDiscountData,
-                        overrideCodeType,
-                        overridePromoCode,
-                        overrideReferralValid,
-                        overridePointsChecked,
-                        overridePointsToUse,
-                        retryCount + 1
-                    );
-                }
-
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    if (data.payment_url) {
-                        sessionStorage.removeItem('pendingCheckoutWebinar');
-                        window.location.href = data.payment_url;
-                    } else {
-                        throw new Error('Payment URL not received');
-                    }
+                if (data.success && data.payment_url) {
+                    window.location.href = data.payment_url;
                 } else {
                     throw new Error(data.message || 'Gagal membuat invoice.');
                 }
@@ -540,17 +495,11 @@ export default function RegisterWebinar({
                 throw error;
             }
         },
-        [basePrice, isFree, refreshCSRFToken, transactionFee, webinar.id, webinar.price, webinar.strikethrough_price, pointsChecked, pointsToUse, codeType, referralData, promoCode],
+        [basePrice, isFree, transactionFee, webinar.id, webinar.price, webinar.strikethrough_price, pointsChecked, pointsToUse, codeType, referralData, promoCode, referralInfo],
     );
 
     const handleFreeCheckout = (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (!isProfileComplete) {
-            alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon dan instansi terlebih dahulu.');
-            window.location.href = route('profile.edit');
-            return;
-        }
 
         if (!freeFormData.requirement_1_proof || !freeFormData.requirement_2_proof || !freeFormData.requirement_3_proof) {
             alert('Harap upload semua bukti yang diperlukan!');
@@ -584,18 +533,13 @@ export default function RegisterWebinar({
             return;
         }
 
+        setLoading(true);
+
         const authenticated = await ensureAuthenticated();
         if (!authenticated) {
+            setLoading(false);
             return;
         }
-
-        if (!isProfileComplete) {
-            alert('Profil Anda belum lengkap! Harap lengkapi nomor telepon dan instansi terlebih dahulu.');
-            window.location.href = route('profile.edit');
-            return;
-        }
-
-        setLoading(true);
 
         if (isFree) {
             setShowFreeForm(true);
@@ -606,78 +550,15 @@ export default function RegisterWebinar({
         try {
             await submitPayment(discountData);
         } catch (error: unknown) {
-            alert(getErrorMessage(error, 'Terjadi kesalahan saat proses pembayaran.'));
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message || 'Terjadi kesalahan saat proses pembayaran.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Terjadi kesalahan saat proses pembayaran.';
+            toast.error(message);
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        if (!isLoggedIn) return;
-
-        const pendingCheckoutRaw = sessionStorage.getItem('pendingCheckoutWebinar');
-        if (!pendingCheckoutRaw) return;
-
-        try {
-            const pendingCheckout = JSON.parse(pendingCheckoutRaw) as PendingCheckoutData;
-
-            const fiveMinutes = 5 * 60 * 1000;
-            if (Date.now() - pendingCheckout.timestamp > fiveMinutes) {
-                sessionStorage.removeItem('pendingCheckoutWebinar');
-                return;
-            }
-
-            if (pendingCheckout.webinarId !== webinar.id) {
-                sessionStorage.removeItem('pendingCheckoutWebinar');
-                return;
-            }
-
-            // Remove immediately to prevent double submissions in StrictMode/concurrent renders
-            sessionStorage.removeItem('pendingCheckoutWebinar');
-
-            if (pendingCheckout.promoCode) {
-                setPromoCode(pendingCheckout.promoCode);
-            }
-            if (pendingCheckout.codeType) {
-                setCodeType(pendingCheckout.codeType);
-            }
-            if (pendingCheckout.referralValid) {
-                setReferralData({ valid: true });
-            }
-
-            if (pendingCheckout.pointsChecked) {
-                setPointsChecked(true);
-            }
-            if (pendingCheckout.pointsToUse) {
-                setPointsToUse(pendingCheckout.pointsToUse);
-            }
-
-            setDiscountData(pendingCheckout.discountData || null);
-            setTermsAccepted(pendingCheckout.termsAccepted || false);
-
-            if (pendingCheckout.isFree) {
-                setShowFreeForm(true);
-                setLoading(false);
-                return;
-            }
-
-            setLoading(true);
-
-            submitPayment(
-                pendingCheckout.discountData || null,
-                pendingCheckout.codeType,
-                pendingCheckout.promoCode,
-                pendingCheckout.referralValid,
-                pendingCheckout.pointsChecked,
-                pendingCheckout.pointsToUse
-            ).catch((error: unknown) => {
-                console.error('Pending checkout webinar error:', error);
-                toast.error(getErrorMessage(error, 'Gagal melanjutkan checkout webinar.'));
-                setLoading(false);
-            });
-        } catch {
-            sessionStorage.removeItem('pendingCheckoutWebinar');
-        }
-    }, [isLoggedIn, submitPayment, webinar.id]);
 
     // Function untuk validasi ukuran file
     const validateFileSize = (file: File, maxSizeMB: number = 2): boolean => {
@@ -811,7 +692,7 @@ export default function RegisterWebinar({
                             </div>
 
                             {/* Guest Form Card (Masukkan Data Diri Anda) */}
-                            {!isLoggedIn && !hasAccess && !pendingInvoiceUrl && (
+                            {!isLoggedIn && !hasAccess && !pendingInvoiceUrl && !pendingInvoice && (
                                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
                                     <h3 className="font-bold text-gray-900 text-lg mb-4">Masukkan Data Diri Anda</h3>
                                     <div className="space-y-4">
@@ -919,20 +800,116 @@ export default function RegisterWebinar({
                                     <p className="text-sm text-gray-500">Anda sudah terdaftar di webinar ini. Silakan masuk ke dalam grup.</p>
                                     <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
                                         <a href={webinar.group_url ?? ''} target="_blank" rel="noopener noreferrer">
-                                            Masuk Group Webinar
+                                             Masuk Group Webinar
                                         </a>
                                     </Button>
                                 </div>
-                            ) : pendingInvoiceUrl ? (
-                                <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-xs">
-                                    <Hourglass size={64} className="text-yellow-500" />
-                                    <h2 className="text-xl font-bold">Pembayaran Tertunda</h2>
-                                    <p className="text-sm text-gray-500">
-                                        Anda memiliki pembayaran yang belum selesai untuk webinar ini. Silakan lanjutkan untuk membayar.
-                                    </p>
-                                    <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
-                                        <a href={pendingInvoiceUrl}>Lanjutkan Pembayaran</a>
-                                    </Button>
+                            ) : (pendingInvoice || pendingInvoiceUrl) ? (
+                                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-6">
+                                    <div
+                                        className="rounded-xl p-4 flex items-center gap-2"
+                                        style={{
+                                            backgroundColor: (() => {
+                                                const expiryInfo = formatExpiryTime(pendingInvoice?.expires_at);
+                                                const isExpired = expiryInfo.status === 'expired';
+                                                return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
+                                            })(),
+                                        }}
+                                    >
+                                        {(() => {
+                                            const expiryInfo = formatExpiryTime(pendingInvoice?.expires_at);
+                                            const isExpired = expiryInfo.status === 'expired';
+                                            if (isExpired) {
+                                                return (
+                                                    <>
+                                                        <X className="h-5 w-5 text-red-600" />
+                                                        <h4 className="font-bold text-red-700">Pembayaran Gagal / Kadaluarsa</h4>
+                                                    </>
+                                                );
+                                            }
+                                            return (
+                                                <>
+                                                    <Hourglass className="h-5 w-5 text-yellow-600 animate-pulse" />
+                                                    <h4 className="font-bold text-yellow-950">Pembayaran Tertunda</h4>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {pendingInvoice && (
+                                            <div className="space-y-2 rounded-xl bg-gray-50/50 p-4 border border-gray-100 text-sm">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-500">No. Invoice</span>
+                                                    <span className="font-semibold text-gray-800">{pendingInvoice.invoice_code}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-500">Total Pembayaran</span>
+                                                    <span className="text-lg font-bold text-[#FA5F25]">
+                                                        Rp {pendingInvoice.amount.toLocaleString('id-ID')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {(() => {
+                                            const expiryInfo = formatExpiryTime(pendingInvoice?.expires_at);
+                                            const isExpired = expiryInfo.status === 'expired';
+
+                                            if (isExpired) {
+                                                return (
+                                                    <div className="rounded-xl bg-red-50 p-4 text-xs text-red-700 leading-relaxed">
+                                                        Waktu pembayaran telah habis. Jika Anda butuh bantuan, silakan hubungi admin atau batalkan pesanan untuk membuat transaksi baru.
+                                                    </div>
+                                                );
+                                            }
+
+                                            const targetUrl = pendingInvoice?.invoice_url || pendingInvoiceUrl;
+                                            return targetUrl ? (
+                                                <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
+                                                    <a href={targetUrl}>Lanjutkan Pembayaran</a>
+                                                </Button>
+                                            ) : null;
+                                        })()}
+
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1 py-6 rounded-full border-gray-200 text-gray-700">
+                                                Cek Status
+                                            </Button>
+                                            {pendingInvoice && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="flex-1 py-6 rounded-full border-red-200 text-red-600 hover:bg-red-50"
+                                                    disabled={cancellingInvoice}
+                                                    onClick={async () => {
+                                                        if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                            setCancellingInvoice(true);
+                                                            try {
+                                                                const res = await axios.post(route('invoice.cancel', pendingInvoice.id));
+                                                                if (res.data?.success) {
+                                                                    toast.success('Pesanan berhasil dibatalkan.');
+                                                                    window.location.reload();
+                                                                } else {
+                                                                    toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
+                                                                    setCancellingInvoice(false);
+                                                                }
+                                                            } catch (err: unknown) {
+                                                                if (axios.isAxiosError(err)) {
+                                                                    toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                                } else {
+                                                                    toast.error('Gagal membatalkan pesanan.');
+                                                                }
+                                                                setCancellingInvoice(false);
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             ) : !showFreeForm ? (
                                 <form onSubmit={handleCheckout} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">

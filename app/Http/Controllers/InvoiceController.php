@@ -937,6 +937,10 @@ class InvoiceController extends Controller
 
 
 
+            if ($invoice->bundleEnrollments->count() > 0) {
+                EnrollmentBundle::where('invoice_id', $invoice->id)->delete();
+            }
+
             if ($invoice->certificationProgramItems->count() > 0) {
                 EnrollmentCertificationProgram::where('invoice_id', $invoice->id)->delete();
             }
@@ -1005,12 +1009,19 @@ class InvoiceController extends Controller
 
             DB::commit();
 
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi berhasil dibatalkan.'
+                ]);
+            }
+
             return redirect()->back()->with('success', 'Invoice berhasil dibatalkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Gagal membatalkan invoice. ' . $e->getMessage(),
-                'success' => false
+                'success' => false,
+                'message' => 'Gagal membatalkan invoice. ' . $e->getMessage()
             ], 400);
         }
     }

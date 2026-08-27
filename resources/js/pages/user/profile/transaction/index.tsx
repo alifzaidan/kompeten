@@ -28,6 +28,12 @@ interface CertificationProgram {
     slug: string;
 }
 
+interface Bundle {
+    id: string;
+    title: string;
+    slug: string;
+}
+
 interface EnrollmentCourse {
     id: string;
     course: Course;
@@ -51,6 +57,12 @@ interface EnrollmentCertificationProgram {
     is_scholarship: boolean;
 }
 
+interface EnrollmentBundle {
+    id: string;
+    bundle: Bundle;
+    price: number;
+}
+
 interface Invoice {
     id: string;
     invoice_code: string;
@@ -60,10 +72,16 @@ interface Invoice {
     paid_at: string | null;
     payment_channel: string | null;
     payment_method: string | null;
-    course_items: EnrollmentCourse[];
-    bootcamp_items: EnrollmentBootcamp[];
-    webinar_items: EnrollmentWebinar[];
-    certificationProgramItems: EnrollmentCertificationProgram[];
+    course_items?: EnrollmentCourse[];
+    courseItems?: EnrollmentCourse[];
+    bootcamp_items?: EnrollmentBootcamp[];
+    bootcampItems?: EnrollmentBootcamp[];
+    webinar_items?: EnrollmentWebinar[];
+    webinarItems?: EnrollmentWebinar[];
+    certificationProgramItems?: EnrollmentCertificationProgram[];
+    certification_program_items?: EnrollmentCertificationProgram[];
+    bundle_enrollments?: EnrollmentBundle[];
+    bundleEnrollments?: EnrollmentBundle[];
     created_at: string;
 }
 
@@ -81,9 +99,33 @@ export default function Transactions({ myTransactions }: Props) {
         );
     };
 
-    const getItemHref = (type: string, slug: string) => {
+    const getItemHref = (type: string, slug: string, status?: string) => {
+        const isPaid = status === 'paid' || status === 'completed';
+
+        if (!isPaid) {
+            // Unpaid / Pending / Expired / Failed -> Route to public detail page
+            switch (type) {
+                case 'Course':
+                    return `/course/${slug}`;
+                case 'Bootcamp':
+                    return `/bootcamp/${slug}`;
+                case 'Webinar':
+                    return `/webinar/${slug}`;
+                case 'Certification Program':
+                    return `/certification-programs/${slug}`;
+                case 'Bundle':
+                    return `/bundling/${slug}`;
+                default:
+                    return '#';
+            }
+        }
+
+        // Paid / Completed -> Route to user LMS / Profile area
         if (type === 'Certification Program') {
             return route('profile.certification-program.detail', { program: slug });
+        }
+        if (type === 'Bundle') {
+            return `/profile`;
         }
 
         const pathSegment = type.toLowerCase().replace(/\s+/g, '-');
@@ -96,13 +138,14 @@ export default function Transactions({ myTransactions }: Props) {
         const bootcampItems = invoice.bootcamp_items || invoice.bootcampItems || [];
         const webinarItems = invoice.webinar_items || invoice.webinarItems || [];
         const certificationItems =
-            invoice.certificationProgramItems || invoice.certification_program_items || invoice.certification_program_items || [];
+            invoice.certificationProgramItems || invoice.certification_program_items || [];
+        const bundleItems = invoice.bundle_enrollments || invoice.bundleEnrollments || [];
 
         return [
             ...courseItems.map((item) => ({
                 type: 'Course',
-                title: item.course.title,
-                slug: item.course.slug,
+                title: item.course?.title || 'Kelas Online',
+                slug: item.course?.slug || '',
                 price: item.price,
                 invoice_id: invoice.id,
                 invoice_status: invoice.status,
@@ -115,8 +158,8 @@ export default function Transactions({ myTransactions }: Props) {
             })),
             ...bootcampItems.map((item) => ({
                 type: 'Bootcamp',
-                title: item.bootcamp.title,
-                slug: item.bootcamp.slug,
+                title: item.bootcamp?.title || 'Bootcamp',
+                slug: item.bootcamp?.slug || '',
                 price: item.price,
                 invoice_id: invoice.id,
                 invoice_status: invoice.status,
@@ -129,8 +172,22 @@ export default function Transactions({ myTransactions }: Props) {
             })),
             ...webinarItems.map((item) => ({
                 type: 'Webinar',
-                title: item.webinar.title,
-                slug: item.webinar.slug,
+                title: item.webinar?.title || 'Webinar',
+                slug: item.webinar?.slug || '',
+                price: item.price,
+                invoice_id: invoice.id,
+                invoice_status: invoice.status,
+                invoice_code: invoice.invoice_code,
+                invoice_url: invoice.invoice_url,
+                paid_at: invoice.paid_at,
+                payment_channel: invoice.payment_channel,
+                payment_method: invoice.payment_method,
+                created_at: invoice.created_at,
+            })),
+            ...bundleItems.map((item) => ({
+                type: 'Bundle',
+                title: item.bundle?.title || 'Paket Bundling',
+                slug: item.bundle?.slug || '',
                 price: item.price,
                 invoice_id: invoice.id,
                 invoice_status: invoice.status,
@@ -231,7 +288,7 @@ export default function Transactions({ myTransactions }: Props) {
                                 filteredItems.map((item, idx) => (
                                     <tr key={idx} className="border-t dark:border-zinc-800">
                                         <td className="p-2">
-                                            <Link href={getItemHref(item.type, item.slug)} className="text-primary hover:underline">
+                                            <Link href={getItemHref(item.type, item.slug, item.invoice_status)} className="text-primary hover:underline">
                                                 {item.title}
                                             </Link>
                                         </td>
@@ -240,7 +297,9 @@ export default function Transactions({ myTransactions }: Props) {
                                                 ? 'Kelas Online'
                                                 : item.type === 'Certification Program'
                                                   ? 'Sertifikasi Program'
-                                                  : item.type}
+                                                  : item.type === 'Bundle'
+                                                    ? 'Paket Bundling'
+                                                    : item.type}
                                         </td>
                                         <td className="p-2">{getStatusComponent(item.invoice_status)}</td>
                                         <td className="p-2">
