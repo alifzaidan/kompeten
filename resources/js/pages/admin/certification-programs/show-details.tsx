@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Schedule {
     id: string;
@@ -61,6 +62,8 @@ interface CertificationProgram {
 
 export default function CertificationProgramDetail({ program }: { program: CertificationProgram }) {
     const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
     const getInitials = useInitials();
     const socializationSchedules =
@@ -287,7 +290,9 @@ export default function CertificationProgramDetail({ program }: { program: Certi
                     <TableRow>
                         <TableCell className="font-medium">Harga</TableCell>
                         <TableCell>
-                            {program.type === 'scholarship' ? (
+                            {isStaff ? (
+                                <span className="text-base font-semibold text-muted-foreground">Rp ***</span>
+                            ) : program.type === 'scholarship' ? (
                                 <div className="space-y-1">
                                     {program.strikethrough_price > 0 && (
                                         <div className="text-xs text-gray-500 line-through">

@@ -8,6 +8,7 @@ import { usePage } from '@inertiajs/react';
 import { LinkIcon, Star } from 'lucide-react';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Course {
     id: string;
@@ -30,6 +31,8 @@ interface Course {
 
 export default function CourseDetail({ course, averageRating }: { course: Course; averageRating?: number }) {
     const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
 
     const affiliateUrls = useMemo(() => {
@@ -234,7 +237,9 @@ export default function CourseDetail({ course, averageRating }: { course: Course
                     <TableRow>
                         <TableCell>Harga</TableCell>
                         <TableCell>
-                            {course.price === 0 ? (
+                            {isStaff ? (
+                                <span className="text-base font-semibold text-muted-foreground">Rp ***</span>
+                            ) : course.price === 0 ? (
                                 <span>Gratis</span>
                             ) : (
                                 <span>

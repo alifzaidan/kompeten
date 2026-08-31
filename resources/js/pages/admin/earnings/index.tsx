@@ -32,9 +32,10 @@ interface AffiliateEarningProps {
 import { usePermission } from '@/hooks/use-permission';
 
 export default function AffiliateEarnings({ earnings, flash, filters }: AffiliateEarningProps) {
-    const { canManage } = usePermission();
+    const { canManage, roles, isAdmin } = usePermission();
+    const isStaff = roles.includes('staff') && !isAdmin;
     const canManageEarnings = canManage('earnings');
-    const columns = getColumns(canManageEarnings);
+    const columns = getColumns(canManageEarnings, isStaff);
 
     useEffect(() => {
         if (flash?.success) {

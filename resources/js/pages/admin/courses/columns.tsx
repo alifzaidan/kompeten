@@ -13,6 +13,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Award, Folder, Trash } from 'lucide-react';
+import { usePermission } from '@/hooks/use-permission';
 
 function CertificateCell({ row }: { row: Row<Course> }) {
     const { auth } = usePage<SharedData>().props;
@@ -102,8 +103,6 @@ function CertificateCell({ row }: { row: Row<Course> }) {
     );
 }
 
-import { usePermission } from '@/hooks/use-permission';
-
 export default function CourseActions({ course }: { course: Course }) {
     const { auth } = usePage<SharedData>().props;
     const { canManage } = usePermission();
@@ -181,6 +180,27 @@ export type Course = {
     } | null;
 };
 
+function CoursePriceCell({ course }: { course: Course }) {
+    const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
+
+    const price = course.price;
+    if (price === 0) {
+        return <div className="text-base font-semibold">Gratis</div>;
+    }
+    if (isStaff) {
+        return <div className="text-base font-semibold text-muted-foreground">Rp ***</div>;
+    }
+    const strikethroughPrice = course.strikethrough_price;
+    return (
+        <div>
+            {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
+            <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
+        </div>
+    );
+}
+
 export const columns: ColumnDef<Course>[] = [
     {
         accessorKey: 'no',
@@ -235,19 +255,7 @@ export const columns: ColumnDef<Course>[] = [
     {
         accessorKey: 'price',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
-        cell: ({ row }) => {
-            const strikethroughPrice = row.original.strikethrough_price;
-            const price = row.original.price;
-            if (price === 0) {
-                return <div className="text-base font-semibold">Gratis</div>;
-            }
-            return (
-                <div>
-                    {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
-                    <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
-                </div>
-            );
-        },
+        cell: ({ row }) => <CoursePriceCell course={row.original} />,
     },
     {
         accessorKey: 'created_at',

@@ -106,8 +106,16 @@ export type CertificationProgram = {
         end_time: string;
         recording_url?: string | null;
     }[];
+    socialization_schedules?: {
+        id?: string;
+        schedule_date: string;
+        day: string;
+        start_time: string;
+        end_time: string;
+        recording_url?: string | null;
+    }[];
     socializationSchedules?: {
-        id: string;
+        id?: string;
         schedule_date: string;
         day: string;
         start_time: string;
@@ -116,6 +124,35 @@ export type CertificationProgram = {
     }[];
     batch?: string | null;
 };
+
+function ProgramPriceCell({ program }: { program: CertificationProgram }) {
+    const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
+
+    const { price, strikethrough_price, scholarship_price, type } = program;
+    const displayPrice = type === 'scholarship' ? (scholarship_price ?? 0) : price;
+
+    if (displayPrice === 0) {
+        return <div className="text-base font-semibold">Gratis</div>;
+    }
+
+    if (isStaff) {
+        return <div className="text-base font-semibold text-muted-foreground">Rp ***</div>;
+    }
+
+    return (
+        <div>
+            {strikethrough_price > 0 && (
+                <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethrough_price)}</div>
+            )}
+            <div className="text-base font-semibold">{rupiahFormatter.format(displayPrice)}</div>
+            {type === 'scholarship' && scholarship_price !== undefined && scholarship_price > 0 && (
+                <div className="mt-0.5 text-xs text-purple-600">Harga Beasiswa</div>
+            )}
+        </div>
+    );
+}
 
 export const columns: ColumnDef<CertificationProgram>[] = [
     {
@@ -172,27 +209,7 @@ export const columns: ColumnDef<CertificationProgram>[] = [
     {
         accessorKey: 'price',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
-        cell: ({ row }) => {
-            const { price, strikethrough_price, scholarship_price, type } = row.original;
-
-            const displayPrice = type === 'scholarship' ? (scholarship_price ?? 0) : price;
-
-            if (displayPrice === 0) {
-                return <div className="text-base font-semibold">Gratis</div>;
-            }
-
-            return (
-                <div>
-                    {strikethrough_price > 0 && (
-                        <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethrough_price)}</div>
-                    )}
-                    <div className="text-base font-semibold">{rupiahFormatter.format(displayPrice)}</div>
-                    {type === 'scholarship' && scholarship_price !== undefined && scholarship_price > 0 && (
-                        <div className="mt-0.5 text-xs text-purple-600">Harga Beasiswa</div>
-                    )}
-                </div>
-            );
-        },
+        cell: ({ row }) => <ProgramPriceCell program={row.original} />,
     },
     {
         accessorKey: 'schedules',
@@ -278,9 +295,9 @@ export const columns: ColumnDef<CertificationProgram>[] = [
     },
     {
         id: 'recording_status',
-        accessorFn: (row) => {
+        accessorFn: (row: CertificationProgram) => {
             const schedules = row.schedules ?? [];
-            const socializationSchedules = row.type === 'scholarship' ? (row.socializationSchedules ?? []) : [];
+            const socializationSchedules = row.type === 'scholarship' ? (row.socialization_schedules ?? row.socializationSchedules ?? []) : [];
             const totalSchedules = schedules.length + socializationSchedules.length;
 
             if (totalSchedules === 0) {

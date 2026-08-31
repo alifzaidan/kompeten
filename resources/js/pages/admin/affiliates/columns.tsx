@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { rupiahFormatter } from '@/lib/utils';
-import { Link, router } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -95,6 +96,18 @@ export type Affiliate = {
     total_earnings: number;
 };
 
+function AffiliateEarningsCell({ affiliate }: { affiliate: Affiliate }) {
+    const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
+
+    if (isStaff) {
+        return <div className="font-medium text-muted-foreground">Rp ***</div>;
+    }
+    const totalEarnings = affiliate.total_earnings || 0;
+    return <div className="font-medium text-green-600">{rupiahFormatter.format(totalEarnings)}</div>;
+}
+
 export const columns: ColumnDef<Affiliate>[] = [
     {
         id: 'select',
@@ -152,10 +165,7 @@ export const columns: ColumnDef<Affiliate>[] = [
     {
         accessorKey: 'total_earnings',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Total Pendapatan" />,
-        cell: ({ row }) => {
-            const totalEarnings = row.original.total_earnings || 0;
-            return <div className="font-medium text-green-600">{rupiahFormatter.format(totalEarnings)}</div>;
-        },
+        cell: ({ row }) => <AffiliateEarningsCell affiliate={row.original} />,
     },
     {
         accessorKey: 'created_at',

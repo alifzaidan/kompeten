@@ -13,6 +13,7 @@ import { LinkIcon, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import AddRecordingDialog from './create-recording-url';
+import { usePermission } from '@/hooks/use-permission';
 
 interface Webinar {
     id: string;
@@ -51,6 +52,8 @@ function getYoutubeId(url: string) {
 
 export default function WebinarDetail({ webinar }: { webinar: Webinar }) {
     const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -247,7 +250,9 @@ export default function WebinarDetail({ webinar }: { webinar: Webinar }) {
                     <TableRow>
                         <TableCell>Harga</TableCell>
                         <TableCell>
-                            {webinar.price === 0 ? (
+                            {isStaff ? (
+                                <span className="text-base font-semibold text-muted-foreground">Rp ***</span>
+                            ) : webinar.price === 0 ? (
                                 <span>Gratis</span>
                             ) : (
                                 <span>
