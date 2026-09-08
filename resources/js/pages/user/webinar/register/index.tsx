@@ -13,6 +13,7 @@ import axios from 'axios';
 import { BadgeCheck, Check, Hourglass, User, X, ShoppingCart, Calendar, RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import InstallmentOptions, { ActiveInstallmentData, InstallmentTermOption } from '@/components/installment-options';
 
 
 interface Webinar {
@@ -130,17 +131,23 @@ export default function RegisterWebinar({
     pendingInvoiceUrl,
     pendingInvoice,
     referralInfo,
+    installmentTerms = [],
+    activeInstallment: initialActiveInstallment = null,
 }: {
     webinar: Webinar;
     hasAccess: boolean;
     pendingInvoiceUrl?: string | null;
     pendingInvoice?: PendingInvoice | null;
     referralInfo: ReferralInfo;
+    installmentTerms?: InstallmentTermOption[];
+    activeInstallment?: ActiveInstallmentData | null;
 }) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number && auth.user?.instance && auth.user?.city;
 
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment);
+    const [paymentTab, setPaymentTab] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [cancellingInvoice, setCancellingInvoice] = useState(false);
@@ -328,7 +335,10 @@ export default function RegisterWebinar({
             setCheckingEmail(true);
 
             try {
-                const response = await axios.post('/api/check-email', { email });
+                const response = await axios.post('/api/check-email', {
+                    email,
+                    webinar_id: webinar.id,
+                });
                 const data = response.data;
 
                 if (data.exists) {
@@ -341,14 +351,23 @@ export default function RegisterWebinar({
                         city: data.city || prev.city,
                     }));
                     setUserPoints(data.point_balance || 0);
+
+                    if (data.active_installment) {
+                        setActiveInstallment(data.active_installment);
+                        setPaymentTab('installment');
+                    } else {
+                        setActiveInstallment(null);
+                    }
                 } else {
                     setEmailExists(false);
+                    setActiveInstallment(null);
                     setUserPoints(0);
                     setPointsChecked(false);
                     setPointsToUse(0);
                 }
             } catch {
                 setEmailExists(false);
+                setActiveInstallment(null);
                 setUserPoints(0);
                 setPointsChecked(false);
                 setPointsToUse(0);
@@ -358,7 +377,7 @@ export default function RegisterWebinar({
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [guestFormData.email, isLoggedIn]);
+    }, [guestFormData.email, isLoggedIn, webinar.id]);
 
     const formatExpiryTime = (expiresAt?: string | null): { time: string; status: 'expired' | 'urgent' | 'normal' } => {
         if (!expiresAt) return { time: 'Normal', status: 'normal' };
@@ -912,8 +931,37 @@ export default function RegisterWebinar({
                                     </div>
                                 </div>
                             ) : !showFreeForm ? (
-                                <form onSubmit={handleCheckout} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
+                                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
                                     <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pembayaran</h3>
+
+                                    {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
+                                    {installmentTerms.length > 0 && !isFree ? (
+                                        <Tabs
+                                            value={paymentTab}
+                                            onValueChange={(val) => {
+                                                if (val === 'full' && activeInstallment && !activeInstallment.is_fully_paid) {
+                                                    toast.error('Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.');
+                                                    return;
+                                                }
+                                                setPaymentTab(val as 'full' | 'installment');
+                                            }}
+                                            className="w-full space-y-4"
+                                        >
+                                            <TabsList className="grid w-full grid-cols-2 h-10">
+                                                <TabsTrigger
+                                                    value="full"
+                                                    disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
+                                                    className="text-xs sm:text-sm"
+                                                >
+                                                    Bayar Penuh
+                                                </TabsTrigger>
+                                                <TabsTrigger value="installment" className="text-xs sm:text-sm">
+                                                    Cicilan ({installmentTerms.length}x)
+                                                </TabsTrigger>
+                                            </TabsList>
+
+                                            <TabsContent value="full" className="space-y-4 m-0">
+                                                <form onSubmit={handleCheckout} className="space-y-4">
                                     
                                     {isFree ? (
                                         <div className="space-y-2 text-center py-2">
@@ -1208,7 +1256,62 @@ export default function RegisterWebinar({
                                     <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
                                         Pembayaran aman dan terenkripsi 🔒
                                     </p>
-                                </form>
+                                    </form>
+                                </TabsContent>
+
+                                <TabsContent value="installment" className="space-y-4 m-0">
+                                    <InstallmentOptions
+                                        productType="webinar"
+                                        productId={webinar.id}
+                                        productPrice={webinar.price}
+                                        terms={installmentTerms}
+                                        activeInstallment={activeInstallment}
+                                        termsAccepted={termsAccepted}
+                                        onTermsAcceptedChange={setTermsAccepted}
+                                        onBeforePay={async () => {
+                                            if (!activeInstallment && !termsAccepted) {
+                                                toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                return false;
+                                            }
+                                            if (!isLoggedIn && (!guestFormData.email || !guestFormData.phone_number || !guestFormData.instance || !guestFormData.city || (!emailExists && !guestFormData.name))) {
+                                                toast.error('Lengkapi semua data diri terlebih dahulu.');
+                                                return false;
+                                            }
+                                            const authenticated = await ensureAuthenticated();
+                                            return authenticated;
+                                        }}
+                                    />
+                                </TabsContent>
+                            </Tabs>
+                        ) : (
+                            <form onSubmit={handleCheckout} className="space-y-4">
+                                {isFree ? (
+                                    <div className="space-y-2 text-center py-2">
+                                        <div className="flex items-center justify-between p-2">
+                                            <span className="w-full text-xl font-bold text-green-600">WEBINAR GRATIS</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">Untuk mendapatkan akses gratis, Anda perlu:</p>
+                                        <ul className="space-y-1 text-left text-sm text-gray-700 bg-gray-50 p-3 rounded-xl">
+                                            {webinar.requirement_1 && <li>• {webinar.requirement_1}</li>}
+                                            {webinar.requirement_2 && <li>• {webinar.requirement_2}</li>}
+                                            {webinar.requirement_3 && <li>• {webinar.requirement_3}</li>}
+                                        </ul>
+                                        <p className="text-xs text-gray-500">Upload bukti follow dan tag untuk mendapatkan akses</p>
+                                    </div>
+                                ) : null}
+                                <Button
+                                    className="w-full"
+                                    type="submit"
+                                    disabled={(isFree ? false : !termsAccepted) || loading}
+                                >
+                                    {loading ? 'Memproses...' : isFree ? 'Upload Bukti Follow' : 'Bayar Sekarang'}
+                                </Button>
+                                <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
+                                    Pembayaran aman dan terenkripsi 🔒
+                                </p>
+                            </form>
+                        )}
+                        </div>
                             ) : (
                                 <form onSubmit={handleFreeCheckout} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
                                     <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Upload Bukti Follow</h3>

@@ -180,19 +180,27 @@ class CertificationProgramController extends Controller
             $isScholarship = true;
         }
 
+        $activeInstallment = null;
         if (Auth::check()) {
             $userId = Auth::id();
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, 'certification_program', $program->id);
 
-            $hasAccess = Invoice::where('user_id', $userId)
-                ->where('status', 'paid')
+            $hasRegularPaid = Invoice::where('user_id', $userId)
+                ->whereNull('parent_invoice_id')
+                ->where('is_installment', false)
+                ->whereIn('status', ['paid', 'completed'])
                 ->whereHas('certificationProgramItems', function ($query) use ($program) {
                     $query->where('certification_program_id', $program->id);
                 })
                 ->exists();
 
-            if (!$hasAccess) {
+            $isInstallmentCompleted = $activeInstallment && $activeInstallment['is_fully_paid'];
+            $hasAccess = $hasRegularPaid || $isInstallmentCompleted;
+
+            if (!$hasAccess && !$activeInstallment) {
                 $pendingInvoice = Invoice::where('user_id', $userId)
                     ->where('status', 'pending')
+                    ->where('is_installment', false)
                     ->whereHas('certificationProgramItems', function ($query) use ($program) {
                         $query->where('certification_program_id', $program->id);
                     })
@@ -240,12 +248,14 @@ class CertificationProgramController extends Controller
         return Inertia::render('user/certification-program/register/index', [
             'program' => $program,
             'hasAccess' => $hasAccess,
+            'activeInstallment' => $activeInstallment,
             'pendingInvoiceUrl' => $pendingInvoiceUrl,
             'pendingInvoice' => $pendingInvoiceData,
             'regularApplication' => $regularApplication,
             'scholarshipApplication' => $scholarshipApplication,
             'isScholarship' => $isScholarship,
             'referralInfo' => $this->getReferralInfo(),
+            'installmentTerms' => $program->installmentTerms()->get(['term_number', 'amount', 'due_date']),
         ]);
     }
 

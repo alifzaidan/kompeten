@@ -16,6 +16,7 @@ import CertificationProgramApplications from './show-applications';
 import CertificationProgramDetail from './show-details';
 import CertificationProgramRecordings from './show-recordings';
 import CertificationProgramTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
 
 interface Schedule {
     id: string;
@@ -48,6 +49,9 @@ interface CertificationProgram {
     strikethrough_price: number;
     price: number;
     scholarship_price?: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     scholarship_flow?: string | null;
     registration_deadline?: string | null;
     socialization_registration_deadline?: string | null;
@@ -167,8 +171,18 @@ export default function ShowCertificationProgram({ program, applications, transa
                                 )}
                             </TabsList>
 
-                            <TabsContent value="detail">
+                            <TabsContent value="detail" className="space-y-4">
                                 <CertificationProgramDetail program={program} />
+                                {canManageProgram && program.type !== 'scholarship' && (
+                                    <InstallmentConfig
+                                        productType="certification_program"
+                                        productId={program.id}
+                                        productPrice={program.price}
+                                        installmentEnabled={program.installment_enabled ?? false}
+                                        initialTerms={program.installment_terms || program.installmentTerms || []}
+                                        registrationDeadline={program.registration_deadline}
+                                    />
+                                )}
                             </TabsContent>
 
                             <TabsContent value="pendaftar">

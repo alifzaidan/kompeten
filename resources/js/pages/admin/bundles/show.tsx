@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { BundleTransactionInvoice } from './columns-transactions';
 import BundleTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
 
 interface Product {
     id: string;
@@ -66,6 +67,9 @@ interface Bundle {
     thumbnail?: string | null;
     batch?: string | null;
     price: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     registration_deadline?: string | null;
     registration_url: string;
     bundle_url: string;
@@ -548,6 +552,19 @@ export default function ShowBundle({ bundle, groupedItems, totalOriginalPrice, d
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {canManageBundle && (
+                                <div className="mt-4">
+                                    <InstallmentConfig
+                                        productType="bundle"
+                                        productId={bundle.id}
+                                        productPrice={bundle.price}
+                                        installmentEnabled={bundle.installment_enabled ?? false}
+                                        initialTerms={bundle.installment_terms || (bundle as any).installmentTerms || []}
+                                        registrationDeadline={bundle.registration_deadline}
+                                    />
+                                </div>
+                            )}
                         </TabsContent>
 
                         {/* Enrollments Tab */}

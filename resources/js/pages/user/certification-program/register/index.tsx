@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserLayout from '@/layouts/user-layout';
 import { SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -17,6 +18,7 @@ import { id } from 'date-fns/locale';
 import { AlertCircle, BadgeCheck, Calendar, CheckCircle2, Clock, GraduationCap, Loader2, Lock, Tag, User, RotateCcw, ShoppingCart } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import InstallmentOptions, { ActiveInstallmentData, InstallmentTermOption } from '@/components/installment-options';
 
 
 interface Mentor {
@@ -114,6 +116,8 @@ interface RegisterProps {
         code: string | null;
         hasActive: boolean;
     };
+    installmentTerms?: InstallmentTermOption[];
+    activeInstallment?: ActiveInstallmentData | null;
 }
 
 export default function Register({
@@ -125,6 +129,8 @@ export default function Register({
     scholarshipApplication,
     isScholarship,
     referralInfo,
+    installmentTerms = [],
+    activeInstallment: initialActiveInstallment = null,
 }: RegisterProps) {
     const { auth } = usePage<SharedData>().props;
     const user = auth.user as
@@ -140,6 +146,8 @@ export default function Register({
     const isLoggedIn = !!user;
     const isProfileComplete = !!(isLoggedIn && user?.phone_number && user?.instance && user?.city);
 
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment);
+    const [paymentTab, setPaymentTab] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [isLoading, setIsLoading] = useState(false);
     const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
@@ -357,8 +365,16 @@ export default function Register({
                         city: data.city || prev.city,
                     }));
                     setUserPoints(data.point_balance || 0);
+
+                    if (data.active_installment) {
+                        setActiveInstallment(data.active_installment);
+                        setPaymentTab('installment');
+                    } else {
+                        setActiveInstallment(null);
+                    }
                 } else {
                     setEmailExists(false);
+                    setActiveInstallment(null);
                     setUserPoints(0);
                     setPointsChecked(false);
                     setPointsToUse(0);
@@ -1067,319 +1083,689 @@ export default function Register({
                             ) : (
                                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
                                     <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pendaftaran</h3>
-                                    <div className="space-y-4">
-                                        {/* Pilihan Jenis Kode */}
-                                        <div className="space-y-2">
-                                            <Label className="font-semibold text-gray-700">Jenis Kode</Label>
-                                            <RadioGroup
-                                                value={codeType}
-                                                onValueChange={(val: 'voucher' | 'referral') => {
-                                                    setCodeType(val);
-                                                    setPromoCode('');
-                                                    setDiscountData(null);
-                                                    setReferralData(null);
-                                                    setPromoError('');
-                                                    setReferralError('');
-                                                    if (val === 'voucher') {
-                                                        setPointsChecked(false);
-                                                        setPointsToUse(0);
-                                                    }
-                                                }}
-                                                className="flex gap-4"
-                                            >
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="voucher" id="code-voucher" />
-                                                    <Label htmlFor="code-voucher" className="cursor-pointer font-medium">Voucher</Label>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <RadioGroupItem value="referral" id="code-referral" />
-                                                    <Label htmlFor="code-referral" className="cursor-pointer font-medium">Referral</Label>
-                                                </div>
-                                            </RadioGroup>
-                                        </div>
 
-                                        {/* Input Kode Promo */}
-                                        <div className="space-y-2">
-                                            <Label htmlFor="promo-code" className="font-semibold text-gray-700">
-                                                Punya Kode Promo?
-                                            </Label>
-                                            <div className="flex gap-2">
-                                                <div className="relative flex-1">
-                                                    <Input
-                                                        id="promo-code"
-                                                        type="text"
-                                                        placeholder={codeType === 'voucher' ? 'Masukkan kode voucher' : 'Masukkan kode referral'}
-                                                        value={promoCode}
-                                                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                        className="rounded-xl pr-10"
-                                                    />
-                                                    {(promoLoading || referralLoading) && (
-                                                        <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
-                                                            <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-orange-600"></div>
+                                    {installmentTerms.length > 0 && !isScholarship && displayPrice > 0 ? (
+                                        <Tabs
+                                            value={paymentTab}
+                                            onValueChange={(val) => {
+                                                if (val === 'full' && activeInstallment && !activeInstallment.is_fully_paid) {
+                                                    toast.error('Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.');
+                                                    return;
+                                                }
+                                                setPaymentTab(val as 'full' | 'installment');
+                                            }}
+                                            className="w-full space-y-4"
+                                        >
+                                            <TabsList className="grid w-full grid-cols-2 h-10">
+                                                <TabsTrigger
+                                                    value="full"
+                                                    disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
+                                                    className="text-xs sm:text-sm"
+                                                >
+                                                    Bayar Penuh
+                                                </TabsTrigger>
+                                                <TabsTrigger value="installment" className="text-xs sm:text-sm">
+                                                    Cicilan ({installmentTerms.length}x)
+                                                </TabsTrigger>
+                                            </TabsList>
+
+                                            {/* Tab Bayar Penuh */}
+                                            <TabsContent value="full" className="space-y-4 m-0">
+                                                <div className="space-y-4">
+                                                    {/* Pilihan Jenis Kode */}
+                                                    <div className="space-y-2">
+                                                        <Label className="font-semibold text-gray-700">Jenis Kode</Label>
+                                                        <RadioGroup
+                                                            value={codeType}
+                                                            onValueChange={(val: 'voucher' | 'referral') => {
+                                                                setCodeType(val);
+                                                                setPromoCode('');
+                                                                setDiscountData(null);
+                                                                setReferralData(null);
+                                                                setPromoError('');
+                                                                setReferralError('');
+                                                                if (val === 'voucher') {
+                                                                    setPointsChecked(false);
+                                                                    setPointsToUse(0);
+                                                                }
+                                                            }}
+                                                            className="flex gap-4"
+                                                        >
+                                                            <div className="flex items-center space-x-2">
+                                                                <RadioGroupItem value="voucher" id="code-voucher" />
+                                                                <Label htmlFor="code-voucher" className="cursor-pointer font-medium">Voucher</Label>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <RadioGroupItem value="referral" id="code-referral" />
+                                                                <Label htmlFor="code-referral" className="cursor-pointer font-medium">Referral</Label>
+                                                            </div>
+                                                        </RadioGroup>
+                                                    </div>
+
+                                                    {/* Input Kode Promo */}
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="promo-code" className="font-semibold text-gray-700">
+                                                            Punya Kode Promo?
+                                                        </Label>
+                                                        <div className="flex gap-2">
+                                                            <div className="relative flex-1">
+                                                                <Input
+                                                                    id="promo-code"
+                                                                    type="text"
+                                                                    placeholder={codeType === 'voucher' ? 'Masukkan kode voucher' : 'Masukkan kode referral'}
+                                                                    value={promoCode}
+                                                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                                    className="rounded-xl pr-10"
+                                                                />
+                                                                {(promoLoading || referralLoading) && (
+                                                                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                                                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-orange-600"></div>
+                                                                    </div>
+                                                                )}
+                                                                {!(promoLoading || referralLoading) && promoCode && (
+                                                                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                                                        {codeType === 'voucher' ? (
+                                                                            discountData?.valid ? (
+                                                                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                                                            ) : promoError ? (
+                                                                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                                                            ) : null
+                                                                        ) : (
+                                                                            referralData?.valid ? (
+                                                                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                                                            ) : referralError ? (
+                                                                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                                                            ) : null
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() => {
+                                                                    setPromoCode('');
+                                                                    setDiscountData(null);
+                                                                    setReferralData(null);
+                                                                    setPromoError('');
+                                                                    setReferralError('');
+                                                                }}
+                                                                className="h-10 w-10 shrink-0 border border-orange-200 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                                                            >
+                                                                <RotateCcw className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
-                                                    )}
-                                                    {!(promoLoading || referralLoading) && promoCode && (
-                                                        <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
-                                                            {codeType === 'voucher' ? (
-                                                                discountData?.valid ? (
-                                                                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                                                ) : promoError ? (
-                                                                    <AlertCircle className="h-4 w-4 text-red-600" />
-                                                                ) : null
-                                                            ) : (
-                                                                referralData?.valid ? (
-                                                                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                                                ) : referralError ? (
-                                                                    <AlertCircle className="h-4 w-4 text-red-600" />
-                                                                ) : null
+                                                        {codeType === 'voucher' && promoError && (
+                                                            <p className="text-sm text-red-600">{promoError}</p>
+                                                        )}
+                                                        {codeType === 'voucher' && discountData?.valid && (
+                                                            <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300">
+                                                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                                                                <div>
+                                                                    <p className="font-semibold">
+                                                                        Voucher "{discountData.discount_code.code}" berhasil diterapkan!
+                                                                    </p>
+                                                                    <p className="text-green-600 dark:text-green-500">
+                                                                        Hemat {formatRupiah(discountData.discount_amount)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {codeType === 'referral' && referralError && (
+                                                            <p className="text-sm text-red-600">{referralError}</p>
+                                                        )}
+                                                        {codeType === 'referral' && referralData?.valid && (
+                                                            <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                                                                <p className="text-sm font-medium text-green-800">
+                                                                    Kode referral valid!
+                                                                </p>
+                                                                <p className="mt-1 text-xs text-green-600">
+                                                                    Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Point Reward/Redeem Section */}
+                                                    {(isLoggedIn || emailExists) && userPoints > 0 && (
+                                                        <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="space-y-0.5">
+                                                                    <Label className="text-base font-semibold text-gray-700">Gunakan Reward Point</Label>
+                                                                    <p className="text-muted-foreground text-xs">
+                                                                        Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
+                                                                    </p>
+                                                                </div>
+                                                                <Switch
+                                                                    checked={pointsChecked}
+                                                                    disabled={codeType === 'voucher' && !!discountData?.valid}
+                                                                    onCheckedChange={(checked) => {
+                                                                        setPointsChecked(checked);
+                                                                        if (checked) {
+                                                                            const autoPoints = Math.min(userPoints, maxPointsAllowed);
+                                                                            setPointsToUse(autoPoints);
+                                                                            setPointsError('');
+                                                                        } else {
+                                                                            setPointsToUse(0);
+                                                                            setPointsError('');
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
+
+                                                            {pointsChecked && (
+                                                                <div className="space-y-2">
+                                                                    <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">Jumlah poin yang digunakan</Label>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Input
+                                                                            id="points-input"
+                                                                            type="number"
+                                                                            max={Math.min(userPoints, maxPointsAllowed)}
+                                                                            min={1}
+                                                                            value={pointsToUse || ''}
+                                                                            onChange={(e) => {
+                                                                                const val = parseInt(e.target.value) || 0;
+                                                                                if (val > userPoints) {
+                                                                                    setPointsError('Poin melebihi saldo Anda.');
+                                                                                } else if (val > maxPointsAllowed) {
+                                                                                    setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
+                                                                                } else {
+                                                                                    setPointsError('');
+                                                                                }
+                                                                                setPointsToUse(val);
+                                                                            }}
+                                                                            className="rounded-xl"
+                                                                        />
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => {
+                                                                                setPointsToUse(Math.min(userPoints, maxPointsAllowed));
+                                                                                setPointsError('');
+                                                                            }}
+                                                                            className="rounded-xl border-orange-200 text-orange-500 hover:bg-orange-50"
+                                                                        >
+                                                                            Maksimal
+                                                                        </Button>
+                                                                    </div>
+                                                                    {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
+                                                                    {codeType === 'voucher' && !!discountData?.valid && (
+                                                                        <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                                                    )}
+                                                                </div>
                                                             )}
                                                         </div>
                                                     )}
+
+                                                    <div className="space-y-2 text-sm">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
+                                                            <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
+                                                                <GraduationCap size={12} className="mr-1" />
+                                                                {isScholarship ? 'Beasiswa' : 'Reguler'}
+                                                            </Badge>
+                                                        </div>
+
+                                                        {displayPrice > 0 && (
+                                                            <>
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
+                                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
+                                                                </div>
+
+                                                                {codeType === 'voucher' && discountData?.valid && (
+                                                                    <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                                        <span>Diskon Promo ({discountData.discount_code.code})</span>
+                                                                        <span>-{formatRupiah(discountData.discount_amount)}</span>
+                                                                    </div>
+                                                                )}
+
+                                                                {pointsChecked && pointsToUse > 0 && !pointsError && (
+                                                                    <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                                        <span>Potongan Poin</span>
+                                                                        <span>-{formatRupiah(pointsToUse)}</span>
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
+                                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                    <Separator />
+
+                                                    <div className="space-y-1">
+                                                        {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                                            <p className="text-right text-sm text-red-500 line-through">
+                                                                {formatRupiah(program.strikethrough_price + (displayPrice > 0 ? 5000 : 0))}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex items-baseline justify-between">
+                                                            <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                                            <div className="text-right">
+                                                                {displayPrice > 0 ? (
+                                                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                                                        {totalPrice <= 0 ? 'GRATIS' : formatRupiah(totalPrice)}
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {codeType === 'voucher' && discountData?.valid && (
+                                                            <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                                                Sudah termasuk diskon {discountData.discount_code.formatted_value}
+                                                            </p>
+                                                        )}
+                                                        {pointsChecked && pointsToUse > 0 && !pointsError && (
+                                                            <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                                                Sudah termasuk potongan poin {formatRupiah(pointsToUse)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {deadline && (
+                                                        <div className="mt-4 flex items-start gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                            <Calendar size="16" className="text-orange-500 mt-0.5" />
+                                                            <div>
+                                                                <p className="font-semibold">Batas Pendaftaran:</p>
+                                                                <p className="text-gray-500">
+                                                                    {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex items-start gap-3 pt-2">
+                                                        <Checkbox
+                                                            id="terms"
+                                                            checked={termsAccepted}
+                                                            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                                                            className="mt-0.5"
+                                                        />
+                                                        <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
+                                                            Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.
+                                                        </Label>
+                                                    </div>
+
+                                                    <div className="space-y-2 pt-2">
+                                                        <Button
+                                                            onClick={handlePrimaryAction}
+                                                            disabled={
+                                                                isLoading ||
+                                                                showScholarshipWarning ||
+                                                                (!isLoggedIn && !isGuestFormComplete()) ||
+                                                                (requiresDocumentUpload && (isDocumentPending || isDocumentRejected)) ||
+                                                                (!!regularApplication &&
+                                                                    regularApplication.status !== 'approved' &&
+                                                                    !isScholarship &&
+                                                                    requiresDocumentUpload) ||
+                                                                scholarshipNotApproved ||
+                                                                (displayPrice > 0 && !termsAccepted)
+                                                            }
+                                                            className="w-full "
+                                                        >
+                                                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                            {isLoading
+                                                                ? 'Memproses...'
+                                                                : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending && !isDocumentRejected
+                                                                  ? 'Upload Dokumen Pendukung'
+                                                                  : 'Bayar Sekarang'}
+                                                        </Button>
+                                                        <Button asChild variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
+                                                            <Link href={route('certification-programs.detail', program.slug)}>Kembali</Link>
+                                                        </Button>
+                                                        <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
+                                                            Pembayaran aman dan terenkripsi 🔒
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() => {
+                                            </TabsContent>
+
+                                            {/* Tab Cicilan */}
+                                            <TabsContent value="installment" className="space-y-4 m-0">
+                                                <InstallmentOptions
+                                                    productType="certification_program"
+                                                    productId={program.id}
+                                                    productPrice={program.price}
+                                                    terms={installmentTerms}
+                                                    activeInstallment={activeInstallment}
+                                                    termsAccepted={termsAccepted}
+                                                    onTermsAcceptedChange={setTermsAccepted}
+                                                    onBeforePay={async () => {
+                                                        if (!activeInstallment && !termsAccepted) {
+                                                            toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                            return false;
+                                                        }
+                                                        if (!isLoggedIn && !isGuestFormComplete()) {
+                                                            toast.error('Lengkapi semua data diri terlebih dahulu.');
+                                                            return false;
+                                                        }
+                                                        const authenticated = await ensureAuthenticated();
+                                                        return authenticated;
+                                                    }}
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {/* Pilihan Jenis Kode */}
+                                            <div className="space-y-2">
+                                                <Label className="font-semibold text-gray-700">Jenis Kode</Label>
+                                                <RadioGroup
+                                                    value={codeType}
+                                                    onValueChange={(val: 'voucher' | 'referral') => {
+                                                        setCodeType(val);
                                                         setPromoCode('');
                                                         setDiscountData(null);
                                                         setReferralData(null);
                                                         setPromoError('');
                                                         setReferralError('');
+                                                        if (val === 'voucher') {
+                                                            setPointsChecked(false);
+                                                            setPointsToUse(0);
+                                                        }
                                                     }}
-                                                    className="h-10 w-10 shrink-0 border border-orange-200 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                                                    className="flex gap-4"
                                                 >
-                                                    <RotateCcw className="h-4 w-4" />
-                                                </Button>
+                                                    <div className="flex items-center space-x-2">
+                                                        <RadioGroupItem value="voucher" id="code-voucher" />
+                                                        <Label htmlFor="code-voucher" className="cursor-pointer font-medium">Voucher</Label>
+                                                    </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <RadioGroupItem value="referral" id="code-referral" />
+                                                        <Label htmlFor="code-referral" className="cursor-pointer font-medium">Referral</Label>
+                                                    </div>
+                                                </RadioGroup>
                                             </div>
-                                            {codeType === 'voucher' && promoError && (
-                                                <p className="text-sm text-red-600">{promoError}</p>
-                                            )}
-                                            {codeType === 'voucher' && discountData?.valid && (
-                                                <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300">
-                                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-                                                    <div>
-                                                        <p className="font-semibold">
-                                                            Voucher "{discountData.discount_code.code}" berhasil diterapkan!
-                                                        </p>
-                                                        <p className="text-green-600 dark:text-green-500">
-                                                            Hemat {formatRupiah(discountData.discount_amount)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {codeType === 'referral' && referralError && (
-                                                <p className="text-sm text-red-600">{referralError}</p>
-                                            )}
-                                            {codeType === 'referral' && referralData?.valid && (
-                                                <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                                                    <p className="text-sm font-medium text-green-800">
-                                                        Kode referral valid!
-                                                    </p>
-                                                    <p className="mt-1 text-xs text-green-600">
-                                                        Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
 
-                                        {/* Point Reward/Redeem Section */}
-                                        {(isLoggedIn || emailExists) && userPoints > 0 && (
-                                            <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="space-y-0.5">
-                                                        <Label className="text-base font-semibold text-gray-700">Gunakan Reward Point</Label>
-                                                        <p className="text-muted-foreground text-xs">
-                                                            Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
-                                                        </p>
-                                                    </div>
-                                                    <Switch
-                                                        checked={pointsChecked}
-                                                        disabled={codeType === 'voucher' && !!discountData?.valid}
-                                                        onCheckedChange={(checked) => {
-                                                            setPointsChecked(checked);
-                                                            if (checked) {
-                                                                const autoPoints = Math.min(userPoints, maxPointsAllowed);
-                                                                setPointsToUse(autoPoints);
-                                                                setPointsError('');
-                                                            } else {
-                                                                setPointsToUse(0);
-                                                                setPointsError('');
-                                                            }
-                                                        }}
-                                                    />
-                                                </div>
-
-                                                {pointsChecked && (
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">Jumlah poin yang digunakan</Label>
-                                                        <div className="flex items-center gap-2">
-                                                            <Input
-                                                                id="points-input"
-                                                                type="number"
-                                                                max={Math.min(userPoints, maxPointsAllowed)}
-                                                                min={1}
-                                                                value={pointsToUse || ''}
-                                                                onChange={(e) => {
-                                                                    const val = parseInt(e.target.value) || 0;
-                                                                    if (val > userPoints) {
-                                                                        setPointsError('Poin melebihi saldo Anda.');
-                                                                    } else if (val > maxPointsAllowed) {
-                                                                        setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
-                                                                    } else {
-                                                                        setPointsError('');
-                                                                    }
-                                                                    setPointsToUse(val);
-                                                                }}
-                                                                className="rounded-xl"
-                                                            />
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                    setPointsToUse(Math.min(userPoints, maxPointsAllowed));
-                                                                    setPointsError('');
-                                                                }}
-                                                                className="rounded-xl border-orange-200 text-orange-500 hover:bg-orange-50"
-                                                            >
-                                                                Maksimal
-                                                            </Button>
-                                                        </div>
-                                                        {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
-                                                        {codeType === 'voucher' && !!discountData?.valid && (
-                                                            <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                            {/* Input Kode Promo */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="promo-code" className="font-semibold text-gray-700">
+                                                    Punya Kode Promo?
+                                                </Label>
+                                                <div className="flex gap-2">
+                                                    <div className="relative flex-1">
+                                                        <Input
+                                                            id="promo-code"
+                                                            type="text"
+                                                            placeholder={codeType === 'voucher' ? 'Masukkan kode voucher' : 'Masukkan kode referral'}
+                                                            value={promoCode}
+                                                            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                            className="rounded-xl pr-10"
+                                                        />
+                                                        {(promoLoading || referralLoading) && (
+                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                                                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-orange-600"></div>
+                                                            </div>
+                                                        )}
+                                                        {!(promoLoading || referralLoading) && promoCode && (
+                                                            <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                                                {codeType === 'voucher' ? (
+                                                                    discountData?.valid ? (
+                                                                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                                                    ) : promoError ? (
+                                                                        <AlertCircle className="h-4 w-4 text-red-600" />
+                                                                    ) : null
+                                                                ) : (
+                                                                    referralData?.valid ? (
+                                                                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                                                    ) : referralError ? (
+                                                                        <AlertCircle className="h-4 w-4 text-red-600" />
+                                                                    ) : null
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
-                                            <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
-                                                <GraduationCap size={12} className="mr-1" />
-                                                {isScholarship ? 'Beasiswa' : 'Reguler'}
-                                            </Badge>
-                                        </div>
-
-                                        {displayPrice > 0 && (
-                                            <>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            setPromoCode('');
+                                                            setDiscountData(null);
+                                                            setReferralData(null);
+                                                            setPromoError('');
+                                                            setReferralError('');
+                                                        }}
+                                                        className="h-10 w-10 shrink-0 border border-orange-200 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
-
+                                                {codeType === 'voucher' && promoError && (
+                                                    <p className="text-sm text-red-600">{promoError}</p>
+                                                )}
                                                 {codeType === 'voucher' && discountData?.valid && (
-                                                    <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                                                        <span>Diskon Promo ({discountData.discount_code.code})</span>
-                                                        <span>-{formatRupiah(discountData.discount_amount)}</span>
+                                                    <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300">
+                                                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                                                        <div>
+                                                            <p className="font-semibold">
+                                                                Voucher "{discountData.discount_code.code}" berhasil diterapkan!
+                                                            </p>
+                                                            <p className="text-green-600 dark:text-green-500">
+                                                                Hemat {formatRupiah(discountData.discount_amount)}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 )}
-
-                                                {pointsChecked && pointsToUse > 0 && !pointsError && (
-                                                    <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                                                        <span>Potongan Poin</span>
-                                                        <span>-{formatRupiah(pointsToUse)}</span>
-                                                    </div>
+                                                {codeType === 'referral' && referralError && (
+                                                    <p className="text-sm text-red-600">{referralError}</p>
                                                 )}
-
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                    <Separator />
-
-                                    <div className="space-y-1">
-                                        {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
-                                            <p className="text-right text-sm text-red-500 line-through">
-                                                {formatRupiah(program.strikethrough_price + (displayPrice > 0 ? 5000 : 0))}
-                                            </p>
-                                        )}
-                                        <div className="flex items-baseline justify-between">
-                                            <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
-                                            <div className="text-right">
-                                                {displayPrice > 0 ? (
-                                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                                        {totalPrice <= 0 ? 'GRATIS' : formatRupiah(totalPrice)}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                                {codeType === 'referral' && referralData?.valid && (
+                                                    <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+                                                        <p className="text-sm font-medium text-green-800">
+                                                            Kode referral valid!
+                                                        </p>
+                                                        <p className="mt-1 text-xs text-green-600">
+                                                            Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
+                                                        </p>
+                                                    </div>
                                                 )}
                                             </div>
-                                        </div>
-                                        {codeType === 'voucher' && discountData?.valid && (
-                                            <p className="text-right text-xs text-green-600 dark:text-green-500">
-                                                Sudah termasuk diskon {discountData.discount_code.formatted_value}
-                                            </p>
-                                        )}
-                                        {pointsChecked && pointsToUse > 0 && !pointsError && (
-                                            <p className="text-right text-xs text-green-600 dark:text-green-500">
-                                                Sudah termasuk potongan poin {formatRupiah(pointsToUse)}
-                                            </p>
-                                        )}
-                                    </div>
 
-                                    {deadline && (
-                                        <div className="mt-4 flex items-start gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                            <Calendar size="16" className="text-orange-500 mt-0.5" />
-                                            <div>
-                                                <p className="font-semibold">Batas Pendaftaran:</p>
-                                                <p className="text-gray-500">
-                                                    {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                            {/* Point Reward/Redeem Section */}
+                                            {(isLoggedIn || emailExists) && userPoints > 0 && (
+                                                <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="space-y-0.5">
+                                                            <Label className="text-base font-semibold text-gray-700">Gunakan Reward Point</Label>
+                                                            <p className="text-muted-foreground text-xs">
+                                                                Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={pointsChecked}
+                                                            disabled={codeType === 'voucher' && !!discountData?.valid}
+                                                            onCheckedChange={(checked) => {
+                                                                setPointsChecked(checked);
+                                                                if (checked) {
+                                                                    const autoPoints = Math.min(userPoints, maxPointsAllowed);
+                                                                    setPointsToUse(autoPoints);
+                                                                    setPointsError('');
+                                                                } else {
+                                                                    setPointsToUse(0);
+                                                                    setPointsError('');
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    {pointsChecked && (
+                                                        <div className="space-y-2">
+                                                            <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">Jumlah poin yang digunakan</Label>
+                                                            <div className="flex items-center gap-2">
+                                                                <Input
+                                                                    id="points-input"
+                                                                    type="number"
+                                                                    max={Math.min(userPoints, maxPointsAllowed)}
+                                                                    min={1}
+                                                                    value={pointsToUse || ''}
+                                                                    onChange={(e) => {
+                                                                        const val = parseInt(e.target.value) || 0;
+                                                                        if (val > userPoints) {
+                                                                            setPointsError('Poin melebihi saldo Anda.');
+                                                                        } else if (val > maxPointsAllowed) {
+                                                                            setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
+                                                                        } else {
+                                                                            setPointsError('');
+                                                                        }
+                                                                        setPointsToUse(val);
+                                                                    }}
+                                                                    className="rounded-xl"
+                                                                />
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setPointsToUse(Math.min(userPoints, maxPointsAllowed));
+                                                                        setPointsError('');
+                                                                    }}
+                                                                    className="rounded-xl border-orange-200 text-orange-500 hover:bg-orange-50"
+                                                                >
+                                                                    Maksimal
+                                                                </Button>
+                                                            </div>
+                                                            {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
+                                                            {codeType === 'voucher' && !!discountData?.valid && (
+                                                                <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
+                                                    <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
+                                                        <GraduationCap size={12} className="mr-1" />
+                                                        {isScholarship ? 'Beasiswa' : 'Reguler'}
+                                                    </Badge>
+                                                </div>
+
+                                                {displayPrice > 0 && (
+                                                    <>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
+                                                            <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
+                                                        </div>
+
+                                                        {codeType === 'voucher' && discountData?.valid && (
+                                                            <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                                <span>Diskon Promo ({discountData.discount_code.code})</span>
+                                                                <span>-{formatRupiah(discountData.discount_amount)}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {pointsChecked && pointsToUse > 0 && !pointsError && (
+                                                            <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                                                                <span>Potongan Poin</span>
+                                                                <span>-{formatRupiah(pointsToUse)}</span>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
+                                                            <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <Separator />
+
+                                            <div className="space-y-1">
+                                                {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
+                                                    <p className="text-right text-sm text-red-500 line-through">
+                                                        {formatRupiah(program.strikethrough_price + (displayPrice > 0 ? 5000 : 0))}
+                                                    </p>
+                                                )}
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                                    <div className="text-right">
+                                                        {displayPrice > 0 ? (
+                                                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                                                                {totalPrice <= 0 ? 'GRATIS' : formatRupiah(totalPrice)}
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {codeType === 'voucher' && discountData?.valid && (
+                                                    <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                                        Sudah termasuk diskon {discountData.discount_code.formatted_value}
+                                                    </p>
+                                                )}
+                                                {pointsChecked && pointsToUse > 0 && !pointsError && (
+                                                    <p className="text-right text-xs text-green-600 dark:text-green-500">
+                                                        Sudah termasuk potongan poin {formatRupiah(pointsToUse)}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {deadline && (
+                                                <div className="mt-4 flex items-start gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                                    <Calendar size="16" className="text-orange-500 mt-0.5" />
+                                                    <div>
+                                                        <p className="font-semibold">Batas Pendaftaran:</p>
+                                                        <p className="text-gray-500">
+                                                            {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-start gap-3 pt-2">
+                                                <Checkbox
+                                                    id="terms"
+                                                    checked={termsAccepted}
+                                                    onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                                                    className="mt-0.5"
+                                                />
+                                                <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
+                                                    Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.
+                                                </Label>
+                                            </div>
+
+                                            <div className="space-y-2 pt-2">
+                                                <Button
+                                                    onClick={handlePrimaryAction}
+                                                    disabled={
+                                                        isLoading ||
+                                                        showScholarshipWarning ||
+                                                        (!isLoggedIn && !isGuestFormComplete()) ||
+                                                        (requiresDocumentUpload && (isDocumentPending || isDocumentRejected)) ||
+                                                        (!!regularApplication &&
+                                                            regularApplication.status !== 'approved' &&
+                                                            !isScholarship &&
+                                                            requiresDocumentUpload) ||
+                                                        scholarshipNotApproved ||
+                                                        (displayPrice > 0 && !termsAccepted)
+                                                    }
+                                                    className="w-full "
+                                                >
+                                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                    {isLoading
+                                                        ? 'Memproses...'
+                                                        : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending && !isDocumentRejected
+                                                          ? 'Upload Dokumen Pendukung'
+                                                          : 'Bayar Sekarang'}
+                                                </Button>
+                                                <Button asChild variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
+                                                    <Link href={route('certification-programs.detail', program.slug)}>Kembali</Link>
+                                                </Button>
+                                                <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
+                                                    Pembayaran aman dan terenkripsi 🔒
                                                 </p>
                                             </div>
                                         </div>
                                     )}
-
-                                    <div className="flex items-start gap-3 pt-2">
-                                        <Checkbox
-                                            id="terms"
-                                            checked={termsAccepted}
-                                            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                                            className="mt-0.5"
-                                        />
-                                        <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
-                                            Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.
-                                        </Label>
-                                    </div>
-
-                                    <div className="space-y-2 pt-2">
-                                        <Button
-                                            onClick={handlePrimaryAction}
-                                            disabled={
-                                                isLoading ||
-                                                showScholarshipWarning ||
-                                                (!isLoggedIn && !isGuestFormComplete()) ||
-                                                (requiresDocumentUpload && (isDocumentPending || isDocumentRejected)) ||
-                                                (!!regularApplication &&
-                                                    regularApplication.status !== 'approved' &&
-                                                    !isScholarship &&
-                                                    requiresDocumentUpload) ||
-                                                scholarshipNotApproved ||
-                                                (displayPrice > 0 && !termsAccepted)
-                                            }
-                                            className="w-full "
-                                        >
-                                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                            {isLoading
-                                                ? 'Memproses...'
-                                                : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending && !isDocumentRejected
-                                                  ? 'Upload Dokumen Pendukung'
-                                                  : 'Bayar Sekarang'}
-                                        </Button>
-                                        <Button asChild variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
-                                            <Link href={route('certification-programs.detail', program.slug)}>Kembali</Link>
-                                        </Button>
-                                        <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
-                                            Pembayaran aman dan terenkripsi 🔒
-                                        </p>
-                                    </div>
                                 </div>
                             )}
                         </div>

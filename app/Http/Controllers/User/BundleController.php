@@ -237,19 +237,26 @@ class BundleController extends Controller
         $hasAccess = false;
         $pendingInvoice = null;
 
+        $activeInstallment = null;
         if (Auth::check()) {
             $userId = Auth::id();
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, 'bundle', $bundle->id);
 
-            $hasAccess = EnrollmentBundle::whereHas('invoice', function ($query) use ($userId) {
+            $hasRegularPaid = EnrollmentBundle::whereHas('invoice', function ($query) use ($userId) {
                 $query->where('user_id', $userId)
-                    ->where('status', 'paid');
+                    ->where('is_installment', false)
+                    ->whereIn('status', ['paid', 'completed']);
             })
                 ->where('bundle_id', $bundle->id)
                 ->exists();
 
-            if (!$hasAccess) {
+            $isInstallmentCompleted = $activeInstallment && $activeInstallment['is_fully_paid'];
+            $hasAccess = $hasRegularPaid || $isInstallmentCompleted;
+
+            if (!$hasAccess && !$activeInstallment) {
                 $invoice = Invoice::where('user_id', $userId)
                     ->where('status', 'pending')
+                    ->where('is_installment', false)
                     ->whereHas('bundleEnrollments', function ($query) use ($bundle) {
                         $query->where('bundle_id', $bundle->id);
                     })
@@ -282,8 +289,10 @@ class BundleController extends Controller
         return Inertia::render('user/bundling/checkout/index', [
             'bundle' => $bundle,
             'hasAccess' => $hasAccess,
+            'activeInstallment' => $activeInstallment,
             'pendingInvoice' => $pendingInvoice,
             'referralInfo' => $this->getReferralInfo(),
+            'installmentTerms' => $bundle->installmentTerms()->get(['term_number', 'amount', 'due_date']),
         ]);
     }
 

@@ -113,19 +113,27 @@ class BootcampController extends Controller
         $hasAccess = false;
         $pendingInvoice = null;
 
+        $activeInstallment = null;
         if (Auth::check()) {
             $userId = Auth::id();
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, 'bootcamp', $bootcamp->id);
 
-            $hasAccess = Invoice::where('user_id', $userId)
-                ->where('status', 'paid')
+            $hasRegularPaid = Invoice::where('user_id', $userId)
+                ->whereNull('parent_invoice_id')
+                ->where('is_installment', false)
+                ->whereIn('status', ['paid', 'completed'])
                 ->whereHas('bootcampItems', function ($query) use ($bootcamp) {
                     $query->where('bootcamp_id', $bootcamp->id);
                 })
                 ->exists();
 
-            if (!$hasAccess) {
+            $isInstallmentCompleted = $activeInstallment && $activeInstallment['is_fully_paid'];
+            $hasAccess = $hasRegularPaid || $isInstallmentCompleted;
+
+            if (!$hasAccess && !$activeInstallment) {
                 $invoice = Invoice::where('user_id', $userId)
                     ->where('status', 'pending')
+                    ->where('is_installment', false)
                     ->whereHas('bootcampItems', function ($query) use ($bootcamp) {
                         $query->where('bootcamp_id', $bootcamp->id);
                     })
@@ -158,8 +166,10 @@ class BootcampController extends Controller
         return Inertia::render('user/bootcamp/register/index', [
             'bootcamp' => $bootcamp,
             'hasAccess' => $hasAccess,
+            'activeInstallment' => $activeInstallment,
             'pendingInvoice' => $pendingInvoice,
             'referralInfo' => $this->getReferralInfo(),
+            'installmentTerms' => $bootcamp->installmentTerms()->get(['term_number', 'amount', 'due_date']),
         ]);
     }
 

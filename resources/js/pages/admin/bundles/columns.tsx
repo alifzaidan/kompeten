@@ -31,6 +31,7 @@ export type Bundle = {
     batch?: string | null;
     price: number;
     strikethrough_price: number;
+    installment_enabled?: boolean;
     registration_deadline?: string | null;
     status: 'draft' | 'published' | 'archived';
     bundle_items?: BundleItem[];
@@ -44,39 +45,37 @@ function BundleActions({ bundle }: { bundle: Bundle }) {
     const isAffiliate = auth.role.includes('affiliate');
     const canManageBundle = canManage('bundles') && !isAffiliate;
 
-    const handleDelete = () => {
-        router.delete(route('bundles.destroy', bundle.id));
-    };
-
     return (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1">
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="link" size="icon" className="size-8" asChild>
+                    <Button variant="ghost" size="icon" asChild>
                         <Link href={route('bundles.show', bundle.id)}>
-                            <Folder />
-                            <span className="sr-only">Detail Paket Bundling</span>
+                            <Folder className="size-4" />
                         </Link>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>Lihat Detail</p>
+                    <p>Detail Paket Bundling</p>
                 </TooltipContent>
             </Tooltip>
+
             {canManageBundle && (
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <div>
                             <DeleteConfirmDialog
                                 trigger={
-                                    <Button variant="link" size="icon" className="size-8 text-red-500 hover:cursor-pointer">
-                                        <Trash />
-                                        <span className="sr-only">Hapus Paket Bundling</span>
+                                    <Button variant="ghost" size="icon">
+                                        <Trash className="size-4 text-red-500" />
                                     </Button>
                                 }
-                                title="Apakah Anda yakin ingin menghapus paket bundling ini?"
+                                title="Hapus Paket Bundling"
+                                description="Apakah Anda yakin ingin menghapus paket bundling ini? Tindakan ini tidak dapat dibatalkan."
                                 itemName={bundle.title}
-                                onConfirm={handleDelete}
+                                onConfirm={() => {
+                                    router.delete(route('bundles.destroy', bundle.id));
+                                }}
                             />
                         </div>
                     </TooltipTrigger>
@@ -103,6 +102,11 @@ function BundlePriceCell({ bundle }: { bundle: Bundle }) {
         <div>
             {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
             <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
+            {bundle.installment_enabled && (
+                <Badge variant="outline" className="mt-1 border-primary/30 bg-primary/10 text-primary text-[10px] px-1.5 py-0 font-medium">
+                    Bisa Dicicil
+                </Badge>
+            )}
         </div>
     );
 }
