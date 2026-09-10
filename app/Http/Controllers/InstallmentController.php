@@ -485,6 +485,7 @@ class InstallmentController extends Controller
                     'customer_phone' => $user->phone_number,
                     'item_name' => $productTitle . ' (Cicilan ke-' . $childInvoice->installment_number . ')',
                     'item_description' => 'Pembayaran Cicilan ke-' . $childInvoice->installment_number . ' ' . $productTitle,
+                    'callback_url_cancel' => route('profile.installments'),
                 ]
             );
 

@@ -595,6 +595,7 @@ Route::post('/api/discount-codes/validate', [DiscountCodeController::class, 'val
 
 
 Route::get('/doku/callback', [InvoiceController::class, 'dokuReturn'])->name('doku.callback.web');
+Route::get('/doku/cancel', [InvoiceController::class, 'dokuCancel'])->name('doku.callback.cancel');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
