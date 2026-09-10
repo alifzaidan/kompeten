@@ -37,6 +37,7 @@ class CheckInstallmentOverdue extends Command
             if (!$parentInvoice) continue;
 
             $user = $parentInvoice->user;
+            if (!$user) continue;
 
             // Overdue: jatuh tempo sudah lewat
             if ($daysUntilDue < 0) {

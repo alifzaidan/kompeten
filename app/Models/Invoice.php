@@ -232,6 +232,38 @@ class Invoice extends Model
     }
 
     /**
+     * Cek apakah user memiliki akses aktif ke produk
+     * (lunas, atau cicilan dengan DP/termin 1 terbayar dan tidak sedang dibekukan)
+     */
+    public function hasActiveAccess(): bool
+    {
+        if (!$this->is_installment) {
+            return in_array($this->status, ['paid', 'completed']);
+        }
+
+        if ($this->isAccessSuspended()) {
+            return false;
+        }
+
+        $terms = $this->relationLoaded('installmentTerms')
+            ? $this->installmentTerms
+            : $this->installmentTerms()->get();
+
+        $firstTerm = $terms->firstWhere('installment_number', 1);
+        return (bool) ($firstTerm && $firstTerm->status === 'paid');
+    }
+
+    public function getHasActiveAccessAttribute(): bool
+    {
+        return $this->hasActiveAccess();
+    }
+
+    public function getIsFullyPaidAttribute(): bool
+    {
+        return $this->isFullyPaid();
+    }
+
+    /**
      * Cek apakah ini invoice induk cicilan
      */
     public function isInstallmentParent(): bool

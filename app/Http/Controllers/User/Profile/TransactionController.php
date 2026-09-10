@@ -18,8 +18,14 @@ class TransactionController extends Controller
             'webinarItems.webinar',
             'certificationProgramItems.certificationProgram',
             'bundleEnrollments.bundle.bundleItems.bundleable',
+            'installmentTerms',
+            'parentInvoice.courseItems.course',
+            'parentInvoice.bootcampItems.bootcamp',
+            'parentInvoice.webinarItems.webinar',
+            'parentInvoice.certificationProgramItems.certificationProgram',
         ])
             ->where('user_id', $userId)
+            ->whereNull('parent_invoice_id')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -34,7 +40,17 @@ class TransactionController extends Controller
             'webinarItems.webinar',
             'certificationProgramItems.certificationProgram',
             'bundleEnrollments.bundle.bundleItems.bundleable',
+            'installmentTerms',
+            'parentInvoice.courseItems.course',
+            'parentInvoice.bootcampItems.bootcamp',
+            'parentInvoice.webinarItems.webinar',
+            'parentInvoice.certificationProgramItems.certificationProgram',
+            'parentInvoice.installmentTerms',
         ])->findOrFail($id);
+
+        if ($invoice->user_id !== Auth::id() && (!Auth::user() || !Auth::user()->hasRole('admin'))) {
+            abort(403);
+        }
 
         return Inertia::render('user/profile/transaction/show', ['invoice' => $invoice]);
     }

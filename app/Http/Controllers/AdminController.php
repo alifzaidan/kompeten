@@ -56,9 +56,18 @@ class AdminController extends Controller
         ]);
     }
 
+    private function paidPaymentsQuery()
+    {
+        return Invoice::where('status', 'paid')->where(function ($q) {
+            $q->where(function ($sq) {
+                $sq->whereNull('parent_invoice_id')->where('is_installment', false);
+            })->orWhereNotNull('parent_invoice_id');
+        });
+    }
+
     private function getRevenueData()
     {
-        return Invoice::where('status', 'paid')
+        return $this->paidPaymentsQuery()
             ->select(
                 DB::raw('DATE(paid_at) as date'),
                 DB::raw('SUM(nett_amount) as total_amount'),
@@ -72,7 +81,7 @@ class AdminController extends Controller
 
     private function getMonthlyRevenueData()
     {
-        return Invoice::where('status', 'paid')
+        return $this->paidPaymentsQuery()
             ->select(
                 DB::raw('YEAR(paid_at) as year'),
                 DB::raw('MONTH(paid_at) as month'),
@@ -243,7 +252,7 @@ class AdminController extends Controller
         $previousMonthStart = $currentMonthStart->copy()->subMonthNoOverflow()->startOfMonth();
         $previousMonthEnd = $currentMonthStart->copy()->subMonthNoOverflow()->endOfMonth();
 
-        $invoiceQuery = Invoice::where('status', 'paid');
+        $invoiceQuery = $this->paidPaymentsQuery();
 
         if ($startDate && $endDate) {
             $invoiceQuery->whereBetween('paid_at', [
@@ -295,11 +304,11 @@ class AdminController extends Controller
             ->whereMonth('enrollment_webinars.created_at', now()->month)
             ->whereYear('enrollment_webinars.created_at', now()->year)->count();
 
-        $revenueToday = Invoice::where('status', 'paid')
+        $revenueToday = $this->paidPaymentsQuery()
             ->whereDate('paid_at', today())
             ->sum('nett_amount');
 
-        $revenueYesterday = Invoice::where('status', 'paid')
+        $revenueYesterday = $this->paidPaymentsQuery()
             ->whereDate('paid_at', now()->subDay())
             ->sum('nett_amount');
 
@@ -310,11 +319,11 @@ class AdminController extends Controller
             $dailyRevenueChange = 100;
         }
 
-        $revenueThisMonth = Invoice::where('status', 'paid')
+        $revenueThisMonth = $this->paidPaymentsQuery()
             ->whereBetween('paid_at', [$currentMonthStart, $currentMonthEnd])
             ->sum('nett_amount');
 
-        $revenueLastMonth = Invoice::where('status', 'paid')
+        $revenueLastMonth = $this->paidPaymentsQuery()
             ->whereBetween('paid_at', [$previousMonthStart, $previousMonthEnd])
             ->sum('nett_amount');
 
@@ -345,7 +354,15 @@ class AdminController extends Controller
             'total_bootcamps' => Bootcamp::count(),
             'total_webinars' => Webinar::count(),
             'recent_sales' => Invoice::with(['user', 'courseItems.course', 'bootcampItems.bootcamp', 'webinarItems.webinar', 'bundleEnrollments.bundle', 'certificationProgramItems.certificationProgram'])
-                ->where('status', 'paid')->latest()->take(5)->get(),
+                ->whereNull('parent_invoice_id')
+                ->where(function ($q) {
+                    $q->whereIn('status', ['paid', 'completed'])
+                        ->orWhere(function ($iq) {
+                            $iq->where('status', 'installment_pending')
+                                ->whereHas('installmentTerms', fn ($tq) => $tq->where('installment_number', 1)->where('status', 'paid'));
+                        });
+                })
+                ->latest()->take(5)->get(),
             'revenue_data' => $this->getRevenueData(),
             'monthly_revenue_data' => $this->getMonthlyRevenueData(),
             'participant_data' => $this->getParticipantData(),

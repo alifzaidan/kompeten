@@ -105,9 +105,6 @@ export default function InstallmentConfig({
     // Validasi: total termin TIDAK BOLEH KURANG dari harga produk (boleh sama atau lebih)
     const isTermsValid = totalTermsAmount >= productPrice && productPrice > 0 && terms.length >= 2 && terms.every(t => t.amount > 0 && t.due_date);
 
-    const getCsrfToken = () =>
-        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
-
     async function handleSave() {
         if (enabled && !isTermsValid) {
             if (productPrice <= 0) {
@@ -141,8 +138,6 @@ export default function InstallmentConfig({
                     amount: Number(t.amount),
                     due_date: t.due_date,
                 })) : [],
-            }, {
-                headers: { 'X-CSRF-TOKEN': getCsrfToken() }
             });
 
             if (res.data.success) {

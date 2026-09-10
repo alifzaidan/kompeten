@@ -415,7 +415,7 @@ class CertificationProgramController extends Controller
         if (!empty($phoneNumber)) {
             $message .= "• No. WA: {$phoneNumber}\n";
         }
-        $message .= "\nJika Anda memiliki pertanyaan atau kendala, silakan hubungi Admin kami via WhatsApp di nomor *6285142505794* (atau klik wa.me/6285142505794).\n\n";
+        $message .= "\nJika Anda memiliki pertanyaan atau kendala, silakan hubungi Admin kami via WhatsApp di nomor *6289528514480* (atau klik wa.me/6289528514480).\n\n";
         $message .= "Silakan cek dashboard admin untuk verifikasi dokumen. Terima kasih 🙏\n";
 
         self::sendText([
@@ -451,9 +451,9 @@ class CertificationProgramController extends Controller
             $message .= "{$socializationGroupUrl}\n\n";
         }
 
-        $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6285142505794* (atau klik wa.me/6285142505794).\n\n";
+        $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6289528514480* (atau klik wa.me/6289528514480).\n\n";
         $message .= "Terima kasih dan selamat bergabung! 🚀\n\n";
-        $message .= "*Araska - Customer Support*";
+        $message .= "*MinKo - Customer Support*";
 
         self::sendText([
             [

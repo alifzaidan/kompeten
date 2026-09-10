@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileLayout from '@/layouts/profile/layout';
 import UserLayout from '@/layouts/user-layout';
+import { formatExternalUrl } from '@/lib/utils';
 import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -219,7 +220,7 @@ export default function CertificationProgramDetail({ invoice, programItem }: Pro
                                     </p>
                                     {program.group_url ? (
                                         <Button asChild size="sm" className="mt-2 w-full sm:w-auto">
-                                            <a href={program.group_url} target="_blank" rel="noopener noreferrer">
+                                            <a href={formatExternalUrl(program.group_url)} target="_blank" rel="noopener noreferrer">
                                                 Gabung Grup Kelas
                                             </a>
                                         </Button>
@@ -418,7 +419,7 @@ export default function CertificationProgramDetail({ invoice, programItem }: Pro
                                                                 </p>
                                                             </div>
                                                             <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700">
-                                                                <a href={program.socialization_group_url} target="_blank" rel="noopener noreferrer">
+                                                                <a href={formatExternalUrl(program.socialization_group_url)} target="_blank" rel="noopener noreferrer">
                                                                     Gabung Grup
                                                                 </a>
                                                             </Button>

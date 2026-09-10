@@ -354,16 +354,16 @@ class InvoiceController extends Controller
                 if ($discountCodeId) {
                     throw new \Exception('Voucher dan Poin tidak dapat digunakan bersamaan.');
                 }
-                
+
                 $user = Auth::user();
                 if ($pointsRedeemed > $user->point_balance) {
                     throw new \Exception('Saldo poin Anda tidak mencukupi.');
                 }
-                
+
                 if ($pointsRedeemed > $expectedNettAmount) {
                     throw new \Exception('Poin yang digunakan melebihi harga produk.');
                 }
-                
+
                 $expectedNettAmount = $expectedNettAmount - $pointsRedeemed;
             }
 
@@ -383,14 +383,14 @@ class InvoiceController extends Controller
                 if ($discountCodeId) {
                     throw new \Exception('Voucher dan Referral tidak dapat digunakan bersamaan.');
                 }
-                
+
                 $referralService = app(\App\Services\ReferralService::class);
                 $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
-                
+
                 if (!$validationResult['valid']) {
                     throw new \Exception($validationResult['message']);
                 }
-                
+
                 $referralUserId = $validationResult['referrer']->id;
             }
 
@@ -587,16 +587,16 @@ class InvoiceController extends Controller
                 if ($discountCodeAmount > 0) {
                     throw new \Exception('Voucher dan Poin tidak dapat digunakan bersamaan.');
                 }
-                
+
                 $user = Auth::user();
                 if ($pointsRedeemed > $user->point_balance) {
                     throw new \Exception('Saldo poin Anda tidak mencukupi.');
                 }
-                
+
                 if ($pointsRedeemed > $expectedNettAmount) {
                     throw new \Exception('Poin yang digunakan melebihi harga produk.');
                 }
-                
+
                 $expectedNettAmount = $expectedNettAmount - $pointsRedeemed;
             }
 
@@ -616,14 +616,14 @@ class InvoiceController extends Controller
                 if ($discountCodeAmount > 0) {
                     throw new \Exception('Voucher dan Referral tidak dapat digunakan bersamaan.');
                 }
-                
+
                 $referralService = app(\App\Services\ReferralService::class);
                 $validationResult = $referralService->validateReferralCode($referralCode, null, Auth::user());
-                
+
                 if (!$validationResult['valid']) {
                     throw new \Exception($validationResult['message']);
                 }
-                
+
                 $referralUserId = $validationResult['referrer']->id;
             }
 
@@ -850,7 +850,7 @@ class InvoiceController extends Controller
                 'table' => 'invoices',
                 'field' => 'invoice_code',
                 'length' => 11,
-                'reset_on_prefix_change'  => true,
+                'reset_on_prefix_change' => true,
                 'prefix' => 'KMT-' . date('y')
             ]);
 
@@ -1097,8 +1097,8 @@ class InvoiceController extends Controller
     public function expireOldInvoices()
     {
         $expiredInvoices = Invoice::where('status', 'pending')
-             ->where('expires_at', '<', Carbon::now())
-             ->get();
+            ->where('expires_at', '<', Carbon::now())
+            ->get();
 
         foreach ($expiredInvoices as $invoice) {
             $this->expireInvoiceInDoku($invoice->invoice_code);
@@ -1124,135 +1124,135 @@ class InvoiceController extends Controller
 
         try {
             $getToken = $request->header('x-callback-token');
-        $callbackToken = config('xendit.CALLBACK_TOKEN');
+            $callbackToken = config('xendit.CALLBACK_TOKEN');
 
-        if ($getToken != $callbackToken) {
-            return response()->json(['message' => 'unauthorized'], 401);
-        }
+            if ($getToken != $callbackToken) {
+                return response()->json(['message' => 'unauthorized'], 401);
+            }
 
-        $externalId = $request->external_id;
-        $baseCode = explode('_', $externalId)[0];
+            $externalId = $request->external_id;
+            $baseCode = explode('_', $externalId)[0];
 
-        $invoice = Invoice::with([
-            'user',
-            'courseItems.course',
-            'bootcampItems.bootcamp',
-            'webinarItems.webinar',
-            'certificationProgramItems.certificationProgram',
-            'bundleEnrollments.bundle.bundleItems.bundleable'
-        ])->where('invoice_code', $externalId)
-          ->orWhere('invoice_code', $baseCode)
-          ->first();
-
-        if (!$invoice) {
-            return response()->json(['message' => 'Invoice Not Found'], 404);
-        }
-
-        // Hanya proses jika status invoice masih pending untuk menghindari duplikasi
-        if ($invoice->status !== 'pending') {
-            return response()->json(['message' => 'Invoice already processed'], 200);
-        }
-
-        $isSuccess = ($request->status == 'PAID' || $request->status == 'SETTLED');
-
-        // ====== INSTALLMENT CHILD HANDLER ======
-        if ($invoice->isInstallmentChild() && $isSuccess) {
-            $invoice->update([
-                'paid_at' => Carbon::now('Asia/Jakarta'),
-                'status' => 'paid',
-                'payment_method' => $request->payment_method,
-                'payment_channel' => $request->payment_channel,
-            ]);
-
-            $parentInvoice = Invoice::with([
+            $invoice = Invoice::with([
                 'user',
                 'courseItems.course',
                 'bootcampItems.bootcamp',
                 'webinarItems.webinar',
                 'certificationProgramItems.certificationProgram',
-                'bundleEnrollments.bundle',
-            ])->find($invoice->parent_invoice_id);
+                'bundleEnrollments.bundle.bundleItems.bundleable'
+            ])->where('invoice_code', $externalId)
+                ->orWhere('invoice_code', $baseCode)
+                ->first();
 
-            if ($parentInvoice) {
-                // Jika termin ke-1 (DP): aktifkan akses
-                if ($invoice->installment_number === 1) {
-                    $this->activateInstallmentEnrollments($parentInvoice);
-                    $this->addEnrollmentToCertificateParticipants($parentInvoice);
+            if (!$invoice) {
+                return response()->json(['message' => 'Invoice Not Found'], 404);
+            }
+
+            // Hanya proses jika status invoice masih pending untuk menghindari duplikasi
+            if ($invoice->status !== 'pending') {
+                return response()->json(['message' => 'Invoice already processed'], 200);
+            }
+
+            $isSuccess = ($request->status == 'PAID' || $request->status == 'SETTLED');
+
+            // ====== INSTALLMENT CHILD HANDLER ======
+            if ($invoice->isInstallmentChild() && $isSuccess) {
+                $invoice->update([
+                    'paid_at' => Carbon::now('Asia/Jakarta'),
+                    'status' => 'paid',
+                    'payment_method' => $request->payment_method,
+                    'payment_channel' => $request->payment_channel,
+                ]);
+
+                $parentInvoice = Invoice::with([
+                    'user',
+                    'courseItems.course',
+                    'bootcampItems.bootcamp',
+                    'webinarItems.webinar',
+                    'certificationProgramItems.certificationProgram',
+                    'bundleEnrollments.bundle',
+                ])->find($invoice->parent_invoice_id);
+
+                if ($parentInvoice) {
+                    // Jika termin ke-1 (DP): aktifkan akses
+                    if ($invoice->installment_number === 1) {
+                        $this->activateInstallmentEnrollments($parentInvoice);
+                        $this->addEnrollmentToCertificateParticipants($parentInvoice);
+                    }
+
+                    // Pulihkan akses jika sebelumnya dibekukan
+                    $parentInvoice->update(['access_suspended_at' => null]);
+
+                    // Catat komisi affiliate untuk termin ini
+                    $this->recordAffiliateCommissionForTerm($invoice, $parentInvoice);
+
+                    // Cek apakah semua termin lunas
+                    if ($parentInvoice->isFullyPaid()) {
+                        $parentInvoice->update(['status' => 'paid', 'paid_at' => Carbon::now('Asia/Jakarta')]);
+                        event(new \App\Events\TransactionPaid($parentInvoice));
+                        $this->sendWhatsAppInstallmentComplete($parentInvoice);
+                    } else {
+                        $this->sendWhatsAppTermPaid($invoice, $parentInvoice);
+                    }
                 }
 
-                // Pulihkan akses jika sebelumnya dibekukan
-                $parentInvoice->update(['access_suspended_at' => null]);
+                return response()->json(['message' => 'Success'], 200);
+            }
+            // ====== END INSTALLMENT CHILD HANDLER ======
 
-                // Catat komisi affiliate untuk termin ini
-                $this->recordAffiliateCommissionForTerm($invoice, $parentInvoice);
+            if ($isSuccess) {
+                $invoice->update([
+                    'paid_at' => Carbon::now('Asia/Jakarta'),
+                    'status' => 'paid',
+                    'payment_method' => $request->payment_method,
+                    'payment_channel' => $request->payment_channel
+                ]);
 
-                // Cek apakah semua termin lunas
-                if ($parentInvoice->isFullyPaid()) {
-                    $parentInvoice->update(['status' => 'paid', 'paid_at' => Carbon::now('Asia/Jakarta')]);
-                    event(new \App\Events\TransactionPaid($parentInvoice));
-                    $this->sendWhatsAppInstallmentComplete($parentInvoice);
-                } else {
-                    $this->sendWhatsAppTermPaid($invoice, $parentInvoice);
+                if ($invoice->bundleEnrollments->count() > 0) {
+                    Log::info('Processing bundle enrollments', [
+                        'invoice_code' => $invoice->invoice_code,
+                        'bundle_count' => $invoice->bundleEnrollments->count()
+                    ]);
+
+                    foreach ($invoice->bundleEnrollments as $bundleEnrollment) {
+                        $bundleEnrollment->createIndividualEnrollments();
+
+                        $bundle = $bundleEnrollment->bundle;
+
+                        Log::info('Processing bundle items', [
+                            'bundle_id' => $bundle->id,
+                            'items_count' => $bundle->bundleItems->count()
+                        ]);
+
+                        foreach ($bundle->bundleItems as $item) {
+                            $type = $item->getTypeSlug();
+                            $this->addToCertificateParticipants($type, $item->bundleable_id, $invoice->user_id);
+
+                            Log::info('Added to certificate', [
+                                'type' => $type,
+                                'item_id' => $item->bundleable_id,
+                                'user_id' => $invoice->user_id
+                            ]);
+                        }
+                    }
                 }
+
+                $this->recordAffiliateCommission($invoice);
+                $this->addEnrollmentToCertificateParticipants($invoice);
+
+                // Fire event for referral/rewards points
+                event(new \App\Events\TransactionPaid($invoice));
+
+                // Kirim WhatsApp setelah pembayaran berhasil
+                $this->sendWhatsAppNotification($invoice);
+            } else {
+                $invoice->update(['status' => 'failed']);
+
+                // Kirim WhatsApp untuk pembayaran gagal (opsional)
+                $this->sendWhatsAppPaymentFailed($invoice);
             }
 
             return response()->json(['message' => 'Success'], 200);
-        }
-        // ====== END INSTALLMENT CHILD HANDLER ======
-
-        if ($isSuccess) {
-            $invoice->update([
-                'paid_at' => Carbon::now('Asia/Jakarta'),
-                'status' => 'paid',
-                'payment_method' => $request->payment_method,
-                'payment_channel' => $request->payment_channel
-            ]);
-
-            if ($invoice->bundleEnrollments->count() > 0) {
-                Log::info('Processing bundle enrollments', [
-                    'invoice_code' => $invoice->invoice_code,
-                    'bundle_count' => $invoice->bundleEnrollments->count()
-                ]);
-
-                foreach ($invoice->bundleEnrollments as $bundleEnrollment) {
-                    $bundleEnrollment->createIndividualEnrollments();
-
-                    $bundle = $bundleEnrollment->bundle;
-
-                    Log::info('Processing bundle items', [
-                        'bundle_id' => $bundle->id,
-                        'items_count' => $bundle->bundleItems->count()
-                    ]);
-
-                    foreach ($bundle->bundleItems as $item) {
-                        $type = $item->getTypeSlug();
-                        $this->addToCertificateParticipants($type, $item->bundleable_id, $invoice->user_id);
-
-                        Log::info('Added to certificate', [
-                            'type' => $type,
-                            'item_id' => $item->bundleable_id,
-                            'user_id' => $invoice->user_id
-                        ]);
-                    }
-                }
-            }
-
-            $this->recordAffiliateCommission($invoice);
-            $this->addEnrollmentToCertificateParticipants($invoice);
-
-            // Fire event for referral/rewards points
-            event(new \App\Events\TransactionPaid($invoice));
-
-            // Kirim WhatsApp setelah pembayaran berhasil
-            $this->sendWhatsAppNotification($invoice);
-        } else {
-            $invoice->update(['status' => 'failed']);
-
-            // Kirim WhatsApp untuk pembayaran gagal (opsional)
-            $this->sendWhatsAppPaymentFailed($invoice);
-        }
-
-        return response()->json(['message' => 'Success'], 200);
 
         } catch (\Throwable $e) {
             Log::error('XENDIT CALLBACK ERROR: ' . $e->getMessage(), [
@@ -1288,8 +1288,8 @@ class InvoiceController extends Controller
                 'certificationProgramItems.certificationProgram',
                 'bundleEnrollments.bundle.bundleItems.bundleable'
             ])->where('invoice_code', $invoiceCode)
-              ->orWhere('invoice_code', $baseCode)
-              ->first();
+                ->orWhere('invoice_code', $baseCode)
+                ->first();
 
             if (!$invoice) {
                 return response()->json(['message' => 'Invoice Not Found'], 404);
@@ -1648,9 +1648,9 @@ class InvoiceController extends Controller
             $message .= "Hai *{$user->name}*,\n\n";
             $message .= "Maaf, pembayaran {$itemType} untuk invoice *{$invoice->invoice_code}* tidak berhasil atau telah kadaluarsa.\n\n";
             $message .= "Silakan melakukan pembelian ulang jika Anda masih berminat.\n\n";
-            $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6285142505794* (atau klik wa.me/6285142505794).\n\n";
+            $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6289528514480* (atau klik wa.me/6289528514480).\n\n";
             $message .= "Terima kasih atas perhatiannya.\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             $waData = [
                 [
@@ -1711,7 +1711,8 @@ class InvoiceController extends Controller
     {
         try {
             $user = $parentInvoice->user;
-            if (!$user?->phone_number) return;
+            if (!$user?->phone_number)
+                return;
 
             $phoneNumber = $this->formatPhoneNumber($user->phone_number);
             $termNumber = $childInvoice->installment_number;
@@ -1740,7 +1741,8 @@ class InvoiceController extends Controller
     {
         try {
             $user = $parentInvoice->user;
-            if (!$user?->phone_number) return;
+            if (!$user?->phone_number)
+                return;
 
             $phoneNumber = $this->formatPhoneNumber($user->phone_number);
 
@@ -1889,7 +1891,7 @@ class InvoiceController extends Controller
             $bundle = $typeInfo['item'];
             $hasGroupUrl = false;
             $groupLinks = "";
-            
+
             foreach ($bundle->bundleItems as $item) {
                 $program = $item->bundleable;
                 if ($program && !empty($program->group_url)) {
@@ -1953,14 +1955,14 @@ class InvoiceController extends Controller
             }
         }
 
-        $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6285142505794* (atau klik wa.me/6285142505794).\n\n";
+        $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6289528514480* (atau klik wa.me/6289528514480).\n\n";
         if ($isFreePurchase) {
             $message .= "Terima kasih telah bergabung dengan Kompeten! 🚀\n\n";
         } else {
             $message .= "Selamat belajar! 🚀\n\n";
         }
 
-        $message .= "*Araska - Customer Support*";
+        $message .= "*MinKo - Customer Support*";
 
         return $message;
     }
@@ -2059,13 +2061,17 @@ class InvoiceController extends Controller
             if ($affiliate && $affiliate->affiliate_status === 'Active' && $affiliate->commission > 0) {
                 $commissionAmount = $invoice->nett_amount * ($affiliate->commission / 100);
 
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $affiliate->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $affiliate->commission,
-                    'status' => 'approved',
-                ]);
+                AffiliateEarning::firstOrCreate(
+                    [
+                        'affiliate_user_id' => $affiliate->id,
+                        'invoice_id' => $invoice->id,
+                    ],
+                    [
+                        'amount' => $commissionAmount,
+                        'rate' => $affiliate->commission,
+                        'status' => 'approved',
+                    ]
+                );
             }
         }
 
@@ -2089,15 +2095,19 @@ class InvoiceController extends Controller
             if ($mentor && $mentor->hasRole('mentor') && $mentor->affiliate_status === 'Active' && $mentor->commission > 0) {
                 $commissionAmount = $courseItem->price * ($mentor->commission / 100);
 
-                AffiliateEarning::create([
-                    'affiliate_user_id' => $mentor->id,
-                    'invoice_id' => $invoice->id,
-                    'amount' => $commissionAmount,
-                    'rate' => $mentor->commission,
-                    'status' => 'approved',
-                    'type' => 'mentor_course',
-                    'course_id' => $course->id,
-                ]);
+                AffiliateEarning::firstOrCreate(
+                    [
+                        'affiliate_user_id' => $mentor->id,
+                        'invoice_id' => $invoice->id,
+                        'course_id' => $course->id,
+                    ],
+                    [
+                        'amount' => $commissionAmount,
+                        'rate' => $mentor->commission,
+                        'status' => 'approved',
+                        'type' => 'mentor_course',
+                    ]
+                );
             }
         }
     }
@@ -2204,8 +2214,23 @@ class InvoiceController extends Controller
             'courseItems.course',
             'bootcampItems.bootcamp',
             'webinarItems.webinar',
-            'certificationProgramItems.certificationProgram'
-        ])->findOrFail($id);
+            'bundleEnrollments.bundle',
+            'certificationProgramItems.certificationProgram',
+            'parentInvoice.courseItems.course',
+            'parentInvoice.bootcampItems.bootcamp',
+            'parentInvoice.webinarItems.webinar',
+            'parentInvoice.bundleEnrollments.bundle',
+            'parentInvoice.certificationProgramItems.certificationProgram',
+        ])
+            ->where(function ($q) use ($id) {
+                $q->where('id', $id)->orWhere('invoice_code', $id);
+            })
+            ->firstOrFail();
+
+        // Cek otorisasi kepemilikan invoice (mencegah IDOR)
+        if (!$user->hasRole('admin') && $invoice->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses ke invoice ini');
+        }
 
         if ($invoice->status !== 'paid') {
             abort(403, 'Invoice belum dibayar');
@@ -2216,7 +2241,7 @@ class InvoiceController extends Controller
             'company' => [
                 'name' => 'Kompeten',
                 'address' => 'Perumahan Permata Permadani, Blok B1. Kel. Pendem Kec. Junrejo Kota Batu Prov. Jawa Timur, 65324',
-                'phone' => '+6285142505794',
+                'phone' => '+6289528514480',
                 'email' => 'kompetenidn@gmail.com',
                 'website' => 'https://kompetenidn.com/'
             ]

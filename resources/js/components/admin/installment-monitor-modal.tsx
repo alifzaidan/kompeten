@@ -126,17 +126,13 @@ export default function InstallmentMonitorModal({
         invoice.bundle_enrollments?.[0]?.bundle?.title ||
         'Produk Program';
 
-    const getCsrfToken = () =>
-        document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
-
     // Kirim Reminder Otomatis via Gateway Backend
     async function handleSendAutomatedReminder(term: InstallmentTermItem, customMessage?: string) {
         setSendingReminderId(term.id);
         try {
             const res = await axios.post(
                 `/admin/installments/${term.id}/send-reminder`,
-                { custom_message: customMessage || undefined },
-                { headers: { 'X-CSRF-TOKEN': getCsrfToken() } }
+                { custom_message: customMessage || undefined }
             );
 
             if (res.data.success) {
