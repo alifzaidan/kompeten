@@ -138,9 +138,11 @@ class CertificationProgramController extends Controller
 
         if ($type === 'scholarship') {
             $data['regular_programs'] = CertificationProgram::where('type', 'regular')
-                ->with(['schedules' => function ($q) {
-                    $q->orderBy('schedule_date');
-                }])
+                ->with([
+                    'schedules' => function ($q) {
+                        $q->orderBy('schedule_date');
+                    }
+                ])
                 ->orderByRaw('CAST(batch AS UNSIGNED) ASC')
                 ->get(['id', 'title', 'batch']);
         }
@@ -293,9 +295,11 @@ class CertificationProgramController extends Controller
 
         if ($program->type === 'scholarship') {
             $data['regular_programs'] = CertificationProgram::where('type', 'regular')
-                ->with(['schedules' => function ($q) {
-                    $q->orderBy('schedule_date');
-                }])
+                ->with([
+                    'schedules' => function ($q) {
+                        $q->orderBy('schedule_date');
+                    }
+                ])
                 ->orderByRaw('CAST(batch AS UNSIGNED) ASC')
                 ->get(['id', 'title', 'batch']);
         }
@@ -504,7 +508,7 @@ class CertificationProgramController extends Controller
             }
             $message .= "\nJika sudah selesai, silakan lanjutkan ke tahap berikutnya sesuai instruksi.\n\n";
             $message .= "Terima kasih dan selamat bergabung! 🚀\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -543,7 +547,7 @@ class CertificationProgramController extends Controller
             $message .= "Hai *{$application->user->name}*,\n\n";
             $message .= "Mohon maaf, pendaftaran Sertifikasi *{$program->title}* Anda belum dapat kami terima.\n\n";
             $message .= "Terima kasih atas ketertarikannya.\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -589,7 +593,7 @@ class CertificationProgramController extends Controller
                 $message .= "{$program->socialization_group_url}\n";
             }
             $message .= "\nTerima kasih dan selamat bergabung! 🚀\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -627,7 +631,7 @@ class CertificationProgramController extends Controller
             $message .= "Hai Kak *{$application->name}*,\n\n";
             $message .= "Mohon maaf, Anda belum lolos sebagai penerima Beasiswa *{$program->title}*.\n\n";
             $message .= "Terima kasih atas partisipasi dan ketertarikannya pada program ini.\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -669,22 +673,22 @@ class CertificationProgramController extends Controller
         // Duplicate schedules (program sessions)
         foreach ($program->schedules as $schedule) {
             $newProgram->schedules()->create([
-                'title'         => $schedule->title,
+                'title' => $schedule->title,
                 'schedule_date' => $schedule->schedule_date,
-                'day'           => $schedule->day,
-                'start_time'    => $schedule->start_time,
-                'end_time'      => $schedule->end_time,
+                'day' => $schedule->day,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
             ]);
         }
 
         // Duplicate socialization schedules
         foreach ($program->socializationSchedules as $schedule) {
             $newProgram->socializationSchedules()->create([
-                'title'         => $schedule->title,
+                'title' => $schedule->title,
                 'schedule_date' => $schedule->schedule_date,
-                'day'           => $schedule->day,
-                'start_time'    => $schedule->start_time,
-                'end_time'      => $schedule->end_time,
+                'day' => $schedule->day,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
             ]);
         }
 

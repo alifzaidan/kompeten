@@ -24,6 +24,11 @@ class AffiliateEarningController extends Controller
             'invoice.webinarItems.webinar',
             'invoice.bundleEnrollments.bundle',
             'invoice.certificationProgramItems.certificationProgram',
+            'invoice.parentInvoice.courseItems.course',
+            'invoice.parentInvoice.bootcampItems.bootcamp',
+            'invoice.parentInvoice.webinarItems.webinar',
+            'invoice.parentInvoice.bundleEnrollments.bundle',
+            'invoice.parentInvoice.certificationProgramItems.certificationProgram',
         ]);
 
         if (!$user->hasRole('admin') && !$isStaff) {

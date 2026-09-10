@@ -55,6 +55,11 @@ interface CourseProps {
     course_items: EnrollmentCourseItem[];
     created_at: string;
     updated_at: string;
+    is_installment?: boolean;
+    installment_terms?: any[];
+    access_suspended_at?: string | null;
+    has_active_access?: boolean;
+    is_fully_paid?: boolean;
 }
 
 interface CourseRating {
@@ -135,9 +140,30 @@ export default function DetailMyCourse({
     const courseItem = course.course_items?.[0];
     const courseData = courseItem?.course;
     const courseInvoiceStatus = course.status;
+    const isInstallment = !!course.is_installment;
+    const isSuspended = !!course.access_suspended_at;
+    const terms = course.installment_terms || (course as any).installmentTerms || [];
+    const firstTermPaid = terms.some((t: any) => t.installment_number === 1 && t.status === 'paid');
+
+    const hasActiveAccess = Boolean(
+        course.has_active_access ?? (
+            isInstallment
+                ? (!isSuspended && firstTermPaid)
+                : (courseInvoiceStatus === 'paid' || courseInvoiceStatus === 'completed')
+        )
+    );
+
+    const isFullyPaid = Boolean(
+        course.is_fully_paid ?? (
+            isInstallment
+                ? (terms.length > 0 && terms.every((t: any) => t.status === 'paid'))
+                : (courseInvoiceStatus === 'paid' || courseInvoiceStatus === 'completed')
+        )
+    );
+
     const keyPointList = parseList(courseData?.key_points);
     const isCompleted = courseItem?.progress === 100;
-    const hasCertificate = certificate && isCompleted && courseRating && courseInvoiceStatus === 'paid';
+    const hasCertificate = certificate && isCompleted && courseRating && isFullyPaid;
 
     if (!courseData || !courseItem) {
         return (
@@ -266,10 +292,22 @@ export default function DetailMyCourse({
                                     ) : null}
                                 </div>
 
-                                {courseInvoiceStatus !== 'paid' ? (
+                                {isSuspended ? (
+                                    <div className="mt-6 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
+                                        <p className="font-semibold text-red-700 dark:text-red-300">
+                                            ⚠️ Akses kelas dibekukan karena ada tagihan cicilan yang melewati jatuh tempo. Silakan lakukan pelunasan di menu Transaksi.
+                                        </p>
+                                    </div>
+                                ) : !hasActiveAccess ? (
                                     <div className="mt-6 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
                                         <p className="font-semibold text-red-700 dark:text-red-300">
                                             ⚠️ Selesaikan pembayaran untuk mengakses kelas!
+                                        </p>
+                                    </div>
+                                ) : isInstallment && !isFullyPaid ? (
+                                    <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+                                        <p className="font-medium">
+                                            ℹ️ Pembayaran Cicilan Aktif. Anda memiliki akses penuh ke materi kelas.
                                         </p>
                                     </div>
                                 ) : null}
@@ -279,7 +317,7 @@ export default function DetailMyCourse({
                                         className="w-full"
                                         size="lg"
                                         onClick={() => router.get(route('learn.course.detail', { course: courseData.slug }))}
-                                        disabled={courseInvoiceStatus !== 'paid'}
+                                        disabled={!hasActiveAccess}
                                     >
                                         <Play size={18} className="mr-2" />
                                         {isCompleted ? 'Lihat Kembali Materi' : 'Lanjutkan Belajar'}
@@ -527,8 +565,8 @@ export default function DetailMyCourse({
                                             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                                                 {!certificate
                                                     ? 'Sertifikat belum dibuat'
-                                                    : courseInvoiceStatus !== 'paid'
-                                                      ? 'Selesaikan pembayaran'
+                                                    : !isFullyPaid
+                                                      ? (isInstallment ? 'Lunasi seluruh cicilan untuk membuka sertifikat' : 'Selesaikan pembayaran')
                                                       : !isCompleted
                                                         ? `Selesaikan pembelajaran (${courseItem.progress}%)`
                                                         : !courseRating
@@ -556,13 +594,13 @@ export default function DetailMyCourse({
                                     <Button
                                         className="w-full"
                                         onClick={() => router.get(route('learn.course.detail', { course: courseData.slug }))}
-                                        disabled={courseInvoiceStatus !== 'paid'}
+                                        disabled={!hasActiveAccess}
                                     >
                                         <Play size={16} className="mr-2" />
                                         {isCompleted ? 'Lihat Kembali Materi' : 'Lanjutkan Belajar'}
                                     </Button>
                                     <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
-                                        {courseInvoiceStatus === 'paid' ? 'Akses selamanya untuk materi ini' : 'Selesaikan pembayaran untuk akses'}
+                                        {hasActiveAccess ? 'Akses pembelajaran aktif' : 'Selesaikan pembayaran untuk akses'}
                                     </p>
                                 </div>
                             </div>
