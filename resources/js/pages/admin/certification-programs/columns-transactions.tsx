@@ -4,12 +4,11 @@ import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { usePermission } from '@/hooks/use-permission';
-import { ColumnDef, Row } from '@tanstack/react-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Clock, FileText } from 'lucide-react';
 import InstallmentMonitorModal, { InstallmentTermItem } from '@/components/admin/installment-monitor-modal';
+import { Clock, FileText, Wallet } from 'lucide-react';
 
 interface User {
     id: string;
@@ -37,6 +36,9 @@ export interface Invoice {
         certification_program_id: string;
     }[];
 }
+
+import { usePermission } from '@/hooks/use-permission';
+import { Row } from '@tanstack/react-table';
 
 function PriceCell({ row }: { row: Row<Invoice> }) {
     const { roles, isAdmin } = usePermission();
@@ -68,7 +70,7 @@ function ActionCell({ row }: { row: Row<Invoice> }) {
                     <TooltipTrigger asChild>
                         <Button variant="ghost" size="icon" className="size-8" asChild>
                             <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
-                                <FileText className="size-4" />
+                                <FileText className="h-4 w-4" />
                             </a>
                         </Button>
                     </TooltipTrigger>
@@ -135,21 +137,26 @@ export const transactionColumns: ColumnDef<Invoice>[] = [
                 const isSuspended = !!invoice.access_suspended_at;
 
                 return (
-                    <div className="flex flex-col gap-1 items-start">
-                        {isFullyPaid ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                                Cicilan Lunas
-                            </Badge>
-                        ) : isSuspended ? (
-                            <Badge variant="destructive">
-                                Akses Dibekukan
-                            </Badge>
-                        ) : (
-                            <Badge className="bg-amber-100 text-amber-800 border-amber-300">
-                                Cicilan ({paidCount}/{totalCount || '?'})
-                            </Badge>
-                        )}
-                    </div>
+                    <InstallmentMonitorModal
+                        invoice={invoice as any}
+                        trigger={
+                            <div className="flex flex-col gap-1 items-start cursor-pointer hover:opacity-80 transition-opacity" title="Klik untuk monitor cicilan">
+                                {isFullyPaid ? (
+                                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 cursor-pointer">
+                                        Cicilan Lunas
+                                    </Badge>
+                                ) : isSuspended ? (
+                                    <Badge variant="destructive" className="cursor-pointer">
+                                        Akses Dibekukan
+                                    </Badge>
+                                ) : (
+                                    <Badge className="bg-amber-100 text-amber-800 border-amber-300 cursor-pointer">
+                                        Cicilan ({paidCount}/{totalCount || '?'})
+                                    </Badge>
+                                )}
+                            </div>
+                        }
+                    />
                 );
             }
 
