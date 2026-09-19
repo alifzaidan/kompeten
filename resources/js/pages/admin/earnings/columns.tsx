@@ -180,7 +180,7 @@ export const getColumns = (isAdmin: boolean, isStaff: boolean = false): ColumnDe
     ];
 
     // Jika pengguna adalah admin, tambahkan kolom Aksi di awal
-    if (isAdmin) {
+    if (isAdmin && !isStaff) {
         columns.unshift({
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,
