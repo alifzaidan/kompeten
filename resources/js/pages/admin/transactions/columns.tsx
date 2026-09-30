@@ -80,7 +80,6 @@ interface CertificationProgramItem {
 export interface Invoice {
     id: string;
     user: User;
-    referrer?: Referrer | null;
     referred_by_user?: Referrer | null;
     referredByUser?: Referrer | null;
     referral_user?: Referrer | null;
@@ -398,12 +397,12 @@ export const columns: ColumnDef<Invoice>[] = [
         id: 'affiliate',
         accessorFn: (row) => {
             const inv = row as any;
-            return inv.referred_by_user?.name || inv.referredByUser?.name || inv.referrer?.name || '-';
+            return inv.referred_by_user?.name || inv.referredByUser?.name || '-';
         },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Afiliasi" />,
         cell: ({ row }) => {
             const inv = row.original as any;
-            const name = inv.referred_by_user?.name || inv.referredByUser?.name || inv.referrer?.name || '-';
+            const name = inv.referred_by_user?.name || inv.referredByUser?.name || '-';
             return <p>{name}</p>;
         },
     },

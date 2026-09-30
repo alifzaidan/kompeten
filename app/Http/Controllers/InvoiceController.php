@@ -49,7 +49,6 @@ class InvoiceController extends Controller
         $invoicesQuery = Invoice::with([
             'user',
             'referredByUser',
-            'referrer',
             'referralUser',
             'installmentTerms',
             'courseItems.course',
