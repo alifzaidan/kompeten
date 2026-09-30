@@ -4,16 +4,23 @@ import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import DeleteConfirmDialog from '@/components/delete-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { router } from '@inertiajs/react';
 import type { Row } from '@tanstack/react-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Clock, FileText, Trash } from 'lucide-react';
-import { useState } from 'react';
-import { usePermission } from '@/hooks/use-permission';
 import InstallmentMonitorModal, { InstallmentTermItem } from '@/components/admin/installment-monitor-modal';
+import { CheckCircle2, Clock, FileText, Trash } from 'lucide-react';
+import { useState } from 'react';
 
 interface Referrer {
     id: string;
@@ -24,7 +31,8 @@ interface User {
     id: string;
     name: string;
     phone_number: string | null;
-    referrer?: Referrer | null;
+    email?: string | null;
+    referrer: Referrer | null;
 }
 
 interface Course {
@@ -65,34 +73,42 @@ interface CertificationProgram {
 }
 
 interface CertificationProgramItem {
-    certification_program: CertificationProgram;
+    certification_program?: CertificationProgram;
+    certificationProgram?: CertificationProgram;
 }
 
 export interface Invoice {
     id: string;
     user: User;
     referrer?: Referrer | null;
-    referred_by_user?: User | null;
-    referredByUser?: User | null;
-    referral_user?: User | null;
-    referralUser?: User | null;
+    referred_by_user?: Referrer | null;
+    referredByUser?: Referrer | null;
+    referral_user?: Referrer | null;
+    referralUser?: Referrer | null;
     invoice_code: string;
     invoice_url: string | null;
-    amount?: number;
     nett_amount: number;
-    status: 'paid' | 'pending' | 'failed' | 'completed' | 'expired' | 'installment_pending';
+    amount?: number;
+    status: 'paid' | 'pending' | 'failed' | 'installment_pending';
     is_installment?: boolean;
     access_suspended_at?: string | null;
     paid_at: string | null;
-    course_items: EnrollmentCourse[];
-    bootcamp_items: EnrollmentBootcamp[];
-    webinar_items: EnrollmentWebinar[];
-    bundle_enrollments: BundleEnrollment[];
-    certification_program_items: CertificationProgramItem[];
+    course_items?: EnrollmentCourse[];
+    courseItems?: EnrollmentCourse[];
+    bootcamp_items?: EnrollmentBootcamp[];
+    bootcampItems?: EnrollmentBootcamp[];
+    webinar_items?: EnrollmentWebinar[];
+    webinarItems?: EnrollmentWebinar[];
+    bundle_enrollments?: BundleEnrollment[];
+    bundleEnrollments?: BundleEnrollment[];
+    certification_program_items?: CertificationProgramItem[];
+    certificationProgramItems?: CertificationProgramItem[];
     installment_terms?: InstallmentTermItem[];
     installmentTerms?: InstallmentTermItem[];
     created_at: string;
 }
+
+import { usePermission } from '@/hooks/use-permission';
 
 function PriceCell({ row }: { row: Row<Invoice> }) {
     const { roles, isAdmin } = usePermission();
@@ -112,12 +128,14 @@ function PriceCell({ row }: { row: Row<Invoice> }) {
 
 function ActionsCell({ row }: { row: Row<Invoice> }) {
     const { canManage, roles, isAdmin } = usePermission();
-    const canManageTransactions = canManage('transactions');
+    const canManageTransaction = canManage('transactions');
     const isStaff = roles.includes('staff') && !isAdmin;
     const invoice = row.original;
     const user = invoice.user;
+    const terms = invoice.installment_terms || invoice.installmentTerms || [];
+    const isInstallment = invoice.is_installment || invoice.status === 'installment_pending' || terms.length > 0;
+    let whatsappUrl = '';
 
-    let whatsappUrl: string | null = null;
     if (user?.phone_number) {
         let phoneNumber = user.phone_number.replace(/\D/g, '');
         if (phoneNumber.startsWith('0')) {
@@ -127,6 +145,7 @@ function ActionsCell({ row }: { row: Row<Invoice> }) {
     }
 
     const [loading, setLoading] = useState(false);
+    const [approveDialogOpen, setApproveDialogOpen] = useState(false);
 
     const handleDelete = async () => {
         setLoading(true);
@@ -139,12 +158,26 @@ function ActionsCell({ row }: { row: Row<Invoice> }) {
         );
     };
 
+    const handleApprove = () => {
+        setLoading(true);
+        router.post(
+            route('transactions.approve', { id: invoice.id }),
+            {},
+            {
+                onFinish: () => {
+                    setLoading(false);
+                    setApproveDialogOpen(false);
+                },
+            },
+        );
+    };
+
     return (
         <div className="flex items-center justify-center gap-2">
             {invoice.status === 'paid' && !isStaff && (
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" className="size-8" asChild>
                             <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
                                 <FileText className="size-4" />
                             </a>
@@ -156,7 +189,7 @@ function ActionsCell({ row }: { row: Row<Invoice> }) {
                 </Tooltip>
             )}
 
-            {(invoice.is_installment || invoice.status === 'installment_pending' || (invoice.installment_terms && invoice.installment_terms.length > 0) || (invoice.installmentTerms && invoice.installmentTerms.length > 0)) && (
+            {isInstallment && (
                 <InstallmentMonitorModal
                     invoice={invoice as any}
                     trigger={
@@ -178,7 +211,7 @@ function ActionsCell({ row }: { row: Row<Invoice> }) {
             {whatsappUrl && (
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" className="size-8" asChild>
                             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                                 <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-4 fill-[#25D366]">
                                     <title>WhatsApp</title>
@@ -193,29 +226,84 @@ function ActionsCell({ row }: { row: Row<Invoice> }) {
                 </Tooltip>
             )}
 
-            {canManageTransactions && invoice.status === 'pending' && (
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <div>
-                            <DeleteConfirmDialog
-                                trigger={
-                                    <Button variant="link" size="icon" className="size-8 text-red-500 hover:cursor-pointer" disabled={loading}>
-                                        <Trash />
-                                        <span className="sr-only">Gagalkan Transaksi</span>
-                                    </Button>
-                                }
-                                title="Apakah Anda yakin ingin menggagalkan transaksi ini?"
-                                description="Transaksi yang digagalkan tidak dapat dikembalikan."
-                                itemName={invoice.invoice_code}
-                                onConfirm={handleDelete}
-                                confirmText="Ya, Gagalkan"
-                            />
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Batalkan Transaksi</p>
-                    </TooltipContent>
-                </Tooltip>
+            {invoice.status === 'pending' && canManageTransaction && (
+                <>
+                    {/* Approve Button */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                disabled={loading}
+                                onClick={() => setApproveDialogOpen(true)}
+                            >
+                                <CheckCircle2 className="size-4" />
+                                <span className="sr-only">Approve Transaksi</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Approve Transaksi</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    {/* Approve Confirmation Dialog */}
+                    <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Approve Transaksi?</DialogTitle>
+                                <DialogDescription>
+                                    Transaksi <strong>{invoice.invoice_code}</strong> akan diubah menjadi{' '}
+                                    <strong>Paid</strong> dengan metode pembayaran <strong>DOKU</strong>.
+                                    <br />
+                                    <br />
+                                    Tgl. Pembayaran akan otomatis tercatat pada saat ini, dan komisi afiliasi
+                                    akan dicatat sesuai data transaksi. Tindakan ini tidak dapat dibatalkan.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setApproveDialogOpen(false)}
+                                    disabled={loading}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    onClick={handleApprove}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Memproses...' : 'Ya, Approve'}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Cancel / Gagalkan Button */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div>
+                                <DeleteConfirmDialog
+                                    trigger={
+                                        <Button variant="link" size="icon" className="size-8 text-red-500 hover:cursor-pointer" disabled={loading}>
+                                            <Trash />
+                                            <span className="sr-only">Gagalkan Transaksi</span>
+                                        </Button>
+                                    }
+                                    title="Apakah Anda yakin ingin menggagalkan transaksi ini?"
+                                    description="Transaksi yang digagalkan tidak dapat dikembalikan."
+                                    itemName={invoice.invoice_code}
+                                    onConfirm={handleDelete}
+                                    confirmText="Ya, Gagalkan"
+                                />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Batalkan Transaksi</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </>
             )}
         </div>
     );
@@ -263,11 +351,13 @@ export const columns: ColumnDef<Invoice>[] = [
         header: 'Nama Produk',
         filterFn: (row, _columnId, filterValue) => {
             const invoice = row.original;
-            const courseTitles = invoice.course_items?.map((item) => item.course.title) || [];
-            const bootcampTitles = invoice.bootcamp_items?.map((item) => item.bootcamp.title) || [];
-            const webinarTitles = invoice.webinar_items?.map((item) => item.webinar.title) || [];
-            const bundleTitles = invoice.bundle_enrollments?.map((item) => item.bundle.title) || [];
-            const certTitles = invoice.certification_program_items?.map((item) => item.certification_program.title) || [];
+            const courseTitles = (invoice.courseItems || invoice.course_items || []).map((item) => item.course.title);
+            const bootcampTitles = (invoice.bootcampItems || invoice.bootcamp_items || []).map((item) => item.bootcamp.title);
+            const webinarTitles = (invoice.webinarItems || invoice.webinar_items || []).map((item) => item.webinar.title);
+            const bundleTitles = (invoice.bundleEnrollments || invoice.bundle_enrollments || []).map((item) => item.bundle.title);
+            const certTitles = (invoice.certificationProgramItems || invoice.certification_program_items || []).map(
+                (item) => item.certificationProgram?.title || item.certification_program?.title || '',
+            );
 
             const allTitles = [...courseTitles, ...bootcampTitles, ...webinarTitles, ...bundleTitles, ...certTitles];
             return allTitles.some((title) =>
@@ -276,14 +366,16 @@ export const columns: ColumnDef<Invoice>[] = [
         },
         cell: ({ row }) => {
             const invoice = row.original;
-            const courseTitles = invoice.course_items?.map((item) => item.course.title) || [];
-            const bootcampTitles = invoice.bootcamp_items?.map((item) => item.bootcamp.title) || [];
-            const webinarTitles = invoice.webinar_items?.map((item) => item.webinar.title) || [];
-            const bundleTitles = invoice.bundle_enrollments?.map((item) => item.bundle.title) || [];
-            const certTitles = invoice.certification_program_items?.map((item) => item.certification_program.title) || [];
+            const courseTitles = (invoice.courseItems || invoice.course_items || []).map((item) => item.course.title);
+            const bootcampTitles = (invoice.bootcampItems || invoice.bootcamp_items || []).map((item) => item.bootcamp.title);
+            const webinarTitles = (invoice.webinarItems || invoice.webinar_items || []).map((item) => item.webinar.title);
+            const bundleTitles = (invoice.bundleEnrollments || invoice.bundle_enrollments || []).map((item) => item.bundle.title);
+            const certTitles = (invoice.certificationProgramItems || invoice.certification_program_items || []).map(
+                (item) => item.certificationProgram?.title || item.certification_program?.title || '',
+            );
 
-            const allTitles = [...courseTitles, ...bootcampTitles, ...webinarTitles, ...bundleTitles, ...certTitles];
-            const fullTitleString = allTitles.join(', ');
+            const allTitles = [...courseTitles, ...bootcampTitles, ...webinarTitles, ...bundleTitles, ...certTitles].filter(Boolean);
+            const fullTitleString = allTitles.length > 0 ? allTitles.join(', ') : '-';
 
             return (
                 <Tooltip>
@@ -306,25 +398,12 @@ export const columns: ColumnDef<Invoice>[] = [
         id: 'affiliate',
         accessorFn: (row) => {
             const inv = row as any;
-            return inv.referred_by_user?.name || inv.referredByUser?.name || inv.user?.referrer?.name || inv.referrer?.name || '-';
+            return inv.referred_by_user?.name || inv.referredByUser?.name || inv.referrer?.name || '-';
         },
         header: ({ column }) => <DataTableColumnHeader column={column} title="Afiliasi" />,
         cell: ({ row }) => {
             const inv = row.original as any;
-            const name = inv.referred_by_user?.name || inv.referredByUser?.name || inv.user?.referrer?.name || inv.referrer?.name || '-';
-            return <p>{name}</p>;
-        },
-    },
-    {
-        id: 'referral_code_user',
-        accessorFn: (row) => {
-            const inv = row as any;
-            return inv.referral_user?.name || inv.referralUser?.name || '-';
-        },
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Kode Referral" />,
-        cell: ({ row }) => {
-            const inv = row.original as any;
-            const name = inv.referral_user?.name || inv.referralUser?.name || '-';
+            const name = inv.referred_by_user?.name || inv.referredByUser?.name || inv.referrer?.name || '-';
             return <p>{name}</p>;
         },
     },

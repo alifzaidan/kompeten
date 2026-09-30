@@ -447,6 +447,11 @@ class Invoice extends Model
         return $this->belongsTo(User::class, 'referral_user_id');
     }
 
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
     public function referredByUser()
     {
         return $this->belongsTo(User::class, 'referred_by_user_id');
