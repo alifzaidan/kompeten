@@ -8,6 +8,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Milon\Barcode\DNS2D;
 
 class CertificatePdfService
@@ -200,6 +201,13 @@ class CertificatePdfService
                 $mimeType = $disk->mimeType($relativePath) ?? 'image/png';
                 return 'data:' . $mimeType . ';base64,' . base64_encode($content);
             }
+
+            // Fallback ke S3 jika default disk adalah local tetapi file ada di S3
+            if (config('filesystems.default') !== 's3' && Storage::disk('s3')->exists($relativePath)) {
+                $content = Storage::disk('s3')->get($relativePath);
+                $mimeType = Storage::disk('s3')->mimeType($relativePath) ?? 'image/png';
+                return 'data:' . $mimeType . ';base64,' . base64_encode($content);
+            }
         } catch (\Throwable $e) {
             Log::warning("CertificatePdfService: Failed to fetch image from storage [{$relativePath}]: " . $e->getMessage());
         }
@@ -207,3 +215,4 @@ class CertificatePdfService
         return $localPath;
     }
 }
+
