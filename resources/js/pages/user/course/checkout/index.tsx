@@ -647,7 +647,7 @@ export default function CheckoutCourse({
                                     <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pembayaran</h3>
 
                                     {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
-                                    {installmentTerms.length > 0 && !isFree ? (
+                                    {((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isFree ? (
                                         <Tabs
                                             value={paymentTab}
                                             onValueChange={(val) => {
@@ -668,7 +668,7 @@ export default function CheckoutCourse({
                                                     Bayar Penuh
                                                 </TabsTrigger>
                                                 <TabsTrigger value="installment" className="text-xs sm:text-sm">
-                                                    Cicilan ({installmentTerms.length}x)
+                                                    Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
                                                 </TabsTrigger>
                                             </TabsList>
 

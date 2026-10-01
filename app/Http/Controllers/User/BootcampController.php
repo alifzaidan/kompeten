@@ -169,7 +169,7 @@ class BootcampController extends Controller
             'activeInstallment' => $activeInstallment,
             'pendingInvoice' => $pendingInvoice,
             'referralInfo' => $this->getReferralInfo(),
-            'installmentTerms' => $bootcamp->installmentTerms()->get(['term_number', 'amount', 'due_date']),
+            'installmentTerms' => $bootcamp->installment_enabled ? $bootcamp->installmentTerms()->get(['term_number', 'amount', 'due_date']) : [],
         ]);
     }
 

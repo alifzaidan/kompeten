@@ -173,7 +173,7 @@ class CourseController extends Controller
             // 'transactionDetail' => $transactionDetail,
             // 'channels' => $this->tripayService->getPaymentChannels(),
             'referralInfo' => $this->getReferralInfo(),
-            'installmentTerms' => $course->installmentTerms()->get(['term_number', 'amount', 'due_date']),
+            'installmentTerms' => $course->installment_enabled ? $course->installmentTerms()->get(['term_number', 'amount', 'due_date']) : [],
         ]);
     }
 

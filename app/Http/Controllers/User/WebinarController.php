@@ -170,7 +170,7 @@ class WebinarController extends Controller
             'activeInstallment' => $activeInstallment,
             'pendingInvoice' => $pendingInvoice,
             'referralInfo' => $this->getReferralInfo(),
-            'installmentTerms' => $webinar->installmentTerms()->get(['term_number', 'amount', 'due_date']),
+            'installmentTerms' => $webinar->installment_enabled ? $webinar->installmentTerms()->get(['term_number', 'amount', 'due_date']) : [],
         ]);
     }
 
