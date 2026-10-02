@@ -1,4 +1,5 @@
 import DeleteConfirmDialog from '@/components/delete-dialog';
+import InstallmentConfig from '@/components/admin/installment-config';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,14 +7,13 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useInitials } from '@/hooks/use-initials';
 import { rupiahFormatter } from '@/lib/utils';
 import { SharedData } from '@/types';
-import { router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { ExternalLink, LinkIcon, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import AddScheduleRecordingDialog from './create-schedule-recording';
-import { usePermission } from '@/hooks/use-permission';
 
 interface BootcampSchedule {
     id: string;
@@ -54,6 +54,25 @@ interface Bootcamp {
     }>;
     has_submission_link?: boolean;
     created_at: string | Date;
+    has_certificate?: boolean;
+    requires_review?: boolean;
+    next_step_type?: string | null;
+    next_step_id?: string | null;
+    next_step_product?: {
+        id: string;
+        title: string;
+        slug: string;
+        batch?: string | null;
+        thumbnail?: string | null;
+        price: number;
+        strikethrough_price: number;
+        type: string;
+        type_label: string;
+        url?: string | null;
+        admin_url?: string | null;
+    } | null;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
 }
 
 function getYoutubeId(url: string) {
@@ -64,9 +83,8 @@ function getYoutubeId(url: string) {
 
 export default function BootcampDetail({ bootcamp }: { bootcamp: Bootcamp }) {
     const { auth } = usePage<SharedData>().props;
-    const { roles, isAdmin } = usePermission();
-    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
+    const isStaff = auth.role.includes('staff') && !auth.role.includes('admin');
     const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
 
     const getInitials = useInitials();
@@ -272,10 +290,10 @@ export default function BootcampDetail({ bootcamp }: { bootcamp: Bootcamp }) {
                     <TableRow>
                         <TableCell>Harga</TableCell>
                         <TableCell>
-                            {isStaff ? (
-                                <span className="text-base font-semibold text-muted-foreground">Rp ***</span>
-                            ) : bootcamp.price === 0 ? (
+                            {bootcamp.price === 0 ? (
                                 <span>Gratis</span>
+                            ) : isStaff ? (
+                                <span className="text-base font-semibold text-muted-foreground">Rp ***</span>
                             ) : (
                                 <span>
                                     {bootcamp.strikethrough_price > 0 && (
@@ -517,6 +535,16 @@ export default function BootcampDetail({ bootcamp }: { bootcamp: Bootcamp }) {
                 />
                 {bootcamp.thumbnail ? null : <span className="text-muted-foreground text-sm">Thumbnail belum diunggah.</span>}
             </div>
+
+            {/* Installment Config */}
+            <InstallmentConfig
+                productType="bootcamp"
+                productId={bootcamp.id}
+                productPrice={bootcamp.price}
+                installmentEnabled={bootcamp.installment_enabled ?? false}
+                initialTerms={bootcamp.installment_terms ?? []}
+                registrationDeadline={bootcamp.registration_deadline}
+            />
         </div>
     );
 }
