@@ -26,17 +26,28 @@ interface Promotion {
     url_redirect: string;
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface ActionCellProps {
     promotion: Promotion;
-    promotions: Promotion[];
+    promotions?: Promotion[] | PaginatedData<Promotion>;
 }
 
-export default function ActionCell({ promotion, promotions }: ActionCellProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function ActionCell({ promotion, promotions = [] }: ActionCellProps) {
+    const { canManage } = usePermission();
+    const canManagePromotions = canManage('promotions');
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
 
-    const hasActivePromotion = promotions.some((p) => p.is_active && p.id !== promotion.id);
+    if (!canManagePromotions) {
+        return null;
+    }
+
+    const promoList = Array.isArray(promotions) ? promotions : (promotions?.data || []);
+    const hasActivePromotion = promoList.some((p) => p.is_active && p.id !== promotion.id);
 
     const handleDelete = () => {
         setDeleteLoading(true);

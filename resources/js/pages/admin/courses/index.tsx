@@ -38,18 +38,29 @@ interface Statistics {
     };
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface CourseProps {
-    courses: Course[];
+    courses: PaginatedData<Course>;
     statistics: Statistics;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function Courses({ courses, statistics, flash }: CourseProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function Courses({ courses, statistics, flash, filters }: CourseProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage, roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
+    const canCreateCourse = canManage('courses') && !isAffiliate;
     const [showMoreStats, setShowMoreStats] = useState(false);
 
     useEffect(() => {
@@ -70,7 +81,7 @@ export default function Courses({ courses, statistics, flash }: CourseProps) {
                         <h1 className="text-2xl font-semibold">Kelas Online</h1>
                         <p className="text-muted-foreground text-sm">Ringkasan dan daftar semua kelas online.</p>
                     </div>
-                    {!isAffiliate && (
+                    {canCreateCourse && (
                         <Button asChild className="hover:cursor-pointer">
                             <Link href={route('courses.create')}>
                                 Tambah Kelas
@@ -146,37 +157,21 @@ export default function Courses({ courses, statistics, flash }: CourseProps) {
                                     </div>
                                 </div>
 
-                                {/* Level & Pricing */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="rounded-lg border p-3 text-sm">
-                                        <h4 className="mb-2 text-xs font-semibold">Level</h4>
-                                        <div className="space-y-1 text-xs">
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Beginner</span>
-                                                <span className="font-medium text-green-600">{statistics.level.beginner}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Intermediate</span>
-                                                <span className="font-medium text-yellow-600">{statistics.level.intermediate}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Advanced</span>
-                                                <span className="font-medium text-red-600">{statistics.level.advanced}</span>
-                                            </div>
+                                {/* Level Breakdown */}
+                                <div className="rounded-lg border p-3 text-sm">
+                                    <h4 className="mb-2 font-semibold">Level</h4>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground text-xs">Beginner</span>
+                                            <span className="text-xs font-medium text-green-600">{statistics.level.beginner}</span>
                                         </div>
-                                    </div>
-
-                                    <div className="rounded-lg border p-3 text-sm">
-                                        <h4 className="mb-2 text-xs font-semibold">Harga</h4>
-                                        <div className="space-y-1 text-xs">
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Berbayar</span>
-                                                <span className="font-medium text-green-600">{statistics.pricing.paid_courses}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Gratis</span>
-                                                <span className="font-medium text-blue-600">{statistics.pricing.free_courses}</span>
-                                            </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground text-xs">Intermediate</span>
+                                            <span className="text-xs font-medium text-yellow-600">{statistics.level.intermediate}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-muted-foreground text-xs">Advanced</span>
+                                            <span className="text-xs font-medium text-red-600">{statistics.level.advanced}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -184,8 +179,8 @@ export default function Courses({ courses, statistics, flash }: CourseProps) {
                         )}
                     </div>
 
-                    {/* ✅ DESKTOP: Overview Stats (4 cards) */}
-                    <div className="hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-4">
+                    {/* ✅ DESKTOP: Overview (4 cards) */}
+                    <div className={`hidden gap-4 md:grid md:grid-cols-2 ${isStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
                         <div className="dark:to-background rounded-lg border bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm dark:from-blue-950/20">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -227,19 +222,21 @@ export default function Courses({ courses, statistics, flash }: CourseProps) {
                             </div>
                         </div>
 
-                        <div className="dark:to-background rounded-lg border bg-gradient-to-br from-orange-50 to-white p-4 shadow-sm dark:from-orange-950/20">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-muted-foreground text-sm font-medium">Total Revenue</p>
-                                    <h3 className="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                        {rupiahFormatter.format(statistics.performance.total_revenue)}
-                                    </h3>
-                                </div>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                                    <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                        {!isStaff && (
+                            <div className="dark:to-background rounded-lg border bg-gradient-to-br from-orange-50 to-white p-4 shadow-sm dark:from-orange-950/20">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-muted-foreground text-sm font-medium">Total Revenue</p>
+                                        <h3 className="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                            {rupiahFormatter.format(statistics.performance.total_revenue)}
+                                        </h3>
+                                    </div>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                                        <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* ✅ DESKTOP: Additional Stats (3 cards) */}
@@ -287,7 +284,7 @@ export default function Courses({ courses, statistics, flash }: CourseProps) {
                 </div>
 
                 {/* Data Table */}
-                <DataTable columns={columns} data={courses} />
+                <DataTable columns={columns} pagination={courses} filters={filters} />
             </div>
         </AdminLayout>
     );

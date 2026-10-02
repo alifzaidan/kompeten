@@ -14,12 +14,20 @@ import { Edit, Trash } from 'lucide-react';
 import { useState } from 'react';
 import EditSign from './edit';
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function SignActions({ sign }: { sign: CertificateSign }) {
+    const { canManage } = usePermission();
+    const canManageCertificate = canManage('certificates');
     const [editOpen, setEditOpen] = useState(false);
 
     const handleDelete = () => {
         router.delete(route('certificate-signs.destroy', sign.id));
     };
+
+    if (!canManageCertificate) {
+        return null;
+    }
 
     return (
         <div className="flex items-center justify-center gap-2">

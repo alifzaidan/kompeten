@@ -171,6 +171,7 @@ class CertificationProgramController extends Controller
 
         $hasAccess = false;
         $pendingInvoiceUrl = null;
+        $pendingInvoiceData = null;
         $regularApplication = null;
         $scholarshipApplication = null;
 
@@ -179,27 +180,53 @@ class CertificationProgramController extends Controller
             $isScholarship = true;
         }
 
+        $activeInstallment = null;
         if (Auth::check()) {
             $userId = Auth::id();
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, 'certification_program', $program->id);
 
-            $hasAccess = Invoice::where('user_id', $userId)
-                ->where('status', 'paid')
+            $hasRegularPaid = Invoice::where('user_id', $userId)
+                ->whereNull('parent_invoice_id')
+                ->where('is_installment', false)
+                ->whereIn('status', ['paid', 'completed'])
                 ->whereHas('certificationProgramItems', function ($query) use ($program) {
                     $query->where('certification_program_id', $program->id);
                 })
                 ->exists();
 
-            if (!$hasAccess) {
+            $isInstallmentCompleted = $activeInstallment && $activeInstallment['is_fully_paid'];
+            $hasAccess = $hasRegularPaid || $isInstallmentCompleted;
+
+            if (!$hasAccess && !$activeInstallment) {
                 $pendingInvoice = Invoice::where('user_id', $userId)
                     ->where('status', 'pending')
+                    ->where('is_installment', false)
                     ->whereHas('certificationProgramItems', function ($query) use ($program) {
                         $query->where('certification_program_id', $program->id);
+                    })
+                    ->where(function ($query) {
+                        $query->whereNull('expires_at')
+                            ->orWhere('expires_at', '>', now());
                     })
                     ->latest()
                     ->first();
 
-                if ($pendingInvoice && $pendingInvoice->invoice_url) {
+                if ($pendingInvoice) {
                     $pendingInvoiceUrl = $pendingInvoice->invoice_url;
+                    $pendingInvoiceData = [
+                        'id' => $pendingInvoice->id,
+                        'invoice_code' => $pendingInvoice->invoice_code,
+                        'status' => $pendingInvoice->status,
+                        'amount' => $pendingInvoice->amount,
+                        'payment_method' => $pendingInvoice->payment_method,
+                        'payment_channel' => $pendingInvoice->payment_channel,
+                        'invoice_url' => $pendingInvoice->invoice_url,
+                        'va_number' => $pendingInvoice->va_number,
+                        'qr_code_url' => $pendingInvoice->qr_code_url,
+                        'bank_name' => $pendingInvoice->bank_name ?? null,
+                        'created_at' => $pendingInvoice->created_at,
+                        'expires_at' => $pendingInvoice->expires_at,
+                    ];
                 }
             }
 
@@ -221,11 +248,14 @@ class CertificationProgramController extends Controller
         return Inertia::render('user/certification-program/register/index', [
             'program' => $program,
             'hasAccess' => $hasAccess,
+            'activeInstallment' => $activeInstallment,
             'pendingInvoiceUrl' => $pendingInvoiceUrl,
+            'pendingInvoice' => $pendingInvoiceData,
             'regularApplication' => $regularApplication,
             'scholarshipApplication' => $scholarshipApplication,
             'isScholarship' => $isScholarship,
             'referralInfo' => $this->getReferralInfo(),
+            'installmentTerms' => $program->installment_enabled ? $program->installmentTerms()->get(['term_number', 'amount', 'due_date']) : [],
         ]);
     }
 
@@ -248,8 +278,8 @@ class CertificationProgramController extends Controller
             ->where('user_id', $userId)
             ->first();
 
-        if ($existing && $existing->status === 'rejected') {
-            return back()->with('error', 'Pengajuan Anda sudah ditolak dan tidak dapat diajukan ulang.');
+        if ($existing && $existing->status === 'approved') {
+            return back()->with('error', 'Dokumen Anda sudah disetujui sebelumnya.');
         }
 
         $documentPath = $request->file('document_attachment')->store('certification-programs/documents', 'public');
@@ -263,6 +293,7 @@ class CertificationProgramController extends Controller
                 'status' => 'pending',
                 'approved_at' => null,
                 'rejected_at' => null,
+                'notes' => null,
             ]);
         } else {
             CertificationProgramApplication::create([
@@ -385,7 +416,7 @@ class CertificationProgramController extends Controller
         if (!empty($phoneNumber)) {
             $message .= "• No. WA: {$phoneNumber}\n";
         }
-        $message .= "\nJika Anda memiliki pertanyaan atau kendala, silakan hubungi Admin kami via WhatsApp di nomor *6285142505794* (atau klik wa.me/6285142505794).\n\n";
+        $message .= "\nJika Anda memiliki pertanyaan atau kendala, silakan hubungi Admin kami via WhatsApp di nomor *6289528514480* (atau klik wa.me/6289528514480).\n\n";
         $message .= "Silakan cek dashboard admin untuk verifikasi dokumen. Terima kasih 🙏\n";
 
         self::sendText([
@@ -421,9 +452,9 @@ class CertificationProgramController extends Controller
             $message .= "{$socializationGroupUrl}\n\n";
         }
 
-        $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6285142505794* (atau klik wa.me/6285142505794).\n\n";
+        $message .= "Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi Admin kami via WhatsApp di nomor *6289528514480* (atau klik wa.me/6289528514480).\n\n";
         $message .= "Terima kasih dan selamat bergabung! 🚀\n\n";
-        $message .= "*Araska - Customer Support*";
+        $message .= "*MinKo - Customer Support*";
 
         self::sendText([
             [

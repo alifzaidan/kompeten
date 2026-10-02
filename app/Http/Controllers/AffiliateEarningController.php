@@ -11,22 +11,71 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AffiliateEarningController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $userId = Auth::user()->id;
-        $earnings = AffiliateEarning::with([
+        $user = Auth::user();
+        $isStaff = $user && $user->hasRole('staff') && !$user->hasRole('admin');
+
+        $query = AffiliateEarning::with([
+            'affiliate',
             'invoice.user',
             'invoice.courseItems.course',
             'invoice.bootcampItems.bootcamp',
             'invoice.webinarItems.webinar',
             'invoice.bundleEnrollments.bundle',
             'invoice.certificationProgramItems.certificationProgram',
-        ])
-            ->where('affiliate_user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+            'invoice.parentInvoice.courseItems.course',
+            'invoice.parentInvoice.bootcampItems.bootcamp',
+            'invoice.parentInvoice.webinarItems.webinar',
+            'invoice.parentInvoice.bundleEnrollments.bundle',
+            'invoice.parentInvoice.certificationProgramItems.certificationProgram',
+        ]);
 
-        return Inertia::render('admin/earnings/index', ['earnings' => $earnings]);
+        if (!$user->hasRole('admin') && !$isStaff) {
+            $query->where('affiliate_user_id', $user->id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('invoice', function ($iq) use ($search) {
+                    $iq->where('invoice_code', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"));
+                })->orWhereHas('affiliate', function ($aq) use ($search) {
+                    $aq->where('name', 'like', "%{$search}%")
+                        ->orWhere('affiliate_code', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = \Carbon\Carbon::parse($request->input('start_date'))->startOfDay();
+            $endDate = \Carbon\Carbon::parse($request->input('end_date'))->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
+        $earnings = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
+
+        if ($isStaff) {
+            $earnings->through(function ($earning) {
+                $earning->amount = 0;
+                if ($earning->invoice) {
+                    $earning->invoice->nett_amount = 0;
+                }
+                return $earning;
+            });
+        }
+
+        return Inertia::render('admin/earnings/index', [
+            'earnings' => $earnings,
+            'filters' => [
+                'search' => $request->input('search'),
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'per_page' => $perPage,
+            ],
+        ]);
     }
 
     public function approveEarning(AffiliateEarning $earning)
@@ -45,6 +94,7 @@ class AffiliateEarningController extends Controller
     {
         $user    = Auth::user();
         $isAdmin = $user->hasRole('admin');
+        $isStaff = $user->hasRole('staff') && !$isAdmin;
 
         $filters = [
             'start_date' => $request->input('start_date'),
@@ -56,7 +106,7 @@ class AffiliateEarningController extends Controller
         $filename   = "pendapatan_{$startLabel}-{$endLabel}.xlsx";
 
         return Excel::download(
-            new EarningsExport($filters, $user->id, $isAdmin),
+            new EarningsExport($filters, $user->id, $isAdmin, $isStaff),
             $filename
         );
     }

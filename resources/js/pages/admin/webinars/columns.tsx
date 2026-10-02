@@ -13,9 +13,13 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Award, Folder, Trash } from 'lucide-react';
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function WebinarActions({ webinar }: { webinar: Webinar }) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const isAffiliate = auth.role.includes('affiliate');
+    const canManageWebinar = canManage('webinars') && !isAffiliate;
 
     const handleDelete = () => {
         router.delete(route('webinars.destroy', webinar.id));
@@ -36,7 +40,7 @@ export default function WebinarActions({ webinar }: { webinar: Webinar }) {
                     <p>Lihat Webinar</p>
                 </TooltipContent>
             </Tooltip>
-            {!isAffiliate && (
+            {canManageWebinar && (
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <div>
@@ -76,6 +80,7 @@ export type Webinar = {
     end_time: string;
     status: 'draft' | 'published' | 'archived';
     recording_url?: string | null;
+    installment_enabled?: boolean;
     certificate?: {
         id: string;
         title: string;
@@ -83,6 +88,32 @@ export type Webinar = {
         created_at: string;
     } | null;
 };
+
+function WebinarPriceCell({ webinar }: { webinar: Webinar }) {
+    const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
+
+    const price = webinar.price;
+    if (price === 0) {
+        return <div className="text-base font-semibold">Gratis</div>;
+    }
+    if (isStaff) {
+        return <div className="text-base font-semibold text-muted-foreground">Rp ***</div>;
+    }
+    const strikethroughPrice = webinar.strikethrough_price;
+    return (
+        <div>
+            {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
+            <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
+            {webinar.installment_enabled && (
+                <Badge variant="outline" className="mt-1 border-primary/30 bg-primary/10 text-primary text-[10px] px-1.5 py-0 font-medium">
+                    Bisa Dicicil
+                </Badge>
+            )}
+        </div>
+    );
+}
 
 export const columns: ColumnDef<Webinar>[] = [
     {
@@ -151,19 +182,7 @@ export const columns: ColumnDef<Webinar>[] = [
     {
         accessorKey: 'price',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
-        cell: ({ row }) => {
-            const strikethroughPrice = row.original.strikethrough_price;
-            const price = row.original.price;
-            if (price === 0) {
-                return <div className="text-base font-semibold">Gratis</div>;
-            }
-            return (
-                <div>
-                    {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
-                    <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
-                </div>
-            );
-        },
+        cell: ({ row }) => <WebinarPriceCell webinar={row.original} />,
     },
     {
         id: 'recording_status',

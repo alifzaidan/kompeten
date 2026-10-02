@@ -10,6 +10,7 @@ import { SharedData } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Folder, Package, Trash } from 'lucide-react';
+import { usePermission } from '@/hooks/use-permission';
 
 export type BundleItem = {
     id: string;
@@ -30,6 +31,7 @@ export type Bundle = {
     batch?: string | null;
     price: number;
     strikethrough_price: number;
+    installment_enabled?: boolean;
     registration_deadline?: string | null;
     status: 'draft' | 'published' | 'archived';
     bundle_items?: BundleItem[];
@@ -39,48 +41,71 @@ export type Bundle = {
 
 function BundleActions({ bundle }: { bundle: Bundle }) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const isAffiliate = auth.role.includes('affiliate');
-
-    const handleDelete = () => {
-        router.delete(route('bundles.destroy', bundle.id));
-    };
+    const canManageBundle = canManage('bundles') && !isAffiliate;
 
     return (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1">
             <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="link" size="icon" className="size-8" asChild>
+                    <Button variant="ghost" size="icon" asChild>
                         <Link href={route('bundles.show', bundle.id)}>
-                            <Folder />
-                            <span className="sr-only">Detail Paket Bundling</span>
+                            <Folder className="size-4" />
                         </Link>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                    <p>Lihat Detail</p>
+                    <p>Detail Paket Bundling</p>
                 </TooltipContent>
             </Tooltip>
-            {!isAffiliate && (
+
+            {canManageBundle && (
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <div>
                             <DeleteConfirmDialog
                                 trigger={
-                                    <Button variant="link" size="icon" className="size-8 text-red-500 hover:cursor-pointer">
-                                        <Trash />
-                                        <span className="sr-only">Hapus Paket Bundling</span>
+                                    <Button variant="ghost" size="icon">
+                                        <Trash className="size-4 text-red-500" />
                                     </Button>
                                 }
-                                title="Apakah Anda yakin ingin menghapus bundle ini?"
+                                title="Hapus Paket Bundling"
+                                description="Apakah Anda yakin ingin menghapus paket bundling ini? Tindakan ini tidak dapat dibatalkan."
                                 itemName={bundle.title}
-                                onConfirm={handleDelete}
+                                onConfirm={() => {
+                                    router.delete(route('bundles.destroy', bundle.id));
+                                }}
                             />
                         </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>Hapus Bundling</p>
+                        <p>Hapus Paket Bundling</p>
                     </TooltipContent>
                 </Tooltip>
+            )}
+        </div>
+    );
+}
+
+function BundlePriceCell({ bundle }: { bundle: Bundle }) {
+    const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
+
+    if (isStaff) {
+        return <div className="text-base font-semibold text-muted-foreground">Rp ***</div>;
+    }
+    const strikethroughPrice = bundle.strikethrough_price;
+    const price = bundle.price;
+    return (
+        <div>
+            {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
+            <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
+            {bundle.installment_enabled && (
+                <Badge variant="outline" className="mt-1 border-primary/30 bg-primary/10 text-primary text-[10px] px-1.5 py-0 font-medium">
+                    Bisa Dicicil
+                </Badge>
             )}
         </div>
     );
@@ -165,16 +190,7 @@ export const columns: ColumnDef<Bundle>[] = [
     {
         accessorKey: 'price',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
-        cell: ({ row }) => {
-            const strikethroughPrice = row.original.strikethrough_price;
-            const price = row.original.price;
-            return (
-                <div>
-                    {strikethroughPrice > 0 && <div className="text-xs text-gray-500 line-through">{rupiahFormatter.format(strikethroughPrice)}</div>}
-                    <div className="text-base font-semibold">{rupiahFormatter.format(price)}</div>
-                </div>
-            );
-        },
+        cell: ({ row }) => <BundlePriceCell bundle={row.original} />,
     },
     {
         accessorKey: 'enrollments_count',

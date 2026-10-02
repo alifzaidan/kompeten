@@ -17,54 +17,83 @@ use Inertia\Inertia;
 
 class WebinarController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = User::find(Auth::user()->id);
         $isAffiliate = $user->hasRole('affiliate');
 
+        $query = Webinar::with(['category', 'user', 'certificate'])->latest();
+
         if ($isAffiliate) {
-            $webinars = Webinar::with(['category', 'user', 'certificate'])
-                ->where('status', 'published')
-                ->latest()
-                ->get();
-        } else {
-            $webinars = Webinar::with(['category', 'user', 'certificate'])
-                ->latest()
-                ->get();
+            $query->where('status', 'published');
         }
 
-        $totalWebinars = $webinars->count();
-        $publishedWebinars = $webinars->where('status', 'published')->count();
-        $draftWebinars = $webinars->where('status', 'draft')->count();
-        $archivedWebinars = $webinars->where('status', 'archived')->count();
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
 
-        $freeWebinars = $webinars->where('price', 0)->count();
-        $paidWebinars = $webinars->where('price', '>', 0)->count();
+        if ($request->filled('status')) {
+            $statuses = explode(',', $request->input('status'));
+            $query->whereIn('status', $statuses);
+        }
+
+        if ($request->filled('has_recording')) {
+            $recordingFilters = explode(',', $request->input('has_recording'));
+            $query->where(function ($q) use ($recordingFilters) {
+                $hasCondition = false;
+                if (in_array('recorded', $recordingFilters)) {
+                    $q->whereNotNull('recording_url')->where('recording_url', '!=', '');
+                    $hasCondition = true;
+                }
+                if (in_array('unrecorded', $recordingFilters)) {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $q->$method(function ($sub) {
+                        $sub->whereNull('recording_url')->orWhere('recording_url', '');
+                    });
+                }
+            });
+        }
+
+        $baseStats = Webinar::query();
+        if ($isAffiliate) {
+            $baseStats->where('status', 'published');
+        }
+
+        $totalWebinars = (clone $baseStats)->count();
+        $publishedWebinars = (clone $baseStats)->where('status', 'published')->count();
+        $draftWebinars = (clone $baseStats)->where('status', 'draft')->count();
+        $archivedWebinars = (clone $baseStats)->where('status', 'archived')->count();
+
+        $freeWebinars = (clone $baseStats)->where('price', 0)->count();
+        $paidWebinars = (clone $baseStats)->where('price', '>', 0)->count();
 
         $now = Carbon::now();
-        $completedWebinars = $webinars->filter(function ($webinar) use ($now) {
-            return $webinar->end_time && Carbon::parse($webinar->end_time)->isBefore($now);
-        })->count();
-        $upcomingWebinars = $webinars->filter(function ($webinar) use ($now) {
-            return $webinar->start_time && Carbon::parse($webinar->start_time)->isAfter($now);
-        })->count();
-        $ongoingWebinars = $totalWebinars - $completedWebinars - $upcomingWebinars;
+        $completedWebinars = (clone $baseStats)->whereNotNull('end_time')->where('end_time', '<', $now)->count();
+        $upcomingWebinars = (clone $baseStats)->whereNotNull('start_time')->where('start_time', '>', $now)->count();
+        $ongoingWebinars = max(0, $totalWebinars - $completedWebinars - $upcomingWebinars);
 
-        $webinarsWithRecording = $webinars->whereNotNull('recording_url')->count();
-        $webinarsWithoutRecording = $totalWebinars - $webinarsWithRecording;
+        $webinarsWithRecording = (clone $baseStats)->whereNotNull('recording_url')->where('recording_url', '!=', '')->count();
+        $webinarsWithoutRecording = max(0, $totalWebinars - $webinarsWithRecording);
 
-        $webinarIds = $webinars->pluck('id');
         $totalParticipants = Invoice::where('status', 'paid')
-            ->whereHas('webinarItems', function ($query) use ($webinarIds) {
-                $query->whereIn('webinar_id', $webinarIds);
-            })
+            ->whereHas('webinarItems')
             ->count();
 
-        $totalRevenue = Invoice::where('status', 'paid')
-            ->whereHas('webinarItems', function ($query) use ($webinarIds) {
-                $query->whereIn('webinar_id', $webinarIds);
-            })
-            ->sum('nett_amount');
+        $user = Auth::user();
+        $isStaff = $user && $user->hasRole('staff') && !$user->hasRole('admin');
+
+        $totalRevenue = $isStaff
+            ? 0
+            : Invoice::where('status', 'paid')
+                ->whereHas('webinarItems')
+                ->sum('nett_amount');
 
         $statistics = [
             'overview' => [
@@ -92,9 +121,18 @@ class WebinarController extends Controller
             ],
         ];
 
+        $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
+        $webinars = $query->paginate($perPage)->withQueryString();
+
         return Inertia::render('admin/webinars/index', [
             'webinars' => $webinars,
             'statistics' => $statistics,
+            'filters' => [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+                'has_recording' => $request->input('has_recording'),
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -173,12 +211,13 @@ class WebinarController extends Controller
 
     public function show(string $id)
     {
-        $webinar = Webinar::with(['category', 'user', 'tools'])->findOrFail($id);
+        $webinar = Webinar::with(['category', 'user', 'tools', 'installmentTerms'])->findOrFail($id);
 
         $transactionQuery = Invoice::with([
             'user',
             'referredByUser',
             'referralUser',
+            'installmentTerms',
             'webinarItems' => function ($query) use ($id) {
                 $query->where('webinar_id', $id)
                     ->with('freeRequirement');
@@ -192,6 +231,16 @@ class WebinarController extends Controller
             ->whereDoesntHave('bundleEnrollments')
             ->latest()
             ->get();
+
+        $user = Auth::user();
+        if ($user && $user->hasRole('staff') && !$user->hasRole('admin')) {
+            $transactions->each(function ($tx) {
+                $tx->amount = 0;
+                $tx->discount_amount = 0;
+                $tx->transaction_fee = 0;
+                $tx->nett_amount = 0;
+            });
+        }
 
         $ratingTransactions = (clone $transactionQuery)
             ->latest()

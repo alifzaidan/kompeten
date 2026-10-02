@@ -13,9 +13,8 @@ class CertificationProgramController extends Controller
     {
         $userId = Auth::id();
 
-        $invoices = Invoice::with(['certificationProgramItems.certificationProgram.category'])
-            ->where('user_id', $userId)
-            ->whereIn('status', ['paid', 'completed'])
+        $invoices = Invoice::with(['certificationProgramItems.certificationProgram.category', 'installmentTerms'])
+            ->purchasedByUser($userId)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -26,6 +25,11 @@ class CertificationProgramController extends Controller
                 'invoice_code' => $invoice->invoice_code,
                 'invoice_url' => $invoice->invoice_url,
                 'status' => $invoice->status,
+                'is_installment' => $invoice->is_installment,
+                'is_access_suspended' => $invoice->isAccessSuspended(),
+                'paid_terms' => $invoice->paidTermsCount(),
+                'total_terms' => $invoice->installmentTerms->count(),
+                'is_fully_paid' => $invoice->isFullyPaid(),
                 'paid_at' => $invoice->paid_at,
                 'created_at' => $invoice->created_at,
                 'payment_method' => $invoice->payment_method,
@@ -63,8 +67,9 @@ class CertificationProgramController extends Controller
     {
         $userId = Auth::id();
 
-        // Get all paid/completed invoices with certification items
+        // Get all purchased invoices with certification items
         $invoices = Invoice::with([
+            'installmentTerms',
             'certificationProgramItems.certificationProgram.category',
             'certificationProgramItems.certificationProgram.schedules' => function($q) {
                 $q->orderBy('schedule_date')->orderBy('start_time');
@@ -73,8 +78,7 @@ class CertificationProgramController extends Controller
                 $q->orderBy('schedule_date')->orderBy('start_time');
             },
         ])
-            ->where('user_id', $userId)
-            ->whereIn('status', ['paid', 'completed'])
+            ->purchasedByUser($userId)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -106,6 +110,11 @@ class CertificationProgramController extends Controller
                 'nett_amount' => $matchedInvoice->nett_amount,
                 'discount_amount' => $matchedInvoice->discount_amount,
                 'status' => $matchedInvoice->status,
+                'is_installment' => $matchedInvoice->is_installment,
+                'is_access_suspended' => $matchedInvoice->isAccessSuspended(),
+                'paid_terms' => $matchedInvoice->paidTermsCount(),
+                'total_terms' => $matchedInvoice->installmentTerms->count(),
+                'is_fully_paid' => $matchedInvoice->isFullyPaid(),
                 'paid_at' => $matchedInvoice->paid_at,
                 'created_at' => $matchedInvoice->created_at,
                 'payment_method' => $matchedInvoice->payment_method,

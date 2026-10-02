@@ -14,6 +14,7 @@ import {
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
     AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { usePermission } from '@/hooks/use-permission';
 
 export type Broadcast = {
     id: string;
@@ -24,79 +25,25 @@ export type Broadcast = {
     created_at: string;
 };
 
-export const columns: ColumnDef<Broadcast>[] = [
-    {
-        id: 'no',
-        header: 'No',
-        cell: ({ row }) => <span className="font-medium">{row.index + 1}</span>,
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'title',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Judul" />,
-        cell: ({ row }) => (
-            <Link href={route('broadcasts.show', row.original.id)} className="text-primary font-medium hover:underline">
-                {row.getValue('title')}
-            </Link>
-        ),
-    },
-    {
-        accessorKey: 'total_sent',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Terkirim" />,
-        cell: ({ row }) => {
-            const total = row.getValue('total_sent') as number;
-            return (
-                <Badge variant={total > 0 ? 'default' : 'secondary'} className="text-xs">
-                    <Send className="mr-1 h-3 w-3" /> {total}
-                </Badge>
-            );
-        },
-    },
-    {
-        accessorKey: 'last_sent_at',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Terakhir Kirim" />,
-        cell: ({ row }) => {
-            const lastSent = row.getValue('last_sent_at') as string | null;
-            return (
-                <span className="text-sm">
-                    {lastSent
-                        ? format(new Date(lastSent), 'dd MMM yyyy HH:mm', { locale: idLocale })
-                        : <span className="text-muted-foreground">-</span>}
-                </span>
-            );
-        },
-    },
-    {
-        accessorKey: 'created_at',
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Dibuat" />,
-        cell: ({ row }) => {
-            const createdAt = row.getValue('created_at') as string;
-            return (
-                <span className="text-sm">
-                    {format(new Date(createdAt), 'dd MMM yyyy', { locale: idLocale })}
-                </span>
-            );
-        },
-    },
-    {
-        id: 'actions',
-        header: () => <div className="text-center">Aksi</div>,
-        cell: ({ row }) => {
-            const bc = row.original;
-            return (
-                <div className="flex items-center justify-center gap-1">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" asChild>
-                                <Link href={route('broadcasts.show', bc.id)}>
-                                    <Eye className="h-4 w-4 text-blue-600" />
-                                </Link>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Kirim Broadcast</TooltipContent>
-                    </Tooltip>
+function BroadcastActionsCell({ bc }: { bc: Broadcast }) {
+    const { canManage } = usePermission();
+    const canManageBroadcasts = canManage('broadcasts');
 
+    return (
+        <div className="flex items-center justify-center gap-1">
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href={route('broadcasts.show', bc.id)}>
+                            <Eye className="h-4 w-4 text-blue-600" />
+                        </Link>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>Kirim Broadcast</TooltipContent>
+            </Tooltip>
+
+            {canManageBroadcasts && (
+                <>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button variant="ghost" size="icon" asChild>
@@ -139,8 +86,65 @@ export const columns: ColumnDef<Broadcast>[] = [
                         </TooltipTrigger>
                         <TooltipContent>Hapus</TooltipContent>
                     </Tooltip>
-                </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+export const columns: ColumnDef<Broadcast>[] = [
+    {
+        id: 'no',
+        header: 'No',
+        cell: ({ row }) => <span className="font-medium">{row.index + 1}</span>,
+        enableSorting: false,
+        enableHiding: false,
+    },
+    {
+        accessorKey: 'title',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Judul" />,
+        cell: ({ row }) => (
+            <Link href={route('broadcasts.show', row.original.id)} className="text-primary font-medium hover:underline">
+                {row.getValue('title')}
+            </Link>
+        ),
+    },
+    {
+        accessorKey: 'total_sent',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Terkirim" />,
+        cell: ({ row }) => {
+            const total = row.getValue('total_sent') as number;
+            return (
+                <Badge variant={total > 0 ? 'default' : 'secondary'} className="text-xs">
+                    <Send className="mr-1 h-3 w-3" /> {total}
+                </Badge>
             );
         },
+    },
+    {
+        accessorKey: 'last_sent_at',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Terakhir Kirim" />,
+        cell: ({ row }) => {
+            const lastSent = row.getValue('last_sent_at') as string | null;
+            return (
+                <span className="text-muted-foreground text-xs">
+                    {lastSent ? format(new Date(lastSent), 'dd MMM yyyy, HH:mm', { locale: idLocale }) : 'Belum pernah'}
+                </span>
+            );
+        },
+    },
+    {
+        accessorKey: 'created_at',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Dibuat" />,
+        cell: ({ row }) => (
+            <span className="text-muted-foreground text-xs">
+                {format(new Date(row.getValue('created_at')), 'dd MMM yyyy', { locale: idLocale })}
+            </span>
+        ),
+    },
+    {
+        id: 'actions',
+        header: () => <div className="text-center">Aksi</div>,
+        cell: ({ row }) => <BroadcastActionsCell bc={row.original} />,
     },
 ];

@@ -15,7 +15,9 @@ import {
 
 import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter';
 import { DataTablePagination } from '@/components/data-table-pagination';
+import { DataTableServerPagination } from '@/components/data-table-server-pagination';
 import { DataTableViewOptions } from '@/components/data-table-view-option';
+import { PaginatedData } from '@/types/pagination';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -25,26 +27,8 @@ import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { BookText, CalendarIcon, CheckCircle, ChevronDownIcon, Clock, Dock, DollarSign, Download, Filter, Gift, MonitorPlay, Presentation, X, XCircle } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-
-export const status = [
-    {
-        value: 'pending',
-        label: 'Pending',
-        icon: Clock,
-    },
-    {
-        value: 'paid',
-        label: 'Paid',
-        icon: CheckCircle,
-    },
-    {
-        value: 'failed',
-        label: 'Failed',
-        icon: XCircle,
-    },
-];
+import { BookText, CalendarIcon, CheckCircle, ChevronDownIcon, Clock, Dock, DollarSign, Download, Filter, Gift, GraduationCap, MonitorPlay, Presentation, X, XCircle } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 export const paymentTypes = [
     {
@@ -56,6 +40,24 @@ export const paymentTypes = [
         value: 'free',
         label: 'Gratis',
         icon: Gift,
+    },
+];
+
+export const status = [
+    {
+        value: 'paid',
+        label: 'Paid',
+        icon: CheckCircle,
+    },
+    {
+        value: 'pending',
+        label: 'Pending',
+        icon: Clock,
+    },
+    {
+        value: 'failed',
+        label: 'Failed',
+        icon: XCircle,
     },
 ];
 
@@ -84,22 +86,26 @@ export const productTypes = [
         value: 'certification_program',
         label: 'Program Sertifikasi',
         icon: Dock,
-    }
+    },
 ];
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
-    data: TData[];
+    data?: TData[] | PaginatedData<TData>;
+    pagination?: PaginatedData<TData>;
     filters?: {
         start_date?: string;
         end_date?: string;
         status?: string;
         payment_type?: string;
         product_type?: string;
+        search?: string;
     };
 }
 
-export function DataTable<TData, TValue>({ columns, data, filters }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, pagination, filters }: DataTableProps<TData, TValue>) {
+    const paginationObj = pagination || (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data ? (data as unknown as PaginatedData<TData>) : undefined);
+    const tableData = paginationObj ? (paginationObj.data || []) : (Array.isArray(data) ? data : []);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -125,12 +131,40 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
     const [isStartDateOpen, setIsStartDateOpen] = useState(false);
     const [isEndDateOpen, setIsEndDateOpen] = useState(false);
 
+    // Server-side search state
+    const [searchValue, setSearchValue] = useState(filters?.search ?? '');
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSearch = useCallback((value: string) => {
+        setSearchValue(value);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (value) {
+                searchParams.set('search', value);
+            } else {
+                searchParams.delete('search');
+            }
+            searchParams.set('page', '1');
+            router.get(
+                `${window.location.pathname}?${searchParams.toString()}`,
+                {},
+                { preserveState: true, preserveScroll: true, replace: true },
+            );
+        }, 400);
+    }, []);
+
+    // Sync searchValue when filters prop changes
+    useEffect(() => {
+        setSearchValue(filters?.search ?? '');
+    }, [filters?.search]);
+
     const table = useReactTable({
-        data,
+        data: tableData,
         columns,
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        getPaginationRowModel: pagination ? undefined : getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
@@ -144,54 +178,74 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
         },
     });
 
-    const isFiltered = table.getState().columnFilters.length > 0;
-    const hasDateFilter = startDate && endDate;
+    const selectedStatuses = React.useMemo(() => {
+        return filters?.status ? filters.status.split(',') : [];
+    }, [filters?.status]);
+
+    const selectedPaymentTypes = React.useMemo(() => {
+        return filters?.payment_type ? filters.payment_type.split(',') : [];
+    }, [filters?.payment_type]);
+
+    const selectedProductTypes = React.useMemo(() => {
+        return filters?.product_type ? filters.product_type.split(',') : [];
+    }, [filters?.product_type]);
+
+    const updateFilter = useCallback((key: string, values: string[]) => {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (values.length > 0) {
+            searchParams.set(key, values.join(','));
+        } else {
+            searchParams.delete(key);
+        }
+        searchParams.set('page', '1');
+        router.get(
+            `${window.location.pathname}?${searchParams.toString()}`,
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    }, []);
+
+    const hasDateFilter = !!(startDate && endDate);
+    const isFiltered =
+        searchValue.length > 0 ||
+        selectedStatuses.length > 0 ||
+        selectedPaymentTypes.length > 0 ||
+        selectedProductTypes.length > 0 ||
+        hasDateFilter ||
+        table.getState().columnFilters.length > 0;
 
     // Apply date filter
     const handleApplyDateFilter = () => {
-        const params: Record<string, string> = {};
-
+        const searchParams = new URLSearchParams(window.location.search);
         if (startDate) {
-            params.start_date = format(startDate, 'yyyy-MM-dd');
+            searchParams.set('start_date', format(startDate, 'yyyy-MM-dd'));
+        } else {
+            searchParams.delete('start_date');
         }
         if (endDate) {
-            params.end_date = format(endDate, 'yyyy-MM-dd');
+            searchParams.set('end_date', format(endDate, 'yyyy-MM-dd'));
+        } else {
+            searchParams.delete('end_date');
         }
-
-        // Tambahkan filter kolom yang sedang aktif
-        const statusFilter = table.getColumn('status')?.getFilterValue();
-        if (statusFilter) {
-            params.status = String(statusFilter);
-        }
-
-        const paymentTypeFilter = table.getColumn('payment_type')?.getFilterValue();
-        if (paymentTypeFilter) {
-            params.payment_type = String(paymentTypeFilter);
-        }
-
-        const productTypeFilter = table.getColumn('product_type')?.getFilterValue();
-        if (productTypeFilter) {
-            params.product_type = String(productTypeFilter);
-        }
-
-        router.get(route('transactions.index'), params, {
-            preserveState: false,
-            preserveScroll: true,
-        });
+        searchParams.set('page', '1');
+        router.get(
+            `${window.location.pathname}?${searchParams.toString()}`,
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
     };
 
     // Clear all filters including date
     const handleClearAllFilters = () => {
+        setSearchValue('');
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
         table.resetColumnFilters();
         setStartDate(undefined);
         setEndDate(undefined);
         router.get(
-            route('transactions.index'),
+            window.location.pathname,
             {},
-            {
-                preserveState: false,
-                preserveScroll: true,
-            },
+            { preserveState: true, preserveScroll: true, replace: true },
         );
     };
 
@@ -214,24 +268,7 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
         } else {
             setEndDate(undefined);
         }
-
-        // Sync column filters from URL
-        const newColumnFilters: ColumnFiltersState = [];
-
-        if (filters?.status) {
-            newColumnFilters.push({ id: 'status', value: filters.status });
-        }
-
-        if (filters?.payment_type) {
-            newColumnFilters.push({ id: 'payment_type', value: filters.payment_type });
-        }
-
-        if (filters?.product_type) {
-            newColumnFilters.push({ id: 'product_type', value: filters.product_type });
-        }
-
-        setColumnFilters(newColumnFilters);
-    }, [filters?.start_date, filters?.end_date, filters?.status, filters?.payment_type, filters?.product_type]);
+    }, [filters?.start_date, filters?.end_date]);
 
     const handleExportToExcel = () => {
         const params = new URLSearchParams();
@@ -361,34 +398,47 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
             {/* Existing Filters */}
             <div className="flex flex-col items-stretch gap-2 py-4 lg:flex-row lg:items-center">
                 <Input
-                    placeholder="Cari nama pembeli..."
-                    value={(table.getColumn('user_name')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('user_name')?.setFilterValue(event.target.value)}
-                    className="lg:max-w-sm"
-                />
-                <Input
-                    placeholder="Cari nama produk..."
-                    value={(table.getColumn('items')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('items')?.setFilterValue(event.target.value)}
+                    placeholder="Cari nama pembeli / invoice..."
+                    value={searchValue}
+                    onChange={(event) => handleSearch(event.target.value)}
                     className="lg:max-w-sm"
                 />
                 <div className="flex flex-col items-center gap-2 lg:flex-row">
-                    {table.getColumn('status') && <DataTableFacetedFilter column={table.getColumn('status')} title="Status" options={status} />}
+                    {table.getColumn('status') && (
+                        <DataTableFacetedFilter
+                            column={table.getColumn('status')}
+                            title="Status"
+                            options={status}
+                            selectedValues={selectedStatuses}
+                            onFilterChange={(values) => updateFilter('status', values)}
+                        />
+                    )}
                     {table.getColumn('payment_type') && (
-                        <DataTableFacetedFilter column={table.getColumn('payment_type')} title="Jenis Bayar" options={paymentTypes} />
+                        <DataTableFacetedFilter
+                            column={table.getColumn('payment_type')}
+                            title="Jenis Bayar"
+                            options={paymentTypes}
+                            selectedValues={selectedPaymentTypes}
+                            onFilterChange={(values) => updateFilter('payment_type', values)}
+                        />
                     )}
                     {table.getColumn('product_type') && (
-                        <DataTableFacetedFilter column={table.getColumn('product_type')} title="Jenis Produk" options={productTypes} />
+                        <DataTableFacetedFilter
+                            column={table.getColumn('product_type')}
+                            title="Jenis Produk"
+                            options={productTypes}
+                            selectedValues={selectedProductTypes}
+                            onFilterChange={(values) => updateFilter('product_type', values)}
+                        />
                     )}
                     {isFiltered && (
                         <Button
-                            onClick={() => {
-                                table.resetColumnFilters();
-                            }}
+                            variant="ghost"
+                            onClick={handleClearAllFilters}
                             className="h-8 px-2 lg:px-3"
                         >
                             Reset
-                            <X />
+                            <X className="ml-2 h-4 w-4" />
                         </Button>
                     )}
                 </div>
@@ -429,7 +479,11 @@ export function DataTable<TData, TValue>({ columns, data, filters }: DataTablePr
                 </Table>
             </div>
             <div className="py-4">
-                <DataTablePagination table={table} />
+                {paginationObj ? (
+                    <DataTableServerPagination pagination={paginationObj} />
+                ) : (
+                    <DataTablePagination table={table} />
+                )}
             </div>
         </div>
     );

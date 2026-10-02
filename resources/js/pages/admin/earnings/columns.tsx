@@ -67,11 +67,13 @@ interface Invoice {
     invoice_code: string;
     nett_amount: number;
     user: User;
-    course_items: EnrollmentCourse[];
-    bootcamp_items: EnrollmentBootcamp[];
-    webinar_items: EnrollmentWebinar[];
-    bundle_enrollments: BundleEnrollment[];
-    certification_program_items: EnrollmentCertification[];
+    course_items?: EnrollmentCourse[];
+    bootcamp_items?: EnrollmentBootcamp[];
+    webinar_items?: EnrollmentWebinar[];
+    bundle_enrollments?: BundleEnrollment[];
+    certification_program_items?: EnrollmentCertification[];
+    parent_invoice?: Invoice;
+    parentInvoice?: Invoice;
 }
 
 export type Earning = {
@@ -83,20 +85,21 @@ export type Earning = {
     created_at: string;
 };
 
-export const getColumns = (isAdmin: boolean): ColumnDef<Earning>[] => {
+export const getColumns = (isAdmin: boolean, isStaff: boolean = false): ColumnDef<Earning>[] => {
     const columns: ColumnDef<Earning>[] = [
         {
             id: 'items',
             header: 'Nama Produk',
             cell: ({ row }) => {
-                const invoice = row.original.invoice;
-                const courseTitles = invoice.course_items?.map((item) => item.course.title) || [];
-                const bootcampTitles = invoice.bootcamp_items?.map((item) => item.bootcamp.title) || [];
-                const webinarTitles = invoice.webinar_items?.map((item) => item.webinar.title) || [];
-                const bundleTitles = invoice.bundle_enrollments?.map((item) => item.bundle.title) || [];
-                const certTitles = invoice.certification_program_items?.map((item) => item.certification_program.title) || [];
+                const rawInvoice = row.original.invoice;
+                const invoice = rawInvoice?.parent_invoice || rawInvoice?.parentInvoice || rawInvoice;
+                const courseTitles = invoice?.course_items?.map((item) => item.course?.title).filter(Boolean) || [];
+                const bootcampTitles = invoice?.bootcamp_items?.map((item) => item.bootcamp?.title).filter(Boolean) || [];
+                const webinarTitles = invoice?.webinar_items?.map((item) => item.webinar?.title).filter(Boolean) || [];
+                const bundleTitles = invoice?.bundle_enrollments?.map((item) => item.bundle?.title).filter(Boolean) || [];
+                const certTitles = invoice?.certification_program_items?.map((item) => item.certification_program?.title).filter(Boolean) || [];
                 const allTitles = [...courseTitles, ...bootcampTitles, ...webinarTitles, ...bundleTitles, ...certTitles];
-                const fullTitleString = allTitles.join(', ');
+                const fullTitleString = allTitles.length > 0 ? allTitles.join(', ') : '-';
 
                 return (
                     <Tooltip>
@@ -114,8 +117,11 @@ export const getColumns = (isAdmin: boolean): ColumnDef<Earning>[] => {
             id: 'price',
             header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
             cell: ({ row }) => {
+                if (isStaff) {
+                    return <div className="font-medium text-muted-foreground">Rp ***</div>;
+                }
                 const invoice = row.original.invoice;
-                const totalPrice = invoice.nett_amount;
+                const totalPrice = invoice?.nett_amount ?? 0;
 
                 // Format total harga sebagai mata uang Rupiah
                 const formatted = new Intl.NumberFormat('id-ID', {
@@ -131,6 +137,9 @@ export const getColumns = (isAdmin: boolean): ColumnDef<Earning>[] => {
             accessorKey: 'amount',
             header: ({ column }) => <DataTableColumnHeader column={column} title="Komisi" />,
             cell: ({ row }) => {
+                if (isStaff) {
+                    return <div className="font-medium text-muted-foreground">Rp ***</div>;
+                }
                 const formatted = new Intl.NumberFormat('id-ID', {
                     style: 'currency',
                     currency: 'IDR',
@@ -171,7 +180,7 @@ export const getColumns = (isAdmin: boolean): ColumnDef<Earning>[] => {
     ];
 
     // Jika pengguna adalah admin, tambahkan kolom Aksi di awal
-    if (isAdmin) {
+    if (isAdmin && !isStaff) {
         columns.unshift({
             id: 'actions',
             header: () => <div className="text-center">Aksi</div>,

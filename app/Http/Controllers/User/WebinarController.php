@@ -114,47 +114,63 @@ class WebinarController extends Controller
         $hasAccess = false;
         $pendingInvoice = null;
 
-        $userId = Auth::id();
+        $activeInstallment = null;
+        if (Auth::check()) {
+            $userId = Auth::id();
+            $activeInstallment = Invoice::getActiveInstallmentForUser($userId, 'webinar', $webinar->id);
 
-        $hasAccess = Invoice::where('user_id', $userId)
-            ->where('status', 'paid')
-            ->whereHas('webinarItems', function ($query) use ($webinar) {
-                $query->where('webinar_id', $webinar->id);
-            })
-            ->exists();
-
-        if (!$hasAccess) {
-            $invoice = Invoice::where('user_id', $userId)
-                ->where('status', 'pending')
+            $hasRegularPaid = Invoice::where('user_id', $userId)
+                ->whereNull('parent_invoice_id')
+                ->where('is_installment', false)
+                ->whereIn('status', ['paid', 'completed'])
                 ->whereHas('webinarItems', function ($query) use ($webinar) {
                     $query->where('webinar_id', $webinar->id);
                 })
-                ->latest()
-                ->first();
+                ->exists();
 
-            if ($invoice) {
-                $pendingInvoice = [
-                    'id' => $invoice->id,
-                    'invoice_code' => $invoice->invoice_code,
-                    'status' => $invoice->status,
-                    'amount' => $invoice->amount,
-                    'payment_method' => $invoice->payment_method,
-                    'payment_channel' => $invoice->payment_channel,
-                    'invoice_url' => $invoice->invoice_url,
-                    'va_number' => $invoice->va_number,
-                    'qr_code_url' => $invoice->qr_code_url,
-                    'bank_name' => $invoice->bank_name ?? null,
-                    'created_at' => $invoice->created_at,
-                    'expires_at' => $invoice->expires_at,
-                ];
+            $isInstallmentCompleted = $activeInstallment && $activeInstallment['is_fully_paid'];
+            $hasAccess = $hasRegularPaid || $isInstallmentCompleted;
+
+            if (!$hasAccess && !$activeInstallment) {
+                $invoice = Invoice::where('user_id', $userId)
+                    ->where('status', 'pending')
+                    ->where('is_installment', false)
+                    ->whereHas('webinarItems', function ($query) use ($webinar) {
+                        $query->where('webinar_id', $webinar->id);
+                    })
+                    ->where(function ($query) {
+                        $query->whereNull('expires_at')
+                            ->orWhere('expires_at', '>', now());
+                    })
+                    ->latest()
+                    ->first();
+
+                if ($invoice) {
+                    $pendingInvoice = [
+                        'id' => $invoice->id,
+                        'invoice_code' => $invoice->invoice_code,
+                        'status' => $invoice->status,
+                        'amount' => $invoice->amount,
+                        'payment_method' => $invoice->payment_method,
+                        'payment_channel' => $invoice->payment_channel,
+                        'invoice_url' => $invoice->invoice_url,
+                        'va_number' => $invoice->va_number,
+                        'qr_code_url' => $invoice->qr_code_url,
+                        'bank_name' => $invoice->bank_name ?? null,
+                        'created_at' => $invoice->created_at,
+                        'expires_at' => $invoice->expires_at,
+                    ];
+                }
             }
         }
 
         return Inertia::render('user/webinar/register/index', [
             'webinar' => $webinar,
             'hasAccess' => $hasAccess,
+            'activeInstallment' => $activeInstallment,
             'pendingInvoice' => $pendingInvoice,
             'referralInfo' => $this->getReferralInfo(),
+            'installmentTerms' => $webinar->installment_enabled ? $webinar->installmentTerms()->get(['term_number', 'amount', 'due_date']) : [],
         ]);
     }
 

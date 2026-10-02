@@ -15,12 +15,15 @@ import {
 
 import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter';
 import { DataTablePagination } from '@/components/data-table-pagination';
+import { DataTableServerPagination } from '@/components/data-table-server-pagination';
 import { DataTableViewOptions } from '@/components/data-table-view-option';
+import { PaginatedData } from '@/types/pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Archive, CheckCircle2, Eye, EyeOff, FileEdit, X } from 'lucide-react';
-import React from 'react';
+import { router } from '@inertiajs/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 export const webinarStatuses = [
     { value: 'draft', label: 'Draft', icon: FileEdit },
@@ -35,20 +38,81 @@ export const recordingStatuses = [
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
-    data: TData[];
+    data?: TData[] | PaginatedData<TData>;
+    pagination?: PaginatedData<TData>;
+    filters?: {
+        search?: string;
+        status?: string;
+        has_recording?: string;
+        per_page?: number;
+    };
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, pagination, filters }: DataTableProps<TData, TValue>) {
+    const paginationObj = pagination || (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data ? (data as unknown as PaginatedData<TData>) : undefined);
+    const tableData = paginationObj ? (paginationObj.data || []) : (Array.isArray(data) ? data : []);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+
+    // Server-side search state
+    const [searchValue, setSearchValue] = useState(filters?.search ?? '');
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSearch = useCallback((value: string) => {
+        setSearchValue(value);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (value) {
+                searchParams.set('search', value);
+            } else {
+                searchParams.delete('search');
+            }
+            searchParams.set('page', '1');
+            router.get(
+                `${window.location.pathname}?${searchParams.toString()}`,
+                {},
+                { preserveState: true, preserveScroll: true, replace: true },
+            );
+        }, 400);
+    }, []);
+
+    // Sync searchValue when filters prop changes (e.g. navigating back)
+    useEffect(() => {
+        setSearchValue(filters?.search ?? '');
+    }, [filters?.search]);
+
+    const selectedStatuses = React.useMemo(() => {
+        return filters?.status ? filters.status.split(',') : [];
+    }, [filters?.status]);
+
+    const selectedRecordingStatuses = React.useMemo(() => {
+        return filters?.has_recording ? filters.has_recording.split(',') : [];
+    }, [filters?.has_recording]);
+
+    const updateFilter = useCallback((key: string, values: string[]) => {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (values.length > 0) {
+            searchParams.set(key, values.join(','));
+        } else {
+            searchParams.delete(key);
+        }
+        searchParams.set('page', '1');
+        router.get(
+            `${window.location.pathname}?${searchParams.toString()}`,
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    }, []);
+
     const table = useReactTable({
-        data,
+        data: tableData,
         columns,
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        getPaginationRowModel: paginationObj ? undefined : getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
@@ -62,28 +126,56 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         },
     });
 
-    const isFiltered = table.getState().columnFilters.length > 0;
+    const isFiltered = searchValue.length > 0 || selectedStatuses.length > 0 || selectedRecordingStatuses.length > 0 || table.getState().columnFilters.length > 0;
+
+    const handleReset = () => {
+        setSearchValue('');
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        table.resetColumnFilters();
+        const searchParams = new URLSearchParams(window.location.search);
+        searchParams.delete('search');
+        searchParams.delete('status');
+        searchParams.delete('has_recording');
+        searchParams.set('page', '1');
+        router.get(
+            `${window.location.pathname}?${searchParams.toString()}`,
+            {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
     return (
         <div>
             <div className="flex flex-col items-stretch gap-2 py-4 lg:flex-row lg:items-center">
                 <Input
-                    placeholder="Cari judul webinar..."
-                    value={(table.getColumn('title')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('title')?.setFilterValue(event.target.value)}
+                    placeholder="Cari webinar..."
+                    value={searchValue}
+                    onChange={(event) => handleSearch(event.target.value)}
                     className="lg:max-w-sm"
                 />
                 <div className="flex flex-col items-center gap-2 lg:flex-row">
                     {table.getColumn('status') && (
-                        <DataTableFacetedFilter column={table.getColumn('status')} title="Status" options={webinarStatuses} />
+                        <DataTableFacetedFilter
+                            column={table.getColumn('status')}
+                            title="Status"
+                            options={webinarStatuses}
+                            selectedValues={selectedStatuses}
+                            onFilterChange={(values) => updateFilter('status', values)}
+                        />
                     )}
-                    {table.getColumn('recording_status') && (
-                        <DataTableFacetedFilter column={table.getColumn('recording_status')} title="Status Rekaman" options={recordingStatuses} />
+                    {table.getColumn('has_recording') && (
+                        <DataTableFacetedFilter
+                            column={table.getColumn('has_recording')}
+                            title="Rekaman"
+                            options={recordingStatuses}
+                            selectedValues={selectedRecordingStatuses}
+                            onFilterChange={(values) => updateFilter('has_recording', values)}
+                        />
                     )}
                     {isFiltered && (
-                        <Button onClick={() => table.resetColumnFilters()} className="h-8 px-2 lg:px-3">
+                        <Button variant="ghost" onClick={handleReset} className="h-8 px-2 lg:px-3">
                             Reset
-                            <X />
+                            <X className="ml-2 h-4 w-4" />
                         </Button>
                     )}
                 </div>
@@ -124,7 +216,11 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                 </Table>
             </div>
             <div className="py-4">
-                <DataTablePagination table={table} />
+                {paginationObj ? (
+                    <DataTableServerPagination pagination={paginationObj} />
+                ) : (
+                    <DataTablePagination table={table} />
+                )}
             </div>
         </div>
     );

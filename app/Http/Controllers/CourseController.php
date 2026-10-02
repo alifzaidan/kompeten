@@ -9,6 +9,7 @@ use App\Models\CourseRating;
 use App\Models\Invoice;
 use App\Models\Tool;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -28,35 +29,59 @@ class CourseController extends Controller
             $query->where('status', 'published');
         }
 
-        $courses = $query->get();
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
 
-        $totalCourses = $courses->count();
-        $publishedCourses = $courses->where('status', 'published')->count();
-        $draftCourses = $courses->where('status', 'draft')->count();
-        $archivedCourses = $courses->where('status', 'archived')->count();
+        if ($request->filled('status')) {
+            $statuses = explode(',', $request->input('status'));
+            $query->whereIn('status', $statuses);
+        }
 
-        $freeCourses = $courses->where('price', 0)->count();
-        $paidCourses = $courses->where('price', '>', 0)->count();
+        if ($request->filled('level')) {
+            $levels = explode(',', $request->input('level'));
+            $query->whereIn('level', $levels);
+        }
 
-        $beginnerCourses = $courses->where('level', 'beginner')->count();
-        $intermediateCourses = $courses->where('level', 'intermediate')->count();
-        $advancedCourses = $courses->where('level', 'advanced')->count();
+        // Compute statistics via SQL aggregates
+        $baseStats = Course::query();
+        if ($user->hasRole('mentor')) {
+            $baseStats->where('user_id', $user->id);
+        } elseif ($isAffiliate) {
+            $baseStats->where('status', 'published');
+        }
 
-        $coursesWithCertificate = $courses->whereNotNull('certificate')->count();
-        $coursesWithoutCertificate = $totalCourses - $coursesWithCertificate;
+        $totalCourses = (clone $baseStats)->count();
+        $publishedCourses = (clone $baseStats)->where('status', 'published')->count();
+        $draftCourses = (clone $baseStats)->where('status', 'draft')->count();
+        $archivedCourses = (clone $baseStats)->where('status', 'archived')->count();
 
-        $courseIds = $courses->pluck('id');
+        $freeCourses = (clone $baseStats)->where('price', 0)->count();
+        $paidCourses = (clone $baseStats)->where('price', '>', 0)->count();
+
+        $beginnerCourses = (clone $baseStats)->where('level', 'beginner')->count();
+        $intermediateCourses = (clone $baseStats)->where('level', 'intermediate')->count();
+        $advancedCourses = (clone $baseStats)->where('level', 'advanced')->count();
+
         $totalEnrollments = Invoice::where('status', 'paid')
-            ->whereHas('courseItems', function ($query) use ($courseIds) {
-                $query->whereIn('course_id', $courseIds);
-            })
+            ->whereHas('courseItems')
             ->count();
 
-        $totalRevenue = Invoice::where('status', 'paid')
-            ->whereHas('courseItems', function ($query) use ($courseIds) {
-                $query->whereIn('course_id', $courseIds);
-            })
-            ->sum('nett_amount');
+        $user = Auth::user();
+        $isStaff = $user && $user->hasRole('staff') && !$user->hasRole('admin');
+
+        $totalRevenue = $isStaff
+            ? 0
+            : Invoice::where('status', 'paid')
+                ->whereHas('courseItems')
+                ->sum('nett_amount');
 
         $statistics = [
             'overview' => [
@@ -80,9 +105,18 @@ class CourseController extends Controller
             ],
         ];
 
+        $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
+        $courses = $query->paginate($perPage)->withQueryString();
+
         return Inertia::render('admin/courses/index', [
             'courses' => $courses,
             'statistics' => $statistics,
+            'filters' => [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+                'level' => $request->input('level'),
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -196,12 +230,13 @@ class CourseController extends Controller
 
     public function show(string $id)
     {
-        $course = Course::with(['category', 'user', 'tools', 'images', 'modules.lessons.quizzes.questions'])->findOrFail($id);
+        $course = Course::with(['category', 'user', 'tools', 'images', 'modules.lessons.quizzes.questions', 'installmentTerms'])->findOrFail($id);
 
         $transactions = Invoice::with([
             'user',
             'referredByUser',
-            'referralUser'
+            'referralUser',
+            'installmentTerms'
         ])
             ->whereHas('courseItems', function ($query) use ($id) {
                 $query->where('course_id', $id);
@@ -209,6 +244,16 @@ class CourseController extends Controller
             ->whereDoesntHave('bundleEnrollments')
             ->latest()
             ->get();
+
+        $user = Auth::user();
+        if ($user && $user->hasRole('staff') && !$user->hasRole('admin')) {
+            $transactions->each(function ($tx) {
+                $tx->amount = 0;
+                $tx->discount_amount = 0;
+                $tx->transaction_fee = 0;
+                $tx->nett_amount = 0;
+            });
+        }
 
         $ratings = CourseRating::with(['user'])
             ->where('course_id', $course->id)

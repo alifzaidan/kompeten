@@ -8,12 +8,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { FileText, Image, User } from 'lucide-react';
+import { FileText, Image, User, Clock } from 'lucide-react';
+import InstallmentMonitorModal, { InstallmentTermItem } from '@/components/admin/installment-monitor-modal';
 
 interface User {
     id: string;
     name: string;
     phone_number: string | null;
+    email?: string | null;
 }
 
 interface FreeRequirement {
@@ -30,9 +32,13 @@ export interface Invoice {
     invoice_code: string;
     invoice_url: string | null;
     amount: number;
-    status: 'paid' | 'pending' | 'failed';
+    status: 'paid' | 'pending' | 'failed' | 'completed' | 'expired' | 'installment_pending';
+    is_installment?: boolean;
+    access_suspended_at?: string | null;
     paid_at: string | null;
     created_at: string;
+    installment_terms?: InstallmentTermItem[];
+    installmentTerms?: InstallmentTermItem[];
     webinar_items: WebinarItem[];
 }
 
@@ -138,6 +144,93 @@ function ProofModal({ requirement, userName }: { requirement: FreeRequirement; u
     );
 }
 
+import { usePermission } from '@/hooks/use-permission';
+import { Row } from '@tanstack/react-table';
+
+function PriceCell({ row }: { row: Row<Invoice> }) {
+    const { roles, isAdmin } = usePermission();
+    const isStaff = roles.includes('staff') && !isAdmin;
+
+    if (isStaff) {
+        return <div className="font-medium text-muted-foreground">Rp ***</div>;
+    }
+
+    const formatted = new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(row.original.amount);
+    return <div className="font-medium">{formatted}</div>;
+}
+
+function ActionCell({ row }: { row: Row<Invoice> }) {
+    const { roles, isAdmin } = usePermission();
+    const isStaff = roles.includes('staff') && !isAdmin;
+    const invoice = row.original;
+    const webinarItem = invoice.webinar_items[0];
+    const terms = invoice.installment_terms || invoice.installmentTerms || [];
+    const isInstallment = invoice.is_installment || invoice.status === 'installment_pending' || terms.length > 0;
+
+    if (!webinarItem && !isInstallment) return <div>-</div>;
+
+    const hasProof =
+        webinarItem?.free_requirement &&
+        (webinarItem.free_requirement.ig_follow_proof ||
+            webinarItem.free_requirement.tiktok_follow_proof ||
+            webinarItem.free_requirement.tag_friend_proof);
+
+    return (
+        <div className="flex items-center justify-center gap-1">
+            {invoice.status === 'paid' && !isStaff && (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" asChild>
+                            <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
+                                <FileText className="size-4" />
+                            </a>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Lihat Invoice</p>
+                    </TooltipContent>
+                </Tooltip>
+            )}
+
+            {isInstallment && (
+                <InstallmentMonitorModal
+                    invoice={invoice as any}
+                    trigger={
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-8 text-primary hover:text-primary hover:bg-primary/10">
+                                    <Clock className="size-4" />
+                                    <span className="sr-only">Monitor Cicilan & Reminder WA</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Monitor Cicilan & Reminder WA</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    }
+                />
+            )}
+
+            {hasProof && (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div>
+                            <ProofModal requirement={webinarItem.free_requirement!} userName={invoice.user?.name || 'Unknown'} />
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Lihat Bukti Follow & Tag</p>
+                    </TooltipContent>
+                </Tooltip>
+            )}
+        </div>
+    );
+}
+
 export const columns: ColumnDef<Invoice>[] = [
     {
         accessorKey: 'user.name',
@@ -151,14 +244,7 @@ export const columns: ColumnDef<Invoice>[] = [
     {
         accessorKey: 'amount',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Harga" />,
-        cell: ({ row }) => {
-            const formatted = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0,
-            }).format(row.original.amount);
-            return <div className="font-medium">{formatted}</div>;
-        },
+        cell: ({ row }) => <PriceCell row={row} />,
     },
     {
         accessorKey: 'referrer.name',
@@ -169,7 +255,41 @@ export const columns: ColumnDef<Invoice>[] = [
         accessorKey: 'status',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
         cell: ({ row }) => {
-            const status = row.original.status;
+            const invoice = row.original;
+            const terms = invoice.installment_terms || invoice.installmentTerms || [];
+            const isInstallment = invoice.is_installment || invoice.status === 'installment_pending' || terms.length > 0;
+
+            if (isInstallment) {
+                const paidCount = terms.filter((t) => t.status === 'paid').length;
+                const totalCount = terms.length;
+                const isFullyPaid = totalCount > 0 && paidCount === totalCount;
+                const isSuspended = !!invoice.access_suspended_at;
+
+                return (
+                    <InstallmentMonitorModal
+                        invoice={invoice as any}
+                        trigger={
+                            <div className="flex flex-col gap-1 items-start cursor-pointer hover:opacity-80 transition-opacity" title="Klik untuk monitor cicilan">
+                                {isFullyPaid ? (
+                                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 cursor-pointer">
+                                        Cicilan Lunas
+                                    </Badge>
+                                ) : isSuspended ? (
+                                    <Badge variant="destructive" className="cursor-pointer">
+                                        Akses Dibekukan
+                                    </Badge>
+                                ) : (
+                                    <Badge className="bg-amber-100 text-amber-800 border-amber-300 cursor-pointer">
+                                        Cicilan ({paidCount}/{totalCount || '?'})
+                                    </Badge>
+                                )}
+                            </div>
+                        }
+                    />
+                );
+            }
+
+            const status = invoice.status;
             const statusText = status.charAt(0).toUpperCase() + status.slice(1);
             const statusClasses = {
                 paid: 'bg-green-100 text-green-800',
@@ -177,6 +297,7 @@ export const columns: ColumnDef<Invoice>[] = [
                 pending: 'bg-yellow-100 text-yellow-800',
                 failed: 'bg-red-100 text-red-800',
                 expired: 'bg-gray-100 text-gray-800',
+                installment_pending: 'bg-amber-100 text-amber-800',
             };
             return <Badge className={`${statusClasses[status] || statusClasses.expired}`}>{statusText}</Badge>;
         },
@@ -194,49 +315,6 @@ export const columns: ColumnDef<Invoice>[] = [
     {
         id: 'actions',
         header: () => <div className="text-center">Aksi</div>,
-        cell: ({ row }) => {
-            const invoice = row.original;
-            const webinarItem = invoice.webinar_items[0];
-
-            if (!webinarItem) return <div>-</div>;
-
-            const hasProof =
-                invoice.webinar_items[0].free_requirement &&
-                (invoice.webinar_items[0].free_requirement.ig_follow_proof ||
-                    invoice.webinar_items[0].free_requirement.tiktok_follow_proof ||
-                    invoice.webinar_items[0].free_requirement.tag_friend_proof);
-
-            return (
-                <div className="flex items-center justify-center gap-1">
-                    {invoice.status === 'paid' && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" asChild>
-                                    <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
-                                        <FileText className="size-4" />
-                                    </a>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Lihat Invoice</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
-
-                    {hasProof && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div>
-                                    <ProofModal requirement={invoice.webinar_items[0].free_requirement!} userName={invoice.user?.name || 'Unknown'} />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Lihat Bukti Follow & Tag</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
-                </div>
-            );
-        },
+        cell: ({ row }) => <ActionCell row={row} />,
     },
 ];

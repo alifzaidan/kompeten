@@ -16,6 +16,7 @@ import CertificationProgramApplications from './show-applications';
 import CertificationProgramDetail from './show-details';
 import CertificationProgramRecordings from './show-recordings';
 import CertificationProgramTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
 
 interface Schedule {
     id: string;
@@ -48,6 +49,9 @@ interface CertificationProgram {
     strikethrough_price: number;
     price: number;
     scholarship_price?: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     scholarship_flow?: string | null;
     registration_deadline?: string | null;
     socialization_registration_deadline?: string | null;
@@ -81,10 +85,14 @@ interface ShowCertificationProgramProps {
     flash?: { success?: string; error?: string };
 }
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function ShowCertificationProgram({ program, applications, transactions, flash }: ShowCertificationProgramProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const role = auth.role[0];
     const isAffiliate = role === 'affiliate';
+    const canManageProgram = canManage('certification-programs') && !isAffiliate;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Program Sertifikasi', href: route('certification-programs.index') },
@@ -127,13 +135,13 @@ export default function ShowCertificationProgram({ program, applications, transa
                     <Badge className={`border-0 ${statusInfo.color}`}>{statusInfo.label}</Badge>
                 </div>
 
-                <div className={`${!isAffiliate ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
+                <div className={`${canManageProgram ? 'lg:grid-cols-3' : ''} grid grid-cols-1 gap-4 lg:gap-6`}>
                     {/* Main Content */}
-                    <div className="lg:col-span-2">
+                    <div className={canManageProgram ? 'lg:col-span-2' : ''}>
                         <Tabs defaultValue="detail">
                             <TabsList>
                                 <TabsTrigger value="detail">Detail</TabsTrigger>
-                                {!isAffiliate && (
+                                {canManageProgram && (
                                     <>
                                         <TabsTrigger value="pendaftar">
                                             Pendaftar
@@ -163,8 +171,18 @@ export default function ShowCertificationProgram({ program, applications, transa
                                 )}
                             </TabsList>
 
-                            <TabsContent value="detail">
+                            <TabsContent value="detail" className="space-y-4">
                                 <CertificationProgramDetail program={program} />
+                                {canManageProgram && program.type !== 'scholarship' && (
+                                    <InstallmentConfig
+                                        productType="certification_program"
+                                        productId={program.id}
+                                        productPrice={program.price}
+                                        installmentEnabled={program.installment_enabled ?? false}
+                                        initialTerms={program.installment_terms || program.installmentTerms || []}
+                                        registrationDeadline={program.registration_deadline}
+                                    />
+                                )}
                             </TabsContent>
 
                             <TabsContent value="pendaftar">
@@ -187,7 +205,7 @@ export default function ShowCertificationProgram({ program, applications, transa
                     </div>
 
                     {/* Sidebar Actions */}
-                    {!isAffiliate && (
+                    {canManageProgram && (
                         <div>
                             <h2 className="my-2 text-lg font-medium">Edit & Kustom</h2>
                             <div className="space-y-4 rounded-lg border p-4">

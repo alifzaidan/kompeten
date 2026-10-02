@@ -3,11 +3,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserLayout from '@/layouts/user-layout';
 import { SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { BadgeCheck, Calendar, Check, Hourglass, RotateCcw, ShoppingCart, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import InstallmentOptions, { ActiveInstallmentData, InstallmentTermOption } from '@/components/installment-options';
 
 interface Course {
     id: string;
@@ -126,6 +130,8 @@ export default function CheckoutCourse({
     // transactionDetail,
     // channels,
     referralInfo,
+    installmentTerms = [],
+    activeInstallment: initialActiveInstallment = null,
 }: {
     course: Course;
     hasAccess: boolean;
@@ -133,13 +139,18 @@ export default function CheckoutCourse({
     // transactionDetail?: TransactionDetail | null;
     // channels: PaymentChannel[];
     referralInfo: ReferralInfo;
+    installmentTerms?: InstallmentTermOption[];
+    activeInstallment?: ActiveInstallmentData | null;
 }) {
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number;
 
+    const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment);
+    const [paymentTab, setPaymentTab] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [cancellingInvoice, setCancellingInvoice] = useState(false);
     const [promoCode, setPromoCode] = useState('');
     const [discountData, setDiscountData] = useState<DiscountData | null>(null);
     const [promoLoading, setPromoLoading] = useState(false);
@@ -297,7 +308,7 @@ export default function CheckoutCourse({
             return handleFreeCheckout(e);
         }
 
-        const submitPayment = async (retryCount = 0): Promise<void> => {
+        const submitPayment = async (): Promise<void> => {
             const originalDiscountAmount = course.strikethrough_price > 0 ? course.strikethrough_price - course.price : 0;
             const promoDiscountAmount = discountData?.discount_amount || 0;
 
@@ -318,33 +329,11 @@ export default function CheckoutCourse({
             invoiceData.affiliate_code = sessionStorage.getItem('affiliate_code') || referralInfo?.code || '';
 
             try {
-                const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+                const response = await axios.post(route('invoice.store'), invoiceData);
+                const data = response.data;
 
-                const res = await fetch(route('invoice.store'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken || '',
-                        Accept: 'application/json',
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(invoiceData),
-                });
-
-                if (res.status === 419 && retryCount < 2) {
-                    console.log(`CSRF token expired, refreshing... (attempt ${retryCount + 1})`);
-                    await refreshCSRFToken();
-                    return submitPayment(retryCount + 1);
-                }
-
-                const data = await res.json();
-
-                if (res.ok && data.success) {
-                    if (data.payment_url) {
-                        window.location.href = data.payment_url;
-                    } else {
-                        throw new Error('Payment URL not received');
-                    }
+                if (data.success && data.payment_url) {
+                    window.location.href = data.payment_url;
                 } else {
                     throw new Error(data.message || 'Gagal membuat invoice.');
                 }
@@ -357,8 +346,12 @@ export default function CheckoutCourse({
         try {
             await submitPayment();
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Terjadi kesalahan saat proses pembayaran.';
-            alert(message);
+            const message = axios.isAxiosError(error)
+                ? error.response?.data?.message || 'Terjadi kesalahan saat proses pembayaran.'
+                : error instanceof Error
+                  ? error.message
+                  : 'Terjadi kesalahan saat proses pembayaran.';
+            toast.error(message);
             setLoading(false);
         }
     };
@@ -540,7 +533,7 @@ export default function CheckoutCourse({
                                     <div
                                         className="rounded-xl p-4 flex items-center gap-2"
                                         style={{
-                                            backgroundColor: (() => {
+                                             backgroundColor: (() => {
                                                 const expiryInfo = formatExpiryTime(pendingInvoice.expires_at);
                                                 const isExpired = expiryInfo.status === 'expired' && pendingInvoice.status === 'pending';
                                                 return isExpired ? '#fee2e2' : 'rgba(254, 249, 195, 0.5)';
@@ -612,25 +605,85 @@ export default function CheckoutCourse({
                                             );
                                         })()}
 
-                                        <Button onClick={() => window.location.reload()} variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
-                                            Cek Status Pembayaran
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => window.location.reload()} variant="outline" className="flex-1 py-6 rounded-full border-gray-200 text-gray-700">
+                                                Cek Status
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1 py-6 rounded-full border-red-200 text-red-600 hover:bg-red-50"
+                                                disabled={cancellingInvoice}
+                                                onClick={async () => {
+                                                    if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                        setCancellingInvoice(true);
+                                                        try {
+                                                            const res = await axios.post(route('invoice.cancel', pendingInvoice.id));
+                                                            if (res.data?.success) {
+                                                                toast.success('Pesanan berhasil dibatalkan.');
+                                                                window.location.reload();
+                                                            } else {
+                                                                toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
+                                                                setCancellingInvoice(false);
+                                                            }
+                                                        } catch (err: unknown) {
+                                                            if (axios.isAxiosError(err)) {
+                                                                toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                            } else {
+                                                                toast.error('Gagal membatalkan pesanan.');
+                                                            }
+                                                            setCancellingInvoice(false);
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
-                                <form onSubmit={handleCheckout} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
+                                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
                                     <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pembayaran</h3>
-                                    
-                                    {isFree ? (
-                                        <div className="space-y-2 text-center py-2">
-                                            <div className="flex items-center justify-between p-2">
-                                                <span className="w-full text-xl font-bold text-green-600">KELAS ONLINE GRATIS</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600">Dapatkan akses langsung secara gratis ke materi pembelajaran kelas ini.</p>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {/* Input Kode Promo */}
+
+                                    {/* Tab Pilihan Pembayaran (Full / Cicilan) */}
+                                    {((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isFree ? (
+                                        <Tabs
+                                            value={paymentTab}
+                                            onValueChange={(val) => {
+                                                if (val === 'full' && activeInstallment && !activeInstallment.is_fully_paid) {
+                                                    toast.error('Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.');
+                                                    return;
+                                                }
+                                                setPaymentTab(val as 'full' | 'installment');
+                                            }}
+                                            className="w-full space-y-4"
+                                        >
+                                            <TabsList className="grid w-full grid-cols-2 h-10">
+                                                <TabsTrigger
+                                                    value="full"
+                                                    disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
+                                                    className="text-xs sm:text-sm"
+                                                >
+                                                    Bayar Penuh
+                                                </TabsTrigger>
+                                                <TabsTrigger value="installment" className="text-xs sm:text-sm">
+                                                    Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
+                                                </TabsTrigger>
+                                            </TabsList>
+
+                                            <TabsContent value="full" className="space-y-4 m-0">
+                                                <form onSubmit={handleCheckout} className="space-y-4">
+                                            {isFree ? (
+                                                <div className="space-y-2 text-center py-2">
+                                                    <div className="flex items-center justify-between p-2">
+                                                        <span className="w-full text-xl font-bold text-green-600">KELAS ONLINE GRATIS</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600">Dapatkan akses langsung secara gratis ke materi pembelajaran kelas ini.</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {/* Input Kode Promo */}
                                             <div className="space-y-2">
                                                 <Label htmlFor="promo-code" className="font-semibold text-gray-700">
                                                     Punya Kode Promo?
@@ -770,7 +823,166 @@ export default function CheckoutCourse({
                                     <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
                                         Pembayaran aman dan terenkripsi 🔒
                                     </p>
-                                </form>
+                                    </form>
+                                            </TabsContent>
+
+                                            <TabsContent value="installment" className="space-y-4 m-0">
+                                                <InstallmentOptions
+                                                    productType="course"
+                                                    productId={course.id}
+                                                    productPrice={course.price}
+                                                    terms={installmentTerms}
+                                                    activeInstallment={activeInstallment}
+                                                    termsAccepted={termsAccepted}
+                                                    onTermsAcceptedChange={setTermsAccepted}
+                                                    onBeforePay={async () => {
+                                                        if (!activeInstallment && !termsAccepted) {
+                                                            toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                            return false;
+                                                        }
+                                                        if (!isProfileComplete) {
+                                                            toast.error('Profil Anda belum lengkap! Harap lengkapi nomor telepon terlebih dahulu.');
+                                                            window.location.href = route('profile.edit');
+                                                            return false;
+                                                        }
+                                                        return true;
+                                                    }}
+                                                />
+                                            </TabsContent>
+                                        </Tabs>
+                                    ) : (
+                                        <form onSubmit={handleCheckout} className="space-y-4">
+                                            {isFree ? (
+                                                <div className="space-y-2 text-center py-2">
+                                                    <div className="flex items-center justify-between p-2">
+                                                        <span className="w-full text-xl font-bold text-green-600">KELAS ONLINE GRATIS</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600">Dapatkan akses langsung secara gratis ke materi pembelajaran kelas ini.</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {/* Input Kode Promo */}
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="promo-code" className="font-semibold text-gray-700">
+                                                            Punya Kode Promo?
+                                                        </Label>
+                                                        <div className="flex gap-2">
+                                                            <div className="relative flex-1">
+                                                                <Input
+                                                                    id="promo-code"
+                                                                    type="text"
+                                                                    placeholder="Masukkan kode promo"
+                                                                    value={promoCode}
+                                                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                                    className="rounded-xl pr-10"
+                                                                />
+                                                                {promoLoading && (
+                                                                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                                                        <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-orange-600"></div>
+                                                                    </div>
+                                                                )}
+                                                                {!promoLoading && promoCode && (
+                                                                    <div className="absolute top-1/2 right-3 -translate-y-1/2 transform">
+                                                                        {discountData?.valid ? (
+                                                                            <Check className="h-4 w-4 text-green-600" />
+                                                                        ) : promoError ? (
+                                                                            <X className="h-4 w-4 text-red-600" />
+                                                                        ) : null}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="icon"
+                                                                onClick={() => {
+                                                                    setPromoCode('');
+                                                                    setDiscountData(null);
+                                                                    setPromoError('');
+                                                                }}
+                                                                className="h-10 w-10 shrink-0 border border-orange-200 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600"
+                                                            >
+                                                                <RotateCcw className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                        {promoError && (
+                                                            <p className="text-sm text-red-600">{promoError}</p>
+                                                        )}
+                                                        {discountData?.valid && (
+                                                            <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-xs text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300">
+                                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                                                                <div>
+                                                                    <p className="font-semibold">
+                                                                        Kode promo "{discountData.discount_code.code}" berhasil diterapkan!
+                                                                    </p>
+                                                                    <p className="text-green-600 dark:text-green-500">
+                                                                        Hemat Rp {discountData.discount_amount.toLocaleString('id-ID')}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Price Breakdown */}
+                                                    <div className="space-y-2 text-sm pt-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600">Harga Kelas</span>
+                                                            <span className="font-medium text-gray-900">Rp {basePrice.toLocaleString('id-ID')}</span>
+                                                        </div>
+                                                        {discountData?.valid && (
+                                                            <div className="flex items-center justify-between text-green-600">
+                                                                <span>Diskon Promo</span>
+                                                                <span>-Rp {discountAmount.toLocaleString('id-ID')}</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-gray-600">Biaya Transaksi</span>
+                                                            <span className="font-semibold text-gray-800">Rp {transactionFee.toLocaleString('id-ID')}</span>
+                                                        </div>
+                                                        <Separator className="my-2" />
+                                                        <div className="flex items-center justify-between text-base">
+                                                            <span className="font-bold text-gray-900">Total Pembayaran</span>
+                                                            <span className="text-[#FA5F25] text-xl font-bold">Rp {totalPrice.toLocaleString('id-ID')}</span>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {!isFree && (
+                                                <div className="flex items-start gap-3 pt-2">
+                                                    <Checkbox
+                                                        id="terms"
+                                                        checked={termsAccepted}
+                                                        onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                                                        className="mt-0.5"
+                                                    />
+                                                    <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
+                                                        Saya menyetujui{' '}
+                                                        <a
+                                                            href="/terms-and-conditions"
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-orange-600 hover:underline font-semibold"
+                                                        >
+                                                            syarat dan ketentuan
+                                                        </a>{' '}
+                                                        yang berlaku
+                                                    </Label>
+                                                </div>
+                                            )}
+                                            <Button
+                                                className="w-full"
+                                                type="submit"
+                                                disabled={(isFree ? false : !termsAccepted) || loading}
+                                            >
+                                                {loading ? 'Memproses...' : isFree ? 'Dapatkan Akses Gratis Sekarang' : 'Bayar Sekarang'}
+                                            </Button>
+                                            <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
+                                                Pembayaran aman dan terenkripsi 🔒
+                                            </p>
+                                        </form>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>

@@ -21,16 +21,25 @@ interface Statistics {
     total_categories: number;
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface CategoriesProps {
-    categories: Category[];
+    categories: PaginatedData<Category>;
     statistics: Statistics;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function Categories({ categories, statistics, flash }: CategoriesProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function Categories({ categories, statistics, flash, filters }: CategoriesProps) {
+    const { canManage } = usePermission();
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -51,15 +60,17 @@ export default function Categories({ categories, statistics, flash }: Categories
                         <h1 className="text-2xl font-semibold">Kategori</h1>
                         <p className="text-muted-foreground text-sm">Daftar semua kategori yang tersedia.</p>
                     </div>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="hover:cursor-pointer">
-                                Tambah Kategori
-                                <Plus />
-                            </Button>
-                        </DialogTrigger>
-                        <CreateCategory setOpen={setOpen} />
-                    </Dialog>
+                    {canManage('categories') && (
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="hover:cursor-pointer">
+                                    Tambah Kategori
+                                    <Plus />
+                                </Button>
+                            </DialogTrigger>
+                            <CreateCategory setOpen={setOpen} />
+                        </Dialog>
+                    )}
                 </div>
 
                 <div className="mb-6">
@@ -76,7 +87,7 @@ export default function Categories({ categories, statistics, flash }: Categories
                     </div>
                 </div>
 
-                <DataTable columns={columns} data={categories} />
+                <DataTable columns={columns} pagination={categories} filters={filters} />
             </div>
         </AdminLayout>
     );

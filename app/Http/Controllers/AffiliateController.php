@@ -6,59 +6,43 @@ use App\Models\AffiliateEarning;
 use App\Models\AffiliateWithdrawal;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class AffiliateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $affiliates = User::role('affiliate')
-            ->withSum('affiliateEarnings', 'amount')
-            ->withCount([
-                'affiliateEarnings as total_transactions' => function ($query) {
-                    $query->whereHas('invoice', function ($q) {
-                        $q->where('status', 'paid');
-                    });
-                }
-            ])
-            ->latest()
-            ->get()
-            ->map(function ($affiliate) {
-                $affiliate->total_earnings = $affiliate->affiliate_earnings_sum_amount ?? 0;
-                unset($affiliate->affiliate_earnings_sum_amount);
-                return $affiliate;
+        $user = Auth::user();
+        $isStaff = $user && $user->hasRole('staff') && !$user->hasRole('admin');
+
+        $query = User::role('affiliate');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('affiliate_code', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
             });
+        }
 
-        // Calculate Statistics
-        $totalAffiliates = $affiliates->count();
-        $activeAffiliates = $affiliates->where('affiliate_status', 'Active')->count();
-        $inactiveAffiliates = $affiliates->where('affiliate_status', 'Not Active')->count();
+        // Calculate Statistics using SQL aggregates
+        $baseQuery = User::role('affiliate');
+        $totalAffiliates = (clone $baseQuery)->count();
+        $activeAffiliates = (clone $baseQuery)->where('affiliate_status', 'Active')->count();
+        $inactiveAffiliates = (clone $baseQuery)->where(function ($q) {
+            $q->where('affiliate_status', '!=', 'Active')->orWhereNull('affiliate_status');
+        })->count();
 
-        // Total earnings and transactions
-        $totalEarnings = $affiliates->sum('total_earnings');
-        $totalTransactions = $affiliates->sum('total_transactions');
-
-        $commissionByAffiliate = AffiliateEarning::query()
-            ->selectRaw('affiliate_user_id, SUM(amount) as total_commission')
-            ->groupBy('affiliate_user_id')
-            ->pluck('total_commission', 'affiliate_user_id');
-
-        $paidByAffiliate = AffiliateWithdrawal::query()
-            ->selectRaw('affiliate_user_id, SUM(amount) as paid_commission')
-            ->groupBy('affiliate_user_id')
-            ->pluck('paid_commission', 'affiliate_user_id');
-
-        $paidCommission = $affiliates->sum(function ($affiliate) use ($paidByAffiliate) {
-            return (int) ($paidByAffiliate[$affiliate->id] ?? 0);
-        });
-
-        $pendingCommission = $affiliates->sum(function ($affiliate) use ($commissionByAffiliate, $paidByAffiliate) {
-            $totalCommission = (int) ($commissionByAffiliate[$affiliate->id] ?? 0);
-            $paid = (int) ($paidByAffiliate[$affiliate->id] ?? 0);
-
-            return max(0, $totalCommission - $paid);
-        });
+        $totalEarnings = $isStaff ? 0 : (int) AffiliateEarning::sum('amount');
+        $paidCommission = $isStaff ? 0 : (int) AffiliateWithdrawal::sum('amount');
+        $pendingCommission = $isStaff ? 0 : max(0, $totalEarnings - $paidCommission);
+        $totalTransactions = AffiliateEarning::whereHas('invoice', function ($q) {
+            $q->where('status', 'paid');
+        })->count();
 
         $statistics = [
             'overview' => [
@@ -74,9 +58,32 @@ class AffiliateController extends Controller
             ],
         ];
 
+        $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
+        $affiliates = $query->withSum('affiliateEarnings', 'amount')
+            ->withCount([
+                'affiliateEarnings as total_transactions' => function ($query) {
+                    $query->whereHas('invoice', function ($q) {
+                        $q->where('status', 'paid');
+                    });
+                }
+            ])
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $affiliates->through(function ($affiliate) use ($isStaff) {
+            $affiliate->total_earnings = $isStaff ? 0 : ($affiliate->affiliate_earnings_sum_amount ?? 0);
+            unset($affiliate->affiliate_earnings_sum_amount);
+            return $affiliate;
+        });
+
         return Inertia::render('admin/affiliates/index', [
             'affiliates' => $affiliates,
             'statistics' => $statistics,
+            'filters' => [
+                'search' => $request->input('search'),
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -115,6 +122,9 @@ class AffiliateController extends Controller
 
     public function show(string $id)
     {
+        $user = Auth::user();
+        $isStaff = $user && $user->hasRole('staff') && !$user->hasRole('admin');
+
         $affiliate = User::findOrFail($id);
         $earnings = AffiliateEarning::with([
             'invoice.user',
@@ -129,9 +139,23 @@ class AffiliateController extends Controller
             ->get();
         $withdrawals = AffiliateWithdrawal::where('affiliate_user_id', $affiliate->id)->orderBy('withdrawn_at', 'desc')->get();
 
-        $totalCommission = $earnings->sum('amount');
-        $paidCommission = $withdrawals->sum('amount');
-        $availableCommission = $totalCommission - $paidCommission;
+        $totalCommission = $isStaff ? 0 : $earnings->sum('amount');
+        $paidCommission = $isStaff ? 0 : $withdrawals->sum('amount');
+        $availableCommission = $isStaff ? 0 : ($totalCommission - $paidCommission);
+
+        if ($isStaff) {
+            $earnings->transform(function ($e) {
+                $e->amount = 0;
+                if ($e->invoice) {
+                    $e->invoice->nett_amount = 0;
+                }
+                return $e;
+            });
+            $withdrawals->transform(function ($w) {
+                $w->amount = 0;
+                return $w;
+            });
+        }
 
         $stats = [
             'total_products' => $earnings->count(),

@@ -16,6 +16,7 @@ import CourseDetail from './show-details';
 import ShowModules from './show-modules';
 import CourseRatingComponent from './show-ratings';
 import CourseTransaction from './show-transactions';
+import InstallmentConfig from '@/components/admin/installment-config';
 
 interface Course {
     id: string;
@@ -28,6 +29,9 @@ interface Course {
     key_points?: string | null;
     strikethrough_price: number;
     price: number;
+    installment_enabled?: boolean;
+    installment_terms?: any[];
+    installmentTerms?: any[];
     thumbnail?: string | null;
     course_url: string;
     registration_url: string;
@@ -70,12 +74,17 @@ interface CourseProps {
     };
 }
 
+import { usePermission } from '@/hooks/use-permission';
+
 export default function ShowCourse({ course, transactions, ratings, certificate, flash }: CourseProps) {
     const { auth } = usePage<SharedData>().props;
+    const { can, canManage, isAdmin } = usePermission();
     const role = auth.role[0];
-    const isAdmin = role === 'admin';
     const isMentor = role === 'mentor';
     const isAffiliate = role === 'affiliate';
+    const canManageCourse = canManage('courses') && !isAffiliate;
+    const canManageCertificate = can('certificates.manage');
+    const canViewCertificate = can('certificates.view') || canManageCertificate;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -162,8 +171,17 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                 </TabsTrigger>
                             )}
                         </TabsList>
-                        <TabsContent value="detail">
+                        <TabsContent value="detail" className="space-y-4">
                             <CourseDetail course={course} averageRating={averageRating} />
+                            {canManageCourse && (
+                                <InstallmentConfig
+                                    productType="course"
+                                    productId={course.id}
+                                    productPrice={course.price}
+                                    installmentEnabled={course.installment_enabled ?? false}
+                                    initialTerms={course.installment_terms || course.installmentTerms || []}
+                                />
+                            )}
                             <ShowModules modules={course.modules} courseId={course.id} />
                         </TabsContent>
                         <TabsContent value="transaksi">
@@ -176,7 +194,7 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                         )}
                     </Tabs>
 
-                    {!isAffiliate && (
+                    {canManageCourse && (
                         <div>
                             <h2 className="my-2 text-lg font-medium">Edit & Kustom</h2>
                             <div className="space-y-4 rounded-lg border p-4">
@@ -227,7 +245,7 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                         onConfirm={handleDelete}
                                     />
                                 </div>
-                                {isAdmin && (
+                                {canViewCertificate && (
                                     <>
                                         <Separator />
                                         {certificate ? (
@@ -237,7 +255,7 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                                     Lihat Data Sertifikat
                                                 </Link>
                                             </Button>
-                                        ) : (
+                                        ) : canManageCertificate ? (
                                             <Button asChild className="w-full" variant="outline">
                                                 <Link
                                                     href={route('certificates.create', {
@@ -249,12 +267,12 @@ export default function ShowCourse({ course, transactions, ratings, certificate,
                                                     Buat Sertifikat
                                                 </Link>
                                             </Button>
-                                        )}
+                                        ) : null}
                                     </>
                                 )}
                             </div>
 
-                            {isAdmin && (
+                            {canViewCertificate && (
                                 <div className="mt-4 space-y-4 rounded-lg border p-4">
                                     <h3 className="text-sm font-medium">Informasi Sertifikat</h3>
                                     {certificate ? (

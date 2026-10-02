@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import AdminLayout from '@/layouts/admin-layout';
 import { type BreadcrumbItem } from '@/types';
+import { PaginatedData } from '@/types/pagination';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -22,14 +23,22 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface CertificateDesignProps {
-    designs: CertificateDesign[];
+    designs: PaginatedData<CertificateDesign>;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function CertificateDesigns({ designs, flash }: CertificateDesignProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function CertificateDesigns({ designs, flash, filters }: CertificateDesignProps) {
+    const { canManage } = usePermission();
+    const canManageCertificate = canManage('certificates');
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -50,18 +59,20 @@ export default function CertificateDesigns({ designs, flash }: CertificateDesign
                         <h1 className="text-2xl font-semibold">Desain Sertifikat</h1>
                         <p className="text-muted-foreground text-sm">Daftar semua desain sertifikat.</p>
                     </div>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="hover:cursor-pointer">
-                                Tambah Desain
-                                <Plus />
-                            </Button>
-                        </DialogTrigger>
-                        <CreateDesign setOpen={setOpen} />
-                    </Dialog>
+                    {canManageCertificate && (
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="hover:cursor-pointer">
+                                    Tambah Desain
+                                    <Plus />
+                                </Button>
+                            </DialogTrigger>
+                            <CreateDesign setOpen={setOpen} />
+                        </Dialog>
+                    )}
                 </div>
 
-                <DataTable columns={columns} data={designs} />
+                <DataTable columns={columns} pagination={designs} filters={filters} />
             </div>
         </AdminLayout>
     );

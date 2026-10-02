@@ -13,6 +13,7 @@ import { ExternalLink, LinkIcon, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import AddScheduleRecordingDialog from './create-schedule-recording';
+import { usePermission } from '@/hooks/use-permission';
 
 interface BootcampSchedule {
     id: string;
@@ -63,6 +64,8 @@ function getYoutubeId(url: string) {
 
 export default function BootcampDetail({ bootcamp }: { bootcamp: Bootcamp }) {
     const { auth } = usePage<SharedData>().props;
+    const { roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
     const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
 
@@ -269,7 +272,9 @@ export default function BootcampDetail({ bootcamp }: { bootcamp: Bootcamp }) {
                     <TableRow>
                         <TableCell>Harga</TableCell>
                         <TableCell>
-                            {bootcamp.price === 0 ? (
+                            {isStaff ? (
+                                <span className="text-base font-semibold text-muted-foreground">Rp ***</span>
+                            ) : bootcamp.price === 0 ? (
                                 <span>Gratis</span>
                             ) : (
                                 <span>

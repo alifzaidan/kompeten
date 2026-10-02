@@ -50,18 +50,29 @@ interface Statistics {
     };
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface BundlesProps {
-    bundles: Bundle[];
+    bundles: PaginatedData<Bundle>;
     statistics: Statistics;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function Bundles({ bundles, statistics, flash }: BundlesProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function Bundles({ bundles, statistics, flash, filters }: BundlesProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage, roles, isAdmin } = usePermission();
+    const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
+    const canCreateBundle = canManage('bundles') && !isAffiliate;
     const [showMoreStats, setShowMoreStats] = useState(false);
 
     useEffect(() => {
@@ -82,7 +93,7 @@ export default function Bundles({ bundles, statistics, flash }: BundlesProps) {
                         <h1 className="text-2xl font-semibold">Paket Bundling</h1>
                         <p className="text-muted-foreground text-sm">Ringkasan dan daftar semua paket bundling.</p>
                     </div>
-                    {!isAffiliate && (
+                    {canCreateBundle && (
                         <Button asChild className="hover:cursor-pointer">
                             <Link href={route('bundles.create')}>
                                 <Plus />
@@ -180,20 +191,21 @@ export default function Bundles({ bundles, statistics, flash }: BundlesProps) {
                                 </div>
 
                                 {/* Pricing & Savings */}
-
-                                <div className="rounded-lg border p-3 text-sm">
-                                    <h4 className="mb-2 text-xs font-semibold">Hemat</h4>
-                                    <div className="text-xs font-medium text-green-600">
-                                        {rupiahFormatter.format(statistics.performance.total_savings)}
+                                {!isStaff && (
+                                    <div className="rounded-lg border p-3 text-sm">
+                                        <h4 className="mb-2 text-xs font-semibold">Hemat</h4>
+                                        <div className="text-xs font-medium text-green-600">
+                                            {rupiahFormatter.format(statistics.performance.total_savings)}
+                                        </div>
+                                        <div className="text-muted-foreground mt-1 text-xs">Total penghematan</div>
                                     </div>
-                                    <div className="text-muted-foreground mt-1 text-xs">Total penghematan</div>
-                                </div>
+                                )}
                             </div>
                         )}
                     </div>
 
                     {/* ✅ DESKTOP: Overview Stats (4 cards) */}
-                    <div className="hidden gap-4 md:grid md:grid-cols-2 lg:grid-cols-4">
+                    <div className={`hidden gap-4 md:grid md:grid-cols-2 ${isStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
                         <div className="dark:to-background rounded-lg border bg-gradient-to-br from-blue-50 to-white p-4 shadow-sm dark:from-blue-950/20">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -238,19 +250,21 @@ export default function Bundles({ bundles, statistics, flash }: BundlesProps) {
                             </div>
                         </div>
 
-                        <div className="dark:to-background rounded-lg border bg-gradient-to-br from-orange-50 to-white p-4 shadow-sm dark:from-orange-950/20">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-muted-foreground text-sm font-medium">Total Revenue</p>
-                                    <h3 className="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">
-                                        {rupiahFormatter.format(statistics.performance.total_revenue)}
-                                    </h3>
-                                </div>
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                                    <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                        {!isStaff && (
+                            <div className="dark:to-background rounded-lg border bg-gradient-to-br from-orange-50 to-white p-4 shadow-sm dark:from-orange-950/20">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-muted-foreground text-sm font-medium">Total Revenue</p>
+                                        <h3 className="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                            {rupiahFormatter.format(statistics.performance.total_revenue)}
+                                        </h3>
+                                    </div>
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
+                                        <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* ✅ DESKTOP: Additional Stats (3 cards) */}
@@ -301,7 +315,7 @@ export default function Bundles({ bundles, statistics, flash }: BundlesProps) {
                 </div>
 
                 {/* Data Table */}
-                <DataTable columns={columns} data={bundles} />
+                <DataTable columns={columns} pagination={bundles} filters={filters} />
             </div>
         </AdminLayout>
     );

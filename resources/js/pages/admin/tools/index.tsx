@@ -21,16 +21,25 @@ interface Statistics {
     total_tools: number;
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface ToolProps {
-    tools: Tool[];
+    tools: PaginatedData<Tool>;
     statistics: Statistics;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function Tools({ tools, statistics, flash }: ToolProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function Tools({ tools, statistics, flash, filters }: ToolProps) {
+    const { canManage } = usePermission();
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -51,15 +60,17 @@ export default function Tools({ tools, statistics, flash }: ToolProps) {
                         <h1 className="text-2xl font-semibold">Tools</h1>
                         <p className="text-muted-foreground text-sm">Daftar semua tools yang tersedia.</p>
                     </div>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button className="hover:cursor-pointer">
-                                Tambah Tool
-                                <Plus />
-                            </Button>
-                        </DialogTrigger>
-                        <CreateTool setOpen={setOpen} />
-                    </Dialog>
+                    {canManage('tools') && (
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="hover:cursor-pointer">
+                                    Tambah Tool
+                                    <Plus />
+                                </Button>
+                            </DialogTrigger>
+                            <CreateTool setOpen={setOpen} />
+                        </Dialog>
+                    )}
                 </div>
 
                 <div className="mb-6">
@@ -76,7 +87,7 @@ export default function Tools({ tools, statistics, flash }: ToolProps) {
                     </div>
                 </div>
 
-                <DataTable columns={columns} data={tools} />
+                <DataTable columns={columns} pagination={tools} filters={filters} />
             </div>
         </AdminLayout>
     );

@@ -46,16 +46,26 @@ interface Statistics {
     };
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface PromotionsProps {
-    promotions: Promotion[];
+    promotions: PaginatedData<Promotion>;
     statistics: Statistics;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function Promotions({ promotions, statistics, flash }: PromotionsProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function Promotions({ promotions, statistics, flash, filters }: PromotionsProps) {
+    const { canManage } = usePermission();
+    const canManagePromotions = canManage('promotions');
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [showMoreStats, setShowMoreStats] = useState(false);
 
@@ -80,10 +90,12 @@ export default function Promotions({ promotions, statistics, flash }: Promotions
                         <h1 className="text-2xl font-semibold">Flyer Promosi</h1>
                         <p className="text-muted-foreground text-sm">Kelola dan monitor flyer promosi untuk produk Anda.</p>
                     </div>
-                    <Button className="hover:cursor-pointer" onClick={() => setCreateModalOpen(true)}>
-                        <Plus />
-                        Tambah Flyer
-                    </Button>
+                    {canManagePromotions && (
+                        <Button className="hover:cursor-pointer" onClick={() => setCreateModalOpen(true)}>
+                            <Plus />
+                            Tambah Flyer
+                        </Button>
+                    )}
                 </div>
 
                 {/* Statistics Cards */}
@@ -380,7 +392,7 @@ export default function Promotions({ promotions, statistics, flash }: Promotions
                 </div>
 
                 {/* Data Table */}
-                <DataTable columns={columns} data={promotions} />
+                <DataTable columns={columns} pagination={promotions} filters={filters} />
 
                 <CreatePromotionModal open={createModalOpen} onOpenChange={setCreateModalOpen} promotions={promotions} />
             </div>

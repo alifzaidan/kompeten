@@ -18,7 +18,7 @@ import { BreadcrumbItem } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
 import { Editor } from '@tinymce/tinymce-react';
-import { BookMarked, CalendarFold, Check, ChevronsUpDown } from 'lucide-react';
+import { AlertTriangle, BookMarked, CalendarFold, Check, ChevronsUpDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -100,6 +100,35 @@ const formSchema = z
 
 type FormValues = z.infer<typeof formSchema>;
 
+const extractDate = (val: any): string => {
+    if (!val) return '';
+    if (typeof val === 'string') {
+        const datePart = val.split('T')[0].split(' ')[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return datePart;
+    }
+    const d = new Date(val);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+    }
+    return '';
+};
+
+const extractTime = (val: any): string => {
+    if (!val || typeof val !== 'string') return '00:00';
+    const match = val.match(/(\d{2}:\d{2})/);
+    return match ? match[1] : '00:00';
+};
+
+const getDayFromDateStr = (dateStr: string): string => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return '';
+    const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    if (isNaN(dt.getTime())) return '';
+    const days = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+    return days[dt.getDay()] || '';
+};
+
 export default function CreateRegularCertificationProgram({ categories, mentors }: CreateRegularProps) {
     const [preview, setPreview] = useState<string | null>(null);
     const [thumbnailError, setThumbnailError] = useState(false);
@@ -108,6 +137,7 @@ export default function CreateRegularCertificationProgram({ categories, mentors 
     const [biinspiraPrograms, setBiinspiraPrograms] = useState<any[]>([]);
     const [isBiinspiraPopoverOpen, setIsBiinspiraPopoverOpen] = useState(false);
     const [selectedBiinspiraProgram, setSelectedBiinspiraProgram] = useState<any | null>(null);
+    const [missingMentorNames, setMissingMentorNames] = useState<string[]>([]);
 
     useEffect(() => {
         fetch(route('admin.biinsight-import.programs') + '?type=certification_program')
@@ -142,7 +172,6 @@ export default function CreateRegularCertificationProgram({ categories, mentors 
                             <li>Grup diskusi dan konsultasi</li>
                             <li>Free Remedial sampai lulus (khusus Brevet)</li>
                             <li>Free Ujian Bergelar CFTR</li>
-                            <li>Akses Aplikasi sekolahpajak.id</li>
                             <li>Dibimbing Tax Expert</li>
                         </ul>`,
             document_description: '',
@@ -254,21 +283,115 @@ export default function CreateRegularCertificationProgram({ categories, mentors 
                                                                     }
 
                                                                     // Populate schedules
-                                                                    if (program.schedules && Array.isArray(program.schedules)) {
-                                                                        const mappedSchedules = program.schedules
-                                                                            .filter((s: any) => s && s.schedule_type === 'main')
-                                                                            .map((s: any) => ({
-                                                                                schedule_date: s.schedule_date || '',
-                                                                                day: s.day || '',
-                                                                                start_time: s.start_time && typeof s.start_time === 'string' ? s.start_time.substring(0, 5) : '00:00',
-                                                                                end_time: s.end_time && typeof s.end_time === 'string' ? s.end_time.substring(0, 5) : '00:00',
-                                                                                title: s.title || ''
-                                                                            }));
-                                                                        setSchedules(mappedSchedules);
+                                                                    const rawSchedules = Array.isArray(program.schedules)
+                                                                        ? program.schedules
+                                                                        : Array.isArray(program.event_schedules)
+                                                                        ? program.event_schedules
+                                                                        : Array.isArray(program.program_schedules)
+                                                                        ? program.program_schedules
+                                                                        : [];
+
+                                                                    let mappedSchedules: BootcampSchedule[] = rawSchedules
+                                                                        .filter((s: any) => s && (!s.schedule_type || s.schedule_type === 'main' || s.schedule_type === 'pelaksanaan' || s.schedule_type === 'session'))
+                                                                        .map((s: any) => {
+                                                                            const scheduleDate = extractDate(s.schedule_date || s.date || s.event_date || s.start_date || s.start_time);
+                                                                            const day = s.day ? String(s.day).toLowerCase() : getDayFromDateStr(scheduleDate);
+                                                                            const startTime = extractTime(s.start_time || s.time_start || s.jam_mulai);
+                                                                            const endTime = extractTime(s.end_time || s.time_end || s.jam_selesai);
+                                                                            return {
+                                                                                schedule_date: scheduleDate,
+                                                                                day: day,
+                                                                                start_time: startTime,
+                                                                                end_time: endTime,
+                                                                                title: s.title || s.name || s.session_title || 'Sesi Pelaksanaan'
+                                                                            };
+                                                                        })
+                                                                        .filter((s: BootcampSchedule) => Boolean(s.schedule_date));
+
+                                                                    if (mappedSchedules.length === 0 && (program.start_date || program.start_time)) {
+                                                                        const startDateStr = extractDate(program.start_date || program.start_time);
+                                                                        if (startDateStr) {
+                                                                            const startTime = extractTime(program.start_time || program.start_date);
+                                                                            const endTime = extractTime(program.end_time || program.end_date) || '23:59';
+                                                                            const day = getDayFromDateStr(startDateStr);
+                                                                            mappedSchedules.push({
+                                                                                schedule_date: startDateStr,
+                                                                                day: day,
+                                                                                start_time: startTime,
+                                                                                end_time: endTime,
+                                                                                title: program.title ? `Pelaksanaan ${program.title}` : 'Jadwal Pelaksanaan'
+                                                                            });
+                                                                        }
+                                                                    }
+
+                                                                    setSchedules(mappedSchedules);
+
+                                                                    // Populate Mentor(s)
+                                                                    const rawMentorNames: string[] = [];
+                                                                    if (Array.isArray(program.mentors)) {
+                                                                        program.mentors.forEach((m: any) => {
+                                                                            if (typeof m === 'string' && m.trim()) {
+                                                                                rawMentorNames.push(m.trim());
+                                                                            } else if (m && typeof m === 'object' && m.name) {
+                                                                                rawMentorNames.push(String(m.name).trim());
+                                                                            }
+                                                                        });
+                                                                    } else if (typeof program.mentor === 'string' && program.mentor.trim()) {
+                                                                        rawMentorNames.push(program.mentor.trim());
+                                                                    } else if (typeof program.mentor_name === 'string' && program.mentor_name.trim()) {
+                                                                        rawMentorNames.push(program.mentor_name.trim());
+                                                                    }
+
+                                                                    const assignedMentors: string[] = [];
+                                                                    const missingMentors: string[] = [];
+
+                                                                    if (rawMentorNames.length > 0) {
+                                                                        const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+                                                                        const getBaseName = (s: string) => normalize(s.split(',')[0]);
+
+                                                                        const matchedMentorIds: string[] = [];
+
+                                                                        rawMentorNames.forEach((rawName) => {
+                                                                            const matched = mentors.find((m) => {
+                                                                                const mNorm = normalize(m.name);
+                                                                                const rNorm = normalize(rawName);
+                                                                                if (mNorm === rNorm) return true;
+                                                                                const mBase = getBaseName(m.name);
+                                                                                const rBase = getBaseName(rawName);
+                                                                                if (mBase && rBase && mBase === rBase) return true;
+                                                                                return false;
+                                                                            });
+
+                                                                            if (matched) {
+                                                                                if (!matchedMentorIds.includes(matched.id)) {
+                                                                                    matchedMentorIds.push(matched.id);
+                                                                                    assignedMentors.push(matched.name);
+                                                                                }
+                                                                            } else {
+                                                                                missingMentors.push(rawName);
+                                                                            }
+                                                                        });
+
+                                                                        if (matchedMentorIds.length > 0) {
+                                                                            form.setValue('mentor_ids', matchedMentorIds);
+                                                                        }
                                                                     }
 
                                                                     setIsBiinspiraPopoverOpen(false);
-                                                                    toast.success(`Berhasil mengambil data "${program.title}" dari Biinsight!`);
+                                                                    setMissingMentorNames(missingMentors);
+
+                                                                    if (missingMentors.length > 0) {
+                                                                        toast.warning(
+                                                                            `Mentor "${missingMentors.join(', ')}" belum terdaftar di database Kompeten. Silakan buat data mentor terlebih dahulu di Kompeten agar dapat dipilih.`,
+                                                                            { duration: 7000 }
+                                                                        );
+                                                                    }
+
+                                                                    if (assignedMentors.length > 0) {
+                                                                        toast.success(`Berhasil mengambil data "${program.title}" dari Biinsight (Mentor: ${assignedMentors.join(', ')}).`);
+                                                                    } else {
+                                                                        toast.success(`Berhasil mengambil data "${program.title}" dari Biinsight!`);
+                                                                    }
                                                                 } catch (err: any) {
                                                                     console.error(err);
                                                                     toast.error(`Gagal memproses data: ${err.message}`);
@@ -611,6 +734,20 @@ export default function CreateRegularCertificationProgram({ categories, mentors 
                                                         </div>
                                                     </div>
                                                 ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {missingMentorNames.length > 0 && (
+                                        <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2.5 text-amber-800 dark:border-amber-800/80 dark:bg-amber-950/40 dark:text-amber-300">
+                                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                                            <div className="space-y-1 text-xs leading-relaxed">
+                                                <p className="font-medium text-amber-900 dark:text-amber-200">
+                                                    Mentor "{missingMentorNames.join(', ')}" belum terdaftar di Kompeten
+                                                </p>
+                                                <p className="text-amber-700 dark:text-amber-400">
+                                                    Data mentor dari Biinsight tidak ditemukan di database Kompeten. Silakan buat akun/data mentor tersebut terlebih dahulu di menu <strong>Kelola Staff / Mentor</strong> atau pilih mentor lain yang tersedia di atas.
+                                                </p>
                                             </div>
                                         </div>
                                     )}

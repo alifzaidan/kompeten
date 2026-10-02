@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Traits\WablasTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -21,55 +22,101 @@ class CertificationProgramController extends Controller
 
     public function index(Request $request)
     {
-        $programs = CertificationProgram::with(['category', 'mentors', 'schedules', 'socializationSchedules'])
-            ->latest()
-            ->get();
+        $query = CertificationProgram::with(['category', 'mentors', 'schedules', 'socializationSchedules'])->latest();
 
-        $programsWithRecording = 0;
-        $programsPartiallyRecorded = 0;
-        $programsWithoutRecording = 0;
-
-        foreach ($programs as $program) {
-            $schedules = $program->schedules ?? collect();
-            $socializationSchedules = ($program->type === 'scholarship' && $program->socializationSchedules)
-                ? $program->socializationSchedules
-                : collect();
-
-            $totalSchedules = $schedules->count() + $socializationSchedules->count();
-            if ($totalSchedules === 0) {
-                $programsWithoutRecording++;
-                continue;
-            }
-
-            $uploadedCount = $schedules->whereNotNull('recording_url')->where('recording_url', '!=', '')->count() +
-                $socializationSchedules->whereNotNull('recording_url')->where('recording_url', '!=', '')->count();
-
-            if ($uploadedCount === $totalSchedules) {
-                $programsWithRecording++;
-            } elseif ($uploadedCount > 0) {
-                $programsPartiallyRecorded++;
-            } else {
-                $programsWithoutRecording++;
-            }
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%");
+                    });
+            });
         }
 
+        if ($request->filled('status')) {
+            $statuses = explode(',', $request->input('status'));
+            $query->whereIn('status', $statuses);
+        }
+
+        if ($request->filled('batch')) {
+            $batches = explode(',', $request->input('batch'));
+            $query->whereIn('batch', $batches);
+        }
+
+        if ($request->filled('recording_status')) {
+            $recordingStatuses = explode(',', $request->input('recording_status'));
+            $query->where(function ($q) use ($recordingStatuses) {
+                $hasCondition = false;
+                if (in_array('full', $recordingStatuses)) {
+                    $q->whereHas('schedules', function ($sq) {
+                        $sq->whereNotNull('recording_url')->where('recording_url', '!=', '');
+                    })->whereDoesntHave('schedules', function ($sq) {
+                        $sq->whereNull('recording_url')->orWhere('recording_url', '');
+                    });
+                    $hasCondition = true;
+                }
+                if (in_array('partial', $recordingStatuses)) {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $q->$method(function ($sub) {
+                        $sub->whereHas('schedules', function ($sq) {
+                            $sq->whereNotNull('recording_url')->where('recording_url', '!=', '');
+                        })->whereHas('schedules', function ($sq) {
+                            $sq->whereNull('recording_url')->orWhere('recording_url', '');
+                        });
+                    });
+                    $hasCondition = true;
+                }
+                if (in_array('none', $recordingStatuses)) {
+                    $method = $hasCondition ? 'orWhere' : 'where';
+                    $q->$method(function ($sub) {
+                        $sub->whereDoesntHave('schedules', function ($sq) {
+                            $sq->whereNotNull('recording_url')->where('recording_url', '!=', '');
+                        });
+                    });
+                }
+            });
+        }
+
+        $baseStats = CertificationProgram::query();
+        $totalPrograms = (clone $baseStats)->count();
+        $publishedPrograms = (clone $baseStats)->where('status', 'published')->count();
+        $draftPrograms = (clone $baseStats)->where('status', 'draft')->count();
+        $archivedPrograms = (clone $baseStats)->where('status', 'archived')->count();
+        $regularPrograms = (clone $baseStats)->where('type', 'regular')->count();
+        $scholarshipPrograms = (clone $baseStats)->where('type', 'scholarship')->count();
+
         $statistics = [
-            'total_programs' => $programs->count(),
-            'published_programs' => $programs->where('status', 'published')->count(),
-            'draft_programs' => $programs->where('status', 'draft')->count(),
-            'archived_programs' => $programs->where('status', 'archived')->count(),
-            'regular_programs' => $programs->where('type', 'regular')->count(),
-            'scholarship_programs' => $programs->where('type', 'scholarship')->count(),
+            'total_programs' => $totalPrograms,
+            'published_programs' => $publishedPrograms,
+            'draft_programs' => $draftPrograms,
+            'archived_programs' => $archivedPrograms,
+            'regular_programs' => $regularPrograms,
+            'scholarship_programs' => $scholarshipPrograms,
             'recording' => [
-                'with_recording' => $programsWithRecording,
-                'partially_recorded' => $programsPartiallyRecorded,
-                'without_recording' => $programsWithoutRecording,
+                'with_recording' => 0,
+                'partially_recorded' => 0,
+                'without_recording' => 0,
             ],
         ];
+
+        $availableBatches = CertificationProgram::whereNotNull('batch')->distinct()->pluck('batch')->toArray();
+
+        $perPage = min(100, max(5, (int) $request->input('per_page', 10)));
+        $programs = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('admin/certification-programs/index', [
             'programs' => $programs,
             'statistics' => $statistics,
+            'available_batches' => $availableBatches,
+            'filters' => [
+                'search' => $request->input('search'),
+                'status' => $request->input('status'),
+                'batch' => $request->input('batch'),
+                'recording_status' => $request->input('recording_status'),
+                'per_page' => $perPage,
+            ],
         ]);
     }
 
@@ -91,9 +138,11 @@ class CertificationProgramController extends Controller
 
         if ($type === 'scholarship') {
             $data['regular_programs'] = CertificationProgram::where('type', 'regular')
-                ->with(['schedules' => function ($q) {
-                    $q->orderBy('schedule_date');
-                }])
+                ->with([
+                    'schedules' => function ($q) {
+                        $q->orderBy('schedule_date');
+                    }
+                ])
                 ->orderByRaw('CAST(batch AS UNSIGNED) ASC')
                 ->get(['id', 'title', 'batch']);
         }
@@ -180,7 +229,7 @@ class CertificationProgramController extends Controller
 
     public function show(string $id)
     {
-        $program = CertificationProgram::with(['category', 'mentors', 'schedules', 'socializationSchedules'])->findOrFail($id);
+        $program = CertificationProgram::with(['category', 'mentors', 'schedules', 'socializationSchedules', 'installmentTerms'])->findOrFail($id);
 
         $applications = [];
         if ($program->type === 'scholarship') {
@@ -198,6 +247,7 @@ class CertificationProgramController extends Controller
             'user',
             'referredByUser',
             'referralUser',
+            'installmentTerms',
             'certificationProgramItems' => function ($query) use ($id) {
                 $query->where('certification_program_id', $id);
             }
@@ -209,6 +259,16 @@ class CertificationProgramController extends Controller
         $transactions = (clone $transactionQuery)
             ->latest()
             ->get();
+
+        $user = Auth::user();
+        if ($user && $user->hasRole('staff') && !$user->hasRole('admin')) {
+            $transactions->each(function ($tx) {
+                $tx->amount = 0;
+                $tx->discount_amount = 0;
+                $tx->transaction_fee = 0;
+                $tx->nett_amount = 0;
+            });
+        }
 
         return Inertia::render('admin/certification-programs/show', [
             'program' => $program,
@@ -235,9 +295,11 @@ class CertificationProgramController extends Controller
 
         if ($program->type === 'scholarship') {
             $data['regular_programs'] = CertificationProgram::where('type', 'regular')
-                ->with(['schedules' => function ($q) {
-                    $q->orderBy('schedule_date');
-                }])
+                ->with([
+                    'schedules' => function ($q) {
+                        $q->orderBy('schedule_date');
+                    }
+                ])
                 ->orderByRaw('CAST(batch AS UNSIGNED) ASC')
                 ->get(['id', 'title', 'batch']);
         }
@@ -446,7 +508,7 @@ class CertificationProgramController extends Controller
             }
             $message .= "\nJika sudah selesai, silakan lanjutkan ke tahap berikutnya sesuai instruksi.\n\n";
             $message .= "Terima kasih dan selamat bergabung! 🚀\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -485,7 +547,7 @@ class CertificationProgramController extends Controller
             $message .= "Hai *{$application->user->name}*,\n\n";
             $message .= "Mohon maaf, pendaftaran Sertifikasi *{$program->title}* Anda belum dapat kami terima.\n\n";
             $message .= "Terima kasih atas ketertarikannya.\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -531,7 +593,7 @@ class CertificationProgramController extends Controller
                 $message .= "{$program->socialization_group_url}\n";
             }
             $message .= "\nTerima kasih dan selamat bergabung! 🚀\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -569,7 +631,7 @@ class CertificationProgramController extends Controller
             $message .= "Hai Kak *{$application->name}*,\n\n";
             $message .= "Mohon maaf, Anda belum lolos sebagai penerima Beasiswa *{$program->title}*.\n\n";
             $message .= "Terima kasih atas partisipasi dan ketertarikannya pada program ini.\n\n";
-            $message .= "*Araska - Customer Support*";
+            $message .= "*MinKo - Customer Support*";
 
             self::sendText([
                 [
@@ -611,22 +673,22 @@ class CertificationProgramController extends Controller
         // Duplicate schedules (program sessions)
         foreach ($program->schedules as $schedule) {
             $newProgram->schedules()->create([
-                'title'         => $schedule->title,
+                'title' => $schedule->title,
                 'schedule_date' => $schedule->schedule_date,
-                'day'           => $schedule->day,
-                'start_time'    => $schedule->start_time,
-                'end_time'      => $schedule->end_time,
+                'day' => $schedule->day,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
             ]);
         }
 
         // Duplicate socialization schedules
         foreach ($program->socializationSchedules as $schedule) {
             $newProgram->socializationSchedules()->create([
-                'title'         => $schedule->title,
+                'title' => $schedule->title,
                 'schedule_date' => $schedule->schedule_date,
-                'day'           => $schedule->day,
-                'start_time'    => $schedule->start_time,
-                'end_time'      => $schedule->end_time,
+                'day' => $schedule->day,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
             ]);
         }
 

@@ -13,19 +13,29 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+import { PaginatedData } from '@/types/pagination';
+
 interface AffiliateEarningProps {
-    earnings: Earning[];
+    earnings: PaginatedData<Earning>;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        start_date?: string;
+        end_date?: string;
+        per_page?: number;
+    };
 }
 
-export default function AffiliateEarnings({ earnings, flash }: AffiliateEarningProps) {
-    const { auth } = usePage<SharedData>().props;
-    const role = auth.role[0];
-    const isAdmin = role === 'admin';
-    const columns = getColumns(isAdmin);
+import { usePermission } from '@/hooks/use-permission';
+
+export default function AffiliateEarnings({ earnings, flash, filters }: AffiliateEarningProps) {
+    const { canManage, roles, isAdmin } = usePermission();
+    const isStaff = roles.includes('staff') && !isAdmin;
+    const canManageEarnings = canManage('earnings');
+    const columns = getColumns(canManageEarnings, isStaff);
 
     useEffect(() => {
         if (flash?.success) {
@@ -47,7 +57,7 @@ export default function AffiliateEarnings({ earnings, flash }: AffiliateEarningP
                     </div>
                 </div>
 
-                <DataTable columns={columns} data={earnings} />
+                <DataTable columns={columns} pagination={earnings} filters={filters} />
             </div>
         </AdminLayout>
     );

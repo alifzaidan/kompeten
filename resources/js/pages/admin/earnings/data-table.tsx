@@ -14,7 +14,9 @@ import {
 } from '@tanstack/react-table';
 
 import { DataTablePagination } from '@/components/data-table-pagination';
+import { DataTableServerPagination } from '@/components/data-table-server-pagination';
 import { DataTableViewOptions } from '@/components/data-table-view-option';
+import { PaginatedData } from '@/types/pagination';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -24,13 +26,19 @@ import { cn } from '@/lib/utils';
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { CalendarIcon, Download, X } from 'lucide-react';
-import React from 'react';
+import { router } from '@inertiajs/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { Earning } from './columns';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
-    data: TData[];
+    data?: TData[] | PaginatedData<TData>;
+    pagination?: PaginatedData<TData>;
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
 function exportToExcel(dateRange: DateRange | undefined) {
@@ -43,7 +51,9 @@ function exportToExcel(dateRange: DateRange | undefined) {
     window.location.href = route('earnings.export') + query;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, pagination, filters }: DataTableProps<TData, TValue>) {
+    const paginationObj = pagination || (data && typeof data === 'object' && !Array.isArray(data) && 'data' in data ? (data as unknown as PaginatedData<TData>) : undefined);
+    const rawData = paginationObj ? (paginationObj.data || []) : (Array.isArray(data) ? data : []);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -51,22 +61,50 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
     const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
 
+    // Server-side search state
+    const [searchValue, setSearchValue] = useState(filters?.search ?? '');
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSearch = useCallback((value: string) => {
+        setSearchValue(value);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => {
+            const searchParams = new URLSearchParams(window.location.search);
+            if (value) {
+                searchParams.set('search', value);
+            } else {
+                searchParams.delete('search');
+            }
+            searchParams.set('page', '1');
+            router.get(
+                `${window.location.pathname}?${searchParams.toString()}`,
+                {},
+                { preserveState: true, preserveScroll: true, replace: true },
+            );
+        }, 400);
+    }, []);
+
+    // Sync searchValue when filters prop changes (e.g. navigating back)
+    useEffect(() => {
+        setSearchValue(filters?.search ?? '');
+    }, [filters?.search]);
+
     const filteredData = React.useMemo(() => {
-        if (!dateRange?.from) return data;
-        return (data as Earning[]).filter((item) => {
+        if (!dateRange?.from) return rawData;
+        return (rawData as Earning[]).filter((item) => {
             const date = parseISO(item.created_at);
             const from = startOfDay(dateRange.from!);
             const to = endOfDay(dateRange.to ?? dateRange.from!);
             return isWithinInterval(date, { start: from, end: to });
         }) as TData[];
-    }, [data, dateRange]);
+    }, [rawData, dateRange]);
 
     const table = useReactTable({
         data: filteredData,
         columns,
         onSortingChange: setSorting,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        getPaginationRowModel: paginationObj ? undefined : getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
@@ -90,9 +128,9 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
         <div>
             <div className="flex flex-col items-stretch gap-2 py-4 lg:flex-row lg:items-center">
                 <Input
-                    placeholder="Cari kode invoice..."
-                    value={(table.getColumn('invoice.invoice_code')?.getFilterValue() as string) ?? ''}
-                    onChange={(event) => table.getColumn('invoice.invoice_code')?.setFilterValue(event.target.value)}
+                    placeholder="Cari invoice / nama user / afiliator..."
+                    value={searchValue}
+                    onChange={(event) => handleSearch(event.target.value)}
                     className="lg:max-w-sm"
                 />
 
@@ -164,7 +202,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                 <div className="bg-muted/50 mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
                     <CalendarIcon className="text-muted-foreground size-3.5" />
                     <span>
-                        Menampilkan <strong>{filteredData.length}</strong> dari <strong>{data.length}</strong> data
+                        Menampilkan <strong>{filteredData.length}</strong> dari <strong>{paginationObj ? paginationObj.total : rawData.length}</strong> data
                         {dateRange.from && (
                             <>
                                 {' '}untuk periode{' '}
@@ -215,7 +253,11 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                 </Table>
             </div>
             <div className="py-4">
-                <DataTablePagination table={table} />
+                {paginationObj ? (
+                    <DataTableServerPagination pagination={paginationObj} />
+                ) : (
+                    <DataTablePagination table={table} />
+                )}
             </div>
         </div>
     );

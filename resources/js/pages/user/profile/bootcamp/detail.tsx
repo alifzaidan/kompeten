@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import UserLayout from '@/layouts/user-layout';
+import { formatExternalUrl } from '@/lib/utils';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -103,6 +104,11 @@ interface BootcampProps {
     bootcamp_items: EnrollmentBootcampItem[];
     created_at: string;
     updated_at: string;
+    is_installment?: boolean;
+    installment_terms?: any[];
+    access_suspended_at?: string | null;
+    has_active_access?: boolean;
+    is_fully_paid?: boolean;
 }
 
 interface Certificate {
@@ -169,6 +175,27 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
     const bootcampItem = bootcamp.bootcamp_items?.[0];
     const bootcampData = bootcampItem?.bootcamp;
     const bootcampInvoiceStatus = bootcamp.status;
+    const isInstallment = !!bootcamp.is_installment;
+    const isSuspended = !!bootcamp.access_suspended_at;
+    const terms = bootcamp.installment_terms || (bootcamp as any).installmentTerms || [];
+    const firstTermPaid = terms.some((t: any) => t.installment_number === 1 && t.status === 'paid');
+
+    const hasActiveAccess = Boolean(
+        bootcamp.has_active_access ?? (
+            isInstallment
+                ? (!isSuspended && firstTermPaid)
+                : (bootcampInvoiceStatus === 'paid' || bootcampInvoiceStatus === 'completed')
+        )
+    );
+
+    const isFullyPaid = Boolean(
+        bootcamp.is_fully_paid ?? (
+            isInstallment
+                ? (terms.length > 0 && terms.every((t: any) => t.status === 'paid'))
+                : (bootcampInvoiceStatus === 'paid' || bootcampInvoiceStatus === 'completed')
+        )
+    );
+
     const benefitList = parseList(bootcampData?.benefits);
     const curriculumList = parseList(bootcampData?.curriculum);
     const [isLoading, setIsLoading] = useState(true);
@@ -331,7 +358,7 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
     const hasReview = bootcampItem.rating && bootcampItem.review;
 
     const hasCertificate =
-        certificate && isCompleted && bootcampInvoiceStatus === 'paid' && allAttendanceVerified && (!needsSubmission || hasSubmission) && hasReview;
+        certificate && isCompleted && isFullyPaid && allAttendanceVerified && (!needsSubmission || hasSubmission) && hasReview;
 
     return (
         <div>
@@ -441,20 +468,35 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
                                     ) : null}
                                 </div>
 
-                                {bootcampInvoiceStatus !== 'paid' ? (
+                                {isSuspended ? (
+                                    <div className="mt-6 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
+                                        <p className="font-semibold text-red-700 dark:text-red-300">
+                                            ⚠️ Akses bootcamp dibekukan karena ada tagihan cicilan yang melewati jatuh tempo. Silakan lakukan pelunasan di menu Transaksi.
+                                        </p>
+                                    </div>
+                                ) : !hasActiveAccess ? (
                                     <div className="mt-6 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-700 dark:bg-red-900/20">
                                         <p className="font-semibold text-red-700 dark:text-red-300">
                                             ⚠️ Selesaikan pembayaran untuk mengakses bootcamp!
                                         </p>
                                     </div>
+                                ) : isInstallment && !isFullyPaid ? (
+                                    <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+                                        <p className="font-medium">
+                                            ℹ️ Pembayaran Cicilan Aktif. Anda memiliki akses penuh ke materi dan grup WhatsApp. Pastikan membayar termin berikutnya tepat waktu.
+                                        </p>
+                                    </div>
                                 ) : null}
 
-                                {!isCompleted && bootcampInvoiceStatus === 'paid' ? (
+                                {!isCompleted && hasActiveAccess ? (
                                     <div className="mt-6">
                                         <Button
                                             className="w-full"
                                             size="lg"
-                                            onClick={() => window.open(bootcampData.group_url ?? undefined, '_blank')}
+                                            onClick={() => {
+                                                const url = formatExternalUrl(bootcampData.group_url);
+                                                if (url) window.open(url, '_blank');
+                                            }}
                                         >
                                             <Users size={18} className="mr-2" />
                                             Gabung Grup WhatsApp
@@ -494,7 +536,7 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
                             ) : null}
 
                             {/* Attendance Section */}
-                            {bootcampInvoiceStatus === 'paid' && bootcampData.schedules && bootcampData.schedules.length > 0 ? (
+                            {hasActiveAccess && bootcampData.schedules && bootcampData.schedules.length > 0 ? (
                                 <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
                                     <div className="border-b bg-gradient-to-r from-purple-500 to-pink-600 p-4 dark:border-gray-700">
                                         <div className="flex items-center gap-2 text-white">
@@ -797,7 +839,7 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
                         {/* Sidebar - 1 Column */}
                         <div className="space-y-6 lg:col-span-1">
                             {/* Submission Section */}
-                            {bootcampInvoiceStatus === 'paid' && needsSubmission && allAttendanceVerified && isCompleted ? (
+                            {hasActiveAccess && needsSubmission && allAttendanceVerified && isCompleted ? (
                                 <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
                                     <div className="border-b bg-gradient-to-r from-blue-500 to-cyan-600 p-4 dark:border-gray-700">
                                         <div className="flex items-center gap-2 text-white">
@@ -877,7 +919,7 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
                             ) : null}
 
                             {/* Review Section */}
-                            {bootcampInvoiceStatus === 'paid' && allAttendanceVerified && (!needsSubmission || hasSubmission) && isCompleted ? (
+                            {hasActiveAccess && allAttendanceVerified && (!needsSubmission || hasSubmission) && isCompleted ? (
                                 <div className="overflow-hidden rounded-2xl border bg-white/95 shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95">
                                     <div className="border-b bg-gradient-to-r from-amber-500 to-orange-600 p-4 dark:border-gray-700">
                                         <div className="flex items-center gap-2 text-white">
@@ -1028,8 +1070,8 @@ export default function DetailMyBootcamp({ bootcamp, certificate, certificatePar
                                             <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                                                 {!certificate
                                                     ? 'Sertifikat belum dibuat'
-                                                    : bootcampInvoiceStatus !== 'paid'
-                                                      ? 'Selesaikan pembayaran'
+                                                    : !isFullyPaid
+                                                      ? (isInstallment ? 'Lunasi seluruh cicilan untuk membuka sertifikat' : 'Selesaikan pembayaran')
                                                       : !allAttendanceVerified
                                                         ? `Lengkapi kehadiran (${verifiedAttendances}/${totalSchedules})`
                                                         : needsSubmission && !hasSubmission

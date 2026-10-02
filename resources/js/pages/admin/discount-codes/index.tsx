@@ -52,16 +52,26 @@ interface Statistics {
     };
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface DiscountCodesProps {
-    discountCodes: DiscountCode[];
+    discountCodes: PaginatedData<DiscountCode>;
     statistics: Statistics;
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function DiscountCodes({ discountCodes, statistics, flash }: DiscountCodesProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function DiscountCodes({ discountCodes, statistics, flash, filters }: DiscountCodesProps) {
+    const { canManage } = usePermission();
+    const canManageDiscount = canManage('discount-codes');
     const [showMoreStats, setShowMoreStats] = useState(false);
 
     useEffect(() => {
@@ -82,12 +92,14 @@ export default function DiscountCodes({ discountCodes, statistics, flash }: Disc
                         <h1 className="text-2xl font-semibold">Kode Diskon</h1>
                         <p className="text-muted-foreground text-sm">Kelola dan monitor kode diskon untuk produk Anda.</p>
                     </div>
-                    <Button className="hover:cursor-pointer" asChild>
-                        <Link href={route('discount-codes.create')}>
-                            <Plus />
-                            Tambah Kode Diskon
-                        </Link>
-                    </Button>
+                    {canManageDiscount && (
+                        <Button className="hover:cursor-pointer" asChild>
+                            <Link href={route('discount-codes.create')}>
+                                <Plus />
+                                Tambah Kode Diskon
+                            </Link>
+                        </Button>
+                    )}
                 </div>
 
                 {/* Statistics Cards */}
@@ -351,7 +363,7 @@ export default function DiscountCodes({ discountCodes, statistics, flash }: Disc
                 </div>
 
                 {/* Data Table */}
-                <DataTable columns={columns} data={discountCodes} />
+                <DataTable columns={columns} pagination={discountCodes} filters={filters} />
             </div>
         </AdminLayout>
     );

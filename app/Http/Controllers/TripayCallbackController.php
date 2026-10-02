@@ -61,7 +61,7 @@ class TripayCallbackController extends Controller
         }
 
         $tripayReference = $data->reference ?? null;
-        $status = strtoupper((string)($data->status ?? ''));
+        $status = strtoupper((string) ($data->status ?? ''));
 
         if (!$tripayReference) {
             return Response::json([
@@ -251,7 +251,7 @@ class TripayCallbackController extends Controller
     //         $message .= "Pembayaran Anda No Invoice: " . $invoice->invoice_code . " telah berhasil diproses.\n\n";
     //         $message .= "Silakan cek dashboard untuk mengakses produk yang Anda beli.\n\n";
     //         $message .= "Terima kasih atas kepercayaan Anda! 🙏\n\n";
-    //         $message .= "Araska - Customer Support";
+    //         $message .= "MinKo - Customer Support";
 
     //         $waData = [
     //             [
@@ -299,7 +299,7 @@ class TripayCallbackController extends Controller
     //         $message .= "Maaf, pembayaran untuk invoice " . $invoice->invoice_code . " tidak berhasil atau sudah kadaluarsa.\n\n";
     //         $message .= "Silakan lakukan pembelian ulang jika Anda masih berminat.\n\n";
     //         $message .= "Terima kasih atas perhatiannya! 🙏\n\n";
-    //         $message .= "Araska - Customer Support";
+    //         $message .= "MinKo - Customer Support";
 
     //         $waData = [
     //             [

@@ -31,18 +31,29 @@ interface Statistics {
     };
 }
 
+import { PaginatedData } from '@/types/pagination';
+
 interface CertificationProgramsProps {
-    programs: CertificationProgram[];
+    programs: PaginatedData<CertificationProgram>;
     statistics: Statistics;
+    available_batches?: string[];
     flash?: {
         success?: string;
         error?: string;
     };
+    filters?: {
+        search?: string;
+        per_page?: number;
+    };
 }
 
-export default function CertificationPrograms({ programs, statistics, flash }: CertificationProgramsProps) {
+import { usePermission } from '@/hooks/use-permission';
+
+export default function CertificationPrograms({ programs, statistics, available_batches, flash, filters }: CertificationProgramsProps) {
     const { auth } = usePage<SharedData>().props;
+    const { canManage } = usePermission();
     const isAffiliate = auth.role.includes('affiliate');
+    const canCreateProgram = canManage('certification-programs') && !isAffiliate;
     const [showMoreStats, setShowMoreStats] = useState(false);
 
     useEffect(() => {
@@ -63,7 +74,7 @@ export default function CertificationPrograms({ programs, statistics, flash }: C
                         <h1 className="text-2xl font-semibold">Program Sertifikasi</h1>
                         <p className="text-muted-foreground text-sm">Ringkasan dan daftar semua program sertifikasi.</p>
                     </div>
-                    {!isAffiliate && (
+                    {canCreateProgram && (
                         <div className="flex gap-2">
                             <Button asChild variant="outline">
                                 <Link href={route('certification-programs.create', { type: 'scholarship' })}>
@@ -257,7 +268,7 @@ export default function CertificationPrograms({ programs, statistics, flash }: C
 
                 {/* Programs Table */}
                 <div className="bg-card rounded-lg border p-4">
-                    <DataTable columns={columns} data={programs} />
+                    <DataTable columns={columns} pagination={programs} availableBatches={available_batches} filters={filters} />
                 </div>
             </div>
         </AdminLayout>
