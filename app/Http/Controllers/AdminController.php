@@ -353,16 +353,29 @@ class AdminController extends Controller
             'total_courses' => Course::count(),
             'total_bootcamps' => Bootcamp::count(),
             'total_webinars' => Webinar::count(),
-            'recent_sales' => Invoice::with(['user', 'courseItems.course', 'bootcampItems.bootcamp', 'webinarItems.webinar', 'bundleEnrollments.bundle', 'certificationProgramItems.certificationProgram'])
-                ->whereNull('parent_invoice_id')
+                                                'recent_sales' => Invoice::with([
+                'user',
+                'parentInvoice.user',
+                'courseItems.course',
+                'bootcampItems.bootcamp',
+                'webinarItems.webinar',
+                'bundleEnrollments.bundle',
+                'certificationProgramItems.certificationProgram',
+                'parentInvoice.courseItems.course',
+                'parentInvoice.bootcampItems.bootcamp',
+                'parentInvoice.webinarItems.webinar',
+                'parentInvoice.bundleEnrollments.bundle',
+                'parentInvoice.certificationProgramItems.certificationProgram',
+            ])
+                ->where('status', 'paid')
                 ->where(function ($q) {
-                    $q->whereIn('status', ['paid', 'completed'])
-                        ->orWhere(function ($iq) {
-                            $iq->where('status', 'installment_pending')
-                                ->whereHas('installmentTerms', fn ($tq) => $tq->where('installment_number', 1)->where('status', 'paid'));
-                        });
+                    $q->where(function ($sq) {
+                        $sq->whereNull('parent_invoice_id')->where('is_installment', false);
+                    })->orWhereNotNull('parent_invoice_id');
                 })
-                ->latest()->take(5)->get(),
+                ->orderByRaw('COALESCE(paid_at, created_at) DESC')
+                ->take(5)
+                ->get(),
             'revenue_data' => $this->getRevenueData(),
             'monthly_revenue_data' => $this->getMonthlyRevenueData(),
             'participant_data' => $this->getParticipantData(),

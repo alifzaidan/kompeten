@@ -529,7 +529,7 @@ export default function DetailMyCourse({
                                                 <div className="text-center">
                                                     <p className="text-xs text-blue-600">
                                                         No: {String(certificateParticipant.certificate_number).padStart(4, '0')}/
-                                                        {certificate.certificate_number}
+                                                        {certificate?.certificate_number}
                                                     </p>
                                                     <Link
                                                         href={route('certificate.participant.detail', {
