@@ -1,1 +1,0 @@
-import{r as t}from"./app-BlU-VVtx.js";import{u as a,M as u,c as r}from"./proxy-9cd_nc0I.js";function i(o){const e=a(()=>r(o)),{isStatic:s}=t.useContext(u);if(s){const[,n]=t.useState(o);t.useEffect(()=>e.on("change",n),[])}return e}export{i as u};
