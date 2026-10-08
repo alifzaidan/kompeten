@@ -2656,7 +2656,16 @@ class InvoiceController extends Controller
             abort(403, 'Anda tidak memiliki akses ke invoice ini');
         }
 
-        if ($invoice->status !== 'paid') {
+        $isAllowed = false;
+        if (in_array($invoice->status, ['paid', 'completed'])) {
+            $isAllowed = true;
+        } elseif ($invoice->is_installment) {
+            $isAllowed = $invoice->installmentTerms()->where('status', 'paid')->exists();
+        } elseif ($invoice->isInstallmentChild() && $invoice->status === 'paid') {
+            $isAllowed = true;
+        }
+
+        if (!$isAllowed) {
             abort(403, 'Invoice belum dibayar');
         }
 
