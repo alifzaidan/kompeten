@@ -60,7 +60,8 @@ export default function Courses({ courses, statistics, flash, filters }: CourseP
     const { canManage, roles, isAdmin } = usePermission();
     const isStaff = (roles?.includes('staff') || auth?.role?.includes('staff')) && !isAdmin && !auth?.role?.includes('admin');
     const isAffiliate = auth.role.includes('affiliate');
-    const canCreateCourse = canManage('courses') && !isAffiliate;
+    const isMentor = auth.role.includes('mentor');
+    const canManageCourse = (canManage('courses') || isMentor) && !isAffiliate;
     const [showMoreStats, setShowMoreStats] = useState(false);
 
     useEffect(() => {
@@ -81,7 +82,7 @@ export default function Courses({ courses, statistics, flash, filters }: CourseP
                         <h1 className="text-2xl font-semibold">Kelas Online</h1>
                         <p className="text-muted-foreground text-sm">Ringkasan dan daftar semua kelas online.</p>
                     </div>
-                    {canCreateCourse && (
+                    {canManageCourse && (
                         <Button asChild className="hover:cursor-pointer">
                             <Link href={route('courses.create')}>
                                 Tambah Kelas

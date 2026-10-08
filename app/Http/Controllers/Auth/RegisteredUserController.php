@@ -58,6 +58,7 @@ class RegisteredUserController extends Controller
             'instance' => $request->instance,
             'city' => $request->city,
             'password' => Hash::make($request->password),
+            'email_verified_at' => now(),
         ]);
 
         $user->assignRole('user');
