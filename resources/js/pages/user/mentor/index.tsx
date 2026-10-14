@@ -5,6 +5,7 @@ import UserLayout from '@/layouts/user-layout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowRight, BookOpen, BookText, FileText, Video } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 interface Mentor {
     id: string;
@@ -22,13 +23,14 @@ interface MentorIndexProps {
 }
 
 export default function MentorIndex({ mentors }: MentorIndexProps) {
+    const { t } = useTranslation('user');
     const getInitials = useInitials();
 
     const stats = [
-        { key: 'courses', label: 'Kelas', icon: BookText, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-950' },
-        { key: 'articles', label: 'Artikel', icon: FileText, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-950' },
-        { key: 'webinars', label: 'Webinar', icon: Video, color: 'from-green-500 to-green-600', bgColor: 'bg-green-50 dark:bg-green-950' },
-        { key: 'bootcamps', label: 'Bootcamp', icon: BookOpen, color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-50 dark:bg-orange-950' },
+        { key: 'courses', label: t('mentor.stats.courses', 'Kelas'), icon: BookText, color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-950' },
+        { key: 'articles', label: t('mentor.stats.articles', 'Artikel'), icon: FileText, color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-950' },
+        { key: 'webinars', label: t('mentor.stats.webinars', 'Webinar'), icon: Video, color: 'from-green-500 to-green-600', bgColor: 'bg-green-50 dark:bg-green-950' },
+        { key: 'bootcamps', label: t('mentor.stats.bootcamps', 'Bootcamp'), icon: BookOpen, color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-50 dark:bg-orange-950' },
     ];
 
     const containerVariants = {
@@ -53,7 +55,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
 
     return (
         <UserLayout>
-            <Head title="Mentor Kami" />
+            <Head title={t('mentor.headTitle', 'Mentor Kami')} />
 
             <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
                 {/* Hero Section */}
@@ -73,7 +75,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                         >
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="mb-6">
                                 <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50/50 px-4 py-2 text-sm font-semibold text-orange-600 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-400">
-                                    👨‍🏫 Tim Profesional Kami
+                                    👨‍🏫 {t('mentor.proBadge', 'Tim Profesional Kami')}
                                 </span>
                             </motion.div>
 
@@ -83,9 +85,9 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                 transition={{ duration: 0.6, delay: 0.2 }}
                                 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white"
                             >
-                                Belajar dari Para Ahli
+                                {t('mentor.heroTitle1', 'Belajar dari Para Ahli')}
                                 <span className="block bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
-                                    Terbaik di Bidangnya
+                                    {t('mentor.heroHighlight', 'Terbaik di Bidangnya')}
                                 </span>
                             </motion.h1>
 
@@ -95,7 +97,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                 transition={{ duration: 0.6, delay: 0.3 }}
                                 className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400"
                             >
-                                Mentor kami adalah praktisi berpengalaman yang siap membimbing Anda menuju kesuksesan karir
+                                {t('mentor.heroDesc', 'Mentor kami adalah praktisi berpengalaman yang siap membimbing Anda menuju kesuksesan karir')}
                             </motion.p>
                         </motion.div>
                     </div>
@@ -145,10 +147,10 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                                     {/* Stats Grid */}
                                                     <div className="mb-6 grid grid-cols-2 gap-3">
                                                         {[
-                                                            { value: mentor.total_courses, label: 'Kelas', icon: BookText },
-                                                            { value: mentor.total_articles, label: 'Artikel', icon: FileText },
-                                                            { value: mentor.total_webinars, label: 'Webinar', icon: Video },
-                                                            { value: mentor.total_bootcamps, label: 'Bootcamp', icon: BookOpen },
+                                                            { value: mentor.total_courses, label: t('mentor.stats.courses', 'Kelas'), icon: BookText },
+                                                            { value: mentor.total_articles, label: t('mentor.stats.articles', 'Artikel'), icon: FileText },
+                                                            { value: mentor.total_webinars, label: t('mentor.stats.webinars', 'Webinar'), icon: Video },
+                                                            { value: mentor.total_bootcamps, label: t('mentor.stats.bootcamps', 'Bootcamp'), icon: BookOpen },
                                                         ].map((stat, idx) => {
                                                             const StatIcon = stat.icon;
                                                             const colors = stats[idx];
@@ -178,7 +180,7 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                                     {/* CTA Button */}
                                                     <Button className="group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/50">
                                                         <span className="relative flex items-center justify-center gap-2">
-                                                            Lihat Profile
+                                                            {t('mentor.viewProfile', 'Lihat Profile')}
                                                             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
                                                         </span>
                                                     </Button>
@@ -197,9 +199,9 @@ export default function MentorIndex({ mentors }: MentorIndexProps) {
                                 <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="mb-6 text-7xl">
                                     👨‍🏫
                                 </motion.div>
-                                <p className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">Belum Ada Mentor</p>
+                                <p className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">{t('mentor.noMentors', 'Belum Ada Mentor')}</p>
                                 <p className="text-center text-gray-600 dark:text-gray-400">
-                                    Mentor akan segera hadir untuk membantu <br /> pembelajaran Anda
+                                    {t('mentor.noMentorsDesc', 'Mentor akan segera hadir untuk membantu pembelajaran Anda')}
                                 </p>
                             </motion.div>
                         )}

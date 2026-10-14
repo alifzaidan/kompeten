@@ -1,0 +1,266 @@
+{
+  "title": "Beranda",
+  "hero": {
+    "title": "Solusi cerdas untuk mengembangkan skill-mu",
+    "subtitle": "Dirancang secara matang agar kamu bisa memahami materi lebih cepat, tanpa rumit, dan langsung bisa dipraktikkan.",
+    "searchPlaceholder": "Cari kelas, bootcamp, webinar, atau bundle...",
+    "tagline": "Belajar dan naik level jadi lebih mudah—semuanya ada di sini.",
+    "services": "Layanan Kami",
+    "contact": "Hubungi Kami",
+    "alumniCount": "5000+ Alumni",
+    "userCount": "4500+ Pengguna"
+  },
+  "offer": {
+    "title": "Apa yang Kami Tawarkan",
+    "subtitle": "Temukan berbagai program pelatihan dan sertifikasi yang dirancang untuk mengembangkan skill Anda",
+    "certificationTitle": "Certification",
+    "certificationDesc": "Tingkatkan skill dan kantongi sertifikat resmi yang bikin CV-mu makin standout!",
+    "bootcampTitle": "Bootcamp",
+    "bootcampDesc": "Belajar intensif, praktik langsung, dan upgrade skill dengan cara yang seru dan cepat!",
+    "webinarTitle": "Webinar",
+    "webinarDesc": "Ikuti sesi belajar online yang ringan tapi penuh insight bareng mentor berpengalaman!",
+    "courseTitle": "Kelas Online",
+    "courseDesc": "Belajar dengan video pembelajaran terstruktur yang bisa kamu akses kapan saja dan di mana saja.",
+    "bundleTitle": "Paket Bundling",
+    "bundleDesc": "Belajar lebih banyak, bayar lebih hemat—semua materi favoritmu ada dalam satu paket lengkap!"
+  },
+  "about": {
+    "badge": "Kenapa Harus Kompeten?",
+    "title1": "Solusi",
+    "title2": "yang dirancang dengan cermat untuk",
+    "titleHighlight": "pembelajaran",
+    "title3": "yang mudah",
+    "webDev": {
+      "title": "Web & App Development",
+      "desc": "Membangun aplikasi web dan mobile yang responsif dan efisien"
+    },
+    "dataScience": {
+      "title": "Data Science",
+      "desc": "Menganalisis data untuk mendapatkan wawasan yang berharga"
+    },
+    "graphicDesign": {
+      "title": "Graphic Design",
+      "desc": "Mendesain antarmuka yang menarik dan fungsional"
+    },
+    "accounting": {
+      "title": "Accounting, Finance, & Tax",
+      "desc": "Membantu mengelola keuangan dan laporan keuangan"
+    },
+    "title": "Mulai Karier Profesionalmu dari Sini",
+    "desc": "Kami menghadirkan pelatihan Akuntansi dan Pajak berbasis praktik, sertifikasi, dan kelas online untuk membantumu siap bersaing di dunia kerja.",
+    "knowMore": "Kenal Lebih Dekat"
+  },
+  "program": {
+    "badge": "Program Kami",
+    "learnNow": "Pelajari Sekarang",
+    "course": {
+      "title": "Kelas Online",
+      "subtitle": "Pelajari berbagai skill sekali bayar, praktik, dan bersertifikat.",
+      "point1": "Belajar fleksibel via Video Materi, Project dan Studi Kasus",
+      "point2": "Praktikal & Actionable. Bertahap dari level Dasar hingga Lanjut",
+      "point3": "Grup Komunitas Diskusi Lifetime. Kelas Gratis Tiap Bulannya"
+    },
+    "bootcamp": {
+      "title": "Bootcamp",
+      "subtitle": "Intensive Live Class bersama Experts. Praktikal & Mendalam.",
+      "point1": "Kombinasi Case Study, Praktik di Tiap Sesi. Basic to Advanced",
+      "point2": "Group Mentoring Semi-Privat untuk Bangun Portfolio",
+      "point3": "Tutor Terkurasi. Memiliki Lebih dari 30.000 Alumni"
+    },
+    "webinar": {
+      "title": "Webinar",
+      "subtitle": "Pelajari berbagai topik terkini dari para ahli di bidangnya.",
+      "point1": "Belajar insightfull dengan pembicara yang expert dibidangnya",
+      "point2": "Praktikal & Actionable. Bertahap dari level Dasar hingga Lanjut",
+      "point3": "Grup Komunitas Diskusi Lifetime. Kelas Gratis Tiap Bulannya"
+    }
+  },
+  "tools": {
+    "badge": "Tools & Framework",
+    "title": "Tools professional yang digunakan"
+  },
+  "latest": {
+    "badge": "Produk Terbaru",
+    "title": "Temukan program terbaru Kompeten yang siap leveling up skill-mu",
+    "empty": "Belum ada produk yang tersedia saat ini.",
+    "allOwned": "Anda sudah memiliki akses semua produk terbaru kami. 😁🙏",
+    "thankYou": "Terima kasih telah menjadi bagian dari Kompeten!",
+    "alreadyOwned": "Sudah Dimiliki",
+    "save": "Hemat {{discount}}%",
+    "free": "Gratis",
+    "registerBefore": "Daftar sebelum {{days}} hari lagi",
+    "registrationClosed": "Pendaftaran ditutup",
+    "registerUntil": "Daftar s/d {{date}}",
+    "badges": {
+      "course": "Kelas",
+      "bootcamp": "Bootcamp",
+      "webinar": "Webinar",
+      "bundle": "Bundle",
+      "private": "Private",
+      "scholarship": "Beasiswa",
+      "regular": "Reguler",
+      "certification": "Sertifikasi"
+    },
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "recentTraining": "Pelatihan Terbaru",
+    "viewMore": "Lihat Selengkapnya...",
+    "registeredMentors": "{{count}} mentor terdaftar",
+    "noBio": "Tidak ada bio",
+    "startsPrefix": "Mulai: ",
+    "registrationDeadlinePrefix": "Batas Pendaftaran: ",
+    "mentorSingular": "Mentor",
+    "mentorsCount": "{{count}} Mentor",
+    "moreMentors": "+{{count}} lainnya"
+  },
+  "mentor": {
+    "title": "Mentor terbaik dari industri untuk memastikan pembelajaranmu relevan dan impactful.",
+    "subtitle": "Ilmu real dari para expert industri."
+  },
+  "testimony": {
+    "badge": "Terpercaya lebih dari 1000+ alumni",
+    "title": "Biar nggak cuma katanya—buktinya ada di sini.",
+    "subtitle": "Simak testimoni peserta yang udah merasakan perubahan nyata setelah ikut kelas di Kompeten",
+    "joinNow": "Gabung Sekarang"
+  },
+  "article": {
+    "title": "Artikel &",
+    "insights": "Insights",
+    "subtitle": "Temukan inspirasi, tips, dan panduan lengkap seputar pembelajaran dan teknologi terkini",
+    "viewAll": "Lihat Semua Artikel",
+    "placeholderTitle": "Artikel Segera Hadir",
+    "placeholderExcerpt": "Nantikan artikel menarik lainnya dari kami",
+    "generalCategory": "Umum"
+  },
+  "faq": {
+    "badge": "FAQ",
+    "title": "Temukan jawaban pertanyaanmu di sini",
+    "subtitle": "Dapatkan pemahaman yang lebih komprehensif melalui rangkaian pertanyaan dan jawaban yang telah kami siapkan.",
+    "categories": {
+      "general": "Umum & Pendaftaran",
+      "learning": "Sistem Pembelajaran",
+      "certificate": "Sertifikat & Kompetensi",
+      "payment": "Sistem Pembayaran",
+      "technical": "Teknis"
+    },
+    "items": {
+      "general": [
+        {
+          "q": "Apa itu Kompeten IDN?",
+          "a": "Kompeten IDN merupakan platform edukasi digital yang dirancang untuk mendukung pengembangan skill di era modern di berbagai bidang mulai dari akuntansi, ekonomi, perpajakan, teknologi, hingga desain."
+        },
+        {
+          "q": "Apa saja yang tersedia di Kompeten?",
+          "a": "Kompeten menawarkan berbagai layanan seperti Online Class, Bootcamp, Webinar, dan Program Sertifikasi."
+        },
+        {
+          "q": "Apakah pelatihan ini terbuka untuk umum?",
+          "a": "Tentu, pelatihan kami terbuka untuk mahasiswa, lulusan baru (fresh graduate), maupun profesional yang ingin meningkatkan keahlian di bidang akuntansi, ekonomi, perpajakan, teknologi, hingga desain."
+        },
+        {
+          "q": "Bagaimana cara mendaftar pelatihan di Kompeten?",
+          "a": "Pendaftaran dapat dilakukan langsung melalui website kami atau melalui link pendaftaran yang tersedia di bio Instagram @kompeten.idn. Kamu hanya perlu mengisi formulir pendaftaran dan melakukan konfirmasi pembayarannya."
+        },
+        {
+          "q": "Apakah saya bisa mendaftar lebih dari satu program sekaligus?",
+          "a": "Tentu saja. Namun, pastikan jadwal Live Class antar program tidak bentrok agar kamu bisa mengikuti sesi interaktif dengan maksimal."
+        },
+        {
+          "q": "Kemana saya bisa mendapatkan informasi lebih lanjut tentang Kompeten?",
+          "a": "Kamu dapat menghubungi admin di +6289528514480 atau mengikuti media sosial Kompeten di Instagram, TikTok, dan LinkedIn."
+        },
+        {
+          "q": "Bagaimana cara mendaftar kelas yang diinginkan?",
+          "a": "Kamu dapat mendaftar dengan mengklik tombol \"Daftar\" pada halaman kelas, mengisi formulir pendaftaran, dan melakukan pembayaran."
+        }
+      ],
+      "learning": [
+        {
+          "q": "Bagaimana alur belajar di Kompeten?",
+          "a": "Alur belajar di Kompeten dimulai dengan memilih kelas atau bootcamp yang diinginkan. Kemudian mendapatkan akses materi pembelajaran yang dapat diakses kapan saja, dilengkapi modul, kuis, dan juga forum diskusi."
+        },
+        {
+          "q": "Apakah kelas dilakukan secara tatap muka atau online?",
+          "a": "Saat ini seluruh pelatihan kami dilakukan secara Online melalui platform Zoom (Live Session) dan Learning Management System (LMS) kami untuk akses materi mandiri."
+        },
+        {
+          "q": "Bagaimana jika saya berhalangan hadir saat sesi Live Class?",
+          "a": "Jangan khawatir. Setiap sesi akan direkam, dan rekaman kelas dapat diakses kembali hingga kapan aja tanpa ada batasan waktu. Recording dapat diakses dalam waktu maksimal 24 jam setelah sesi berakhir."
+        },
+        {
+          "q": "Berapa lama masa akses materi pelatihan?",
+          "a": "Masa akses materi (video rekaman dan modul) dapat diakses hingga kapan saja tanpa batasan waktu sehingga kamu bisa belajar lagi secara mandiri."
+        }
+      ],
+      "certificate": [
+        {
+          "q": "Apakah saya akan mendapatkan sertifikat?",
+          "a": "Tentu saja, setiap peserta yang telah menyelesaikan pelatihan dan memenuhi syarat kelulusan (seperti mengerjakan post-test atau tugas) akan mendapatkan e-sertifikat resmi dari Kompeten IDN."
+        },
+        {
+          "q": "Apakah sertifikat dari Kompeten IDN bisa digunakan untuk melamar kerja?",
+          "a": "Tentu, sertifikat kami mencantumkan daftar kompetensi yang kamu pelajari, yang dapat memperkuat CV dan portofolio kamu di mata rekruter."
+        },
+        {
+          "q": "Bagaimana memastikan kredibilitas e-sertifikat?",
+          "a": "Di e-sertifikat terdapat qr code yang dapat discan dan berisi data diri peserta pelatihan mulai dari nama peserta, tanggal pelatihan, dan program yang diikuti sehingga tidak dapat dimanipulasi oleh pihak yang tidak bertanggung jawab."
+        }
+      ],
+      "payment": [
+        {
+          "q": "Metode pembayaran apa saja yang tersedia?",
+          "a": "Pembayaran dapat dilakukan melalui QRIS atau transfer bank menggunakan Virtual Account, e-wallet (GoPay, OVO, DANA)."
+        },
+        {
+          "q": "Bagaimana jika pembayaran saya belum terkonfirmasi?",
+          "a": "Jika pembayaran belum terkonfirmasi dalam 1x24 jam, silakan hubungi tim support dengan menyertakan bukti pembayaran."
+        },
+        {
+          "q": "Apa yang harus saya lakukan ketika sudah menyelesaikan pembayaran?",
+          "a": "Setelah menyelesaikan pembayaran, kamu dapat melakukan konfirmasi ke admin (MinKo) atau langsung bergabung ke dalam grup whatsapp."
+        }
+      ],
+      "technical": [
+        {
+          "q": "Perangkat apa yang saya butuhkan untuk mengikuti pelatihan?",
+          "a": "Kami menyarankan penggunaan laptop/pc (Windows atau Mac) atau bisa juga menggunakan tablet untuk memudahkan saat praktik langsung."
+        },
+        {
+          "q": "Saya mengalami kendala saat login ke member area, apa yang harus saya lakukan?",
+          "a": "Silakan gunakan fitur \"Lupa Password\" di halaman login. Jika kendala berlanjut, hubungi admin (MinKo) di nomor +62 895-2851-4480."
+        },
+        {
+          "q": "Bagaimana cara reset password?",
+          "a": "Klik menu \"Lupa Password\" di halaman login, masukkan email terdaftar, lalu ikuti instruksi yang dikirimkan melalui email."
+        },
+        {
+          "q": "Bagaimana jika video pembelajaran tidak dapat diputar?",
+          "a": "Pastikan koneksi internet stabil, browser telah diperbarui, dan coba bersihkan cache browser."
+        }
+      ]
+    }
+  },
+  "cta": {
+    "badge": "Bergabung dengan 1000+ alumni",
+    "title": "Let's Get In Touch.",
+    "subtitle": "Bergabunglah dengan ribuan peserta lainnya yang telah merasakan manfaat dari kelas-kelas kami. Dapatkan akses ke materi berkualitas, mentor berpengalaman, dan komunitas yang mendukung.",
+    "button": "Eksplorasi Kelas",
+    "desc": "Kami hadir untuk memudahkan proses belajar online Anda. Kami siap membantu Anda.",
+    "getInTouch": "Get in Touch",
+    "exploreBootcamp": "Explore Our Bootcamp"
+  },
+  "notification": {
+    "justPurchased": "Baru saja membeli {{type}}: "
+  },
+  "promotion": {
+    "alt": "Promosi Kompeten",
+    "clickForDetail": "Klik untuk detail",
+    "clickToClose": "Klik untuk tutup"
+  },
+  "galery": {
+    "title": "Galeri Kompeten"
+  }
+}

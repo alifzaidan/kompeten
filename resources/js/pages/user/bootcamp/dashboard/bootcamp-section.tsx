@@ -5,6 +5,7 @@ import { Magnetic } from '@/components/ui/magnetic';
 import { Link } from '@inertiajs/react';
 import { Calendar, GalleryVerticalEnd, Percent } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Category = {
     id: string;
@@ -42,6 +43,7 @@ interface BootcampProps {
 }
 
 export default function BootcampSection({ categories, bootcamps, myBootcampIds }: BootcampProps) {
+    const { t, i18n } = useTranslation('user');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
@@ -86,19 +88,19 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
             case 'beginner':
                 return (
                     <Badge className="border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300">
-                        Beginner
+                        {t('course.catalog.beginner')}
                     </Badge>
                 );
             case 'intermediate':
                 return (
                     <Badge className="border-yellow-300 bg-yellow-100 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-                        Intermediate
+                        {t('course.catalog.intermediate')}
                     </Badge>
                 );
             case 'advanced':
                 return (
                     <Badge className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
-                        Advanced
+                        {t('course.catalog.advanced')}
                     </Badge>
                 );
             default:
@@ -116,13 +118,13 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8" id="bootcamp">
-            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">Transformasi Karir Digital Dimulai dari Sini</h2>
+            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">{t('bootcamp.catalog.title')}</h2>
             <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">
-                Kuasai keterampilan digital terkini melalui program pembelajaran intensif bersama mentor berpengalaman.
+                {t('bootcamp.catalog.subtitle')}
             </p>
 
             <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari bootcamp..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input type="search" placeholder={t('bootcamp.catalog.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
 
             <div
@@ -144,7 +146,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                 : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                         } `}
                     >
-                        Semua Kategori
+                        {t('bootcamp.catalog.allCategories')}
                     </button>
                     {categories.map((category) => (
                         <button
@@ -166,8 +168,8 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleBootcamps.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                        <img src="/assets/images/not-found.webp" alt="Bootcamp Belum Tersedia" className="w-48" />
-                        <div className="text-center text-gray-500">Belum ada bootcamp yang tersedia saat ini.</div>
+                        <img src="/assets/images/not-found.webp" alt={t('bootcamp.catalog.emptyAlt', 'Bootcamp Belum Tersedia')} className="w-48" />
+                        <div className="text-center text-gray-500">{t('bootcamp.catalog.empty')}</div>
                     </div>
                 ) : (
                     visibleBootcamps.map((bootcamp) => {
@@ -197,7 +199,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
 
                                                 {/* Bootcamp Badge */}
                                                 <span className="absolute top-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                                                    Bootcamp
+                                                    {t('bootcamp.title')}
                                                 </span>
 
                                                 {/* Discount Badge */}
@@ -205,7 +207,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                                     <div className="absolute top-2 right-2">
                                                         <Badge className="bg-red-500 text-white shadow-lg">
                                                             <Percent size={12} className="mr-1" />
-                                                            Hemat {discount}%
+                                                            {t('bootcamp.detail.savePercent', { percent: discount, defaultValue: `Hemat ${discount}%` })}
                                                         </Badge>
                                                     </div>
                                                 )}
@@ -213,7 +215,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                                 {/* Access Badge */}
                                                 {hasAccess && (
                                                     <div className="absolute top-2 right-2">
-                                                        <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                        <Badge className="bg-green-500 text-white shadow-lg">{t('bootcamp.catalog.owned')}</Badge>
                                                     </div>
                                                 )}
                                             </div>
@@ -223,9 +225,9 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                         <div className="mt-auto w-full p-4 text-left">
                                             <div className="flex items-end justify-between">
                                                 {hasAccess ? (
-                                                    <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                                    <p className="text-primary text-sm font-medium">{t('course.catalog.alreadyHaveAccess')}</p>
                                                 ) : bootcamp.price === 0 ? (
-                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('bootcamp.catalog.free')}</p>
                                                 ) : (
                                                     <div className="">
                                                         {bootcamp.strikethrough_price > 0 && bootcamp.strikethrough_price > bootcamp.price && (
@@ -250,13 +252,13 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                             <div className="mt-2 flex items-center gap-2">
                                                 <Calendar size="18" />
                                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {new Date(bootcamp.start_date).toLocaleDateString('id-ID', {
+                                                    {new Date(bootcamp.start_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID', {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
                                                     })}{' '}
                                                     -{' '}
-                                                    {new Date(bootcamp.end_date).toLocaleDateString('id-ID', {
+                                                    {new Date(bootcamp.end_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'id-ID', {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
@@ -289,7 +291,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                                     </div>
                                                     <div className="flex flex-col">
                                                         <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                            {mentors.length === 1 ? mentors[0].name : `${mentors.length} Mentor`}
+                                                            {mentors.length === 1 ? mentors[0].name : t('bootcamp.detail.mentorMultiple', { count: mentors.length, defaultValue: `${mentors.length} Mentor` })}
                                                         </p>
                                                         <p className="text-primary text-xs">
                                                             {mentors.length === 1
@@ -297,7 +299,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                                                                 : `${mentors
                                                                       .slice(0, 2)
                                                                       .map((mentor) => mentor.name)
-                                                                      .join(', ')}${mentors.length > 2 ? ` +${mentors.length - 2} lainnya` : ''}`}
+                                                                      .join(', ')}${mentors.length > 2 ? t('bootcamp.detail.andOtherMentors', { count: mentors.length - 2, defaultValue: ` +${mentors.length - 2} lainnya` }) : ''}`}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -315,7 +317,7 @@ export default function BootcampSection({ categories, bootcamps, myBootcampIds }
                 <div className="mb-8 flex justify-center">
                     <Magnetic>
                         <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
+                            {t('bootcamp.catalog.loadMore')} <GalleryVerticalEnd />
                         </Button>
                     </Magnetic>
                 </div>

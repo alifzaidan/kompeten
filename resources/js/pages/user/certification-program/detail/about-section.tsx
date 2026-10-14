@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Program {
     description: string;
     benefits: string;
@@ -34,6 +36,7 @@ function parseCurriculumItems(curriculum?: string | null): string[] {
 }
 
 export default function AboutSection({ program }: { program: Program }) {
+    const { t } = useTranslation('user');
     const hasHtmlList = /<(ol|ul)\b/i.test(program.benefits || '');
     const benefitsItems = hasHtmlList ? [] : parseCurriculumItems(program.benefits);
 
@@ -42,16 +45,18 @@ export default function AboutSection({ program }: { program: Program }) {
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <div
                     className="prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300"
-                    dangerouslySetInnerHTML={{ __html: program.description || '<p>Deskripsi tidak tersedia.</p>' }}
+                    dangerouslySetInnerHTML={{ __html: program.description || `<p>${t('certificationProgram.detail.about.descriptionEmpty')}</p>` }}
                 ></div>
             </div>
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Materi yang akan kamu pelajari</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('certificationProgram.detail.about.curriculumHeading')}
+                </h2>
 
                 {hasHtmlList ? (
                     <div
                         className="prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300"
-                        dangerouslySetInnerHTML={{ __html: program.benefits || '<p>Materi belum tersedia.</p>' }}
+                        dangerouslySetInnerHTML={{ __html: program.benefits || `<p>${t('certificationProgram.detail.about.curriculumEmpty')}</p>` }}
                     />
                 ) : benefitsItems.length ? (
                     <ol className="list-decimal space-y-2 pl-5 text-neutral-800 md:columns-2 dark:text-neutral-200">
@@ -62,7 +67,9 @@ export default function AboutSection({ program }: { program: Program }) {
                         ))}
                     </ol>
                 ) : (
-                    <p className="text-center text-neutral-700 dark:text-neutral-300">Materi belum tersedia.</p>
+                    <p className="text-center text-neutral-700 dark:text-neutral-300">
+                        {t('certificationProgram.detail.about.curriculumEmpty')}
+                    </p>
                 )}
             </div>
         </section>

@@ -15,6 +15,7 @@ import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
 import { AlertTriangle, Calendar, CheckCircle2, Clock, CreditCard, ExternalLink, FileText, Home, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 interface CourseItem {
@@ -120,6 +121,10 @@ interface Props {
 }
 
 export default function TransactionShow({ invoice }: Props) {
+    const { t, i18n } = useTranslation('profile');
+    const numLocale = i18n.language === 'en' ? 'en-US' : 'id-ID';
+    const dateLocaleStr = i18n.language === 'en' ? 'en-US' : 'id-ID';
+
     const [cancelLoading, setCancelLoading] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -171,7 +176,7 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: course.thumbnail,
                 profileRoute: 'profile.course.detail',
                 publicRoute: 'course.detail',
-                badge: 'Kelas Online',
+                badge: t('transactions.typeCourse', 'Kelas Online'),
             };
         } else if (bootcampItems && bootcampItems.length > 0) {
             const bootcamp = bootcampItems[0].bootcamp;
@@ -183,7 +188,7 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: bootcamp.thumbnail,
                 profileRoute: 'profile.bootcamp.detail',
                 publicRoute: 'bootcamp.detail',
-                badge: 'Bootcamp',
+                badge: t('transactions.typeBootcamp', 'Bootcamp'),
             };
         } else if (webinarItems && webinarItems.length > 0) {
             const webinar = webinarItems[0].webinar;
@@ -195,7 +200,7 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: webinar.thumbnail,
                 profileRoute: 'profile.webinar.detail',
                 publicRoute: 'webinar.detail',
-                badge: 'Webinar',
+                badge: t('transactions.typeWebinar', 'Webinar'),
             };
         } else if (certItems && certItems.length > 0) {
             const certificationProgram = certItems[0].certificationProgram;
@@ -207,19 +212,19 @@ export default function TransactionShow({ invoice }: Props) {
                 thumbnail: certificationProgram.thumbnail,
                 profileRoute: 'profile.certification-program.detail',
                 publicRoute: 'certification-programs.detail',
-                badge: 'Sertifikasi Program',
+                badge: t('transactions.typeCert', 'Sertifikasi Program'),
             };
         } else if (bundleItems && bundleItems.length > 0) {
             const bundleItem = bundleItems[0];
             return {
                 type: 'bundle',
                 routeParam: 'bundle',
-                name: bundleItem.bundle?.title || 'Paket Bundling',
+                name: bundleItem.bundle?.title || t('transactions.typeBundle', 'Paket Bundling'),
                 slug: bundleItem.bundle?.slug || '',
                 thumbnail: bundleItem.bundle?.thumbnail || '',
                 profileRoute: 'profile.index',
                 publicRoute: 'bundle.detail',
-                badge: 'Paket Bundling',
+                badge: t('transactions.typeBundle', 'Paket Bundling'),
             };
         }
         return null;
@@ -234,16 +239,16 @@ export default function TransactionShow({ invoice }: Props) {
         try {
             const res = await axios.post(route('invoice.cancel', { id: invoice.id }));
             if (res.data?.success) {
-                toast.success('Pesanan berhasil dibatalkan dan invoice telah dinonaktifkan.');
+                toast.success(t('transaction.cancelSuccess', 'Pesanan berhasil dibatalkan dan invoice telah dinonaktifkan.'));
                 window.location.reload();
             } else {
-                toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
+                toast.error(res.data?.message || t('transaction.cancelFailed', 'Gagal membatalkan pesanan.'));
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
-                toast.error(err.response?.data?.message || 'Terjadi kesalahan saat membatalkan pesanan.');
+                toast.error(err.response?.data?.message || t('transaction.cancelError', 'Terjadi kesalahan saat membatalkan pesanan.'));
             } else {
-                toast.error('Terjadi kesalahan saat membatalkan pesanan.');
+                toast.error(t('transaction.cancelError', 'Terjadi kesalahan saat membatalkan pesanan.'));
             }
         } finally {
             setCancelLoading(false);
@@ -255,52 +260,52 @@ export default function TransactionShow({ invoice }: Props) {
             if (isFullyPaid) {
                 return {
                     icon: <CheckCircle2 size={48} className="text-green-600" />,
-                    title: 'Cicilan Lunas!',
-                    subtitle: 'Seluruh termin cicilan telah berhasil diselesaikan',
+                    title: t('transaction.statusInstallmentPaidTitle', 'Cicilan Lunas!'),
+                    subtitle: t('transaction.statusInstallmentPaidSubtitle', 'Seluruh termin cicilan telah berhasil diselesaikan'),
                     gradient: 'from-green-500 to-emerald-600',
                     statusBadge: (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
                             <CheckCircle2 size={14} />
-                            Cicilan Lunas
+                            {t('transaction.installmentFullyPaid', 'Cicilan Lunas')}
                         </span>
                     ),
                 };
             } else if (isSuspended) {
                 return {
                     icon: <AlertTriangle size={48} className="text-red-600" />,
-                    title: 'Akses Dibekukan',
-                    subtitle: 'Termin cicilan telah melewati batas jatuh tempo. Bayar untuk membuka kembali akses.',
+                    title: t('transaction.statusSuspendedTitle', 'Akses Dibekukan'),
+                    subtitle: t('transaction.statusSuspendedSubtitle', 'Termin cicilan telah melewati batas jatuh tempo. Bayar untuk membuka kembali akses.'),
                     gradient: 'from-red-500 to-rose-600',
                     statusBadge: (
                         <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
                             <AlertTriangle size={14} />
-                            Akses Dibekukan
+                            {t('transaction.installmentSuspended', 'Akses Dibekukan')}
                         </span>
                     ),
                 };
             } else if (isTerm1Paid) {
                 return {
                     icon: <Clock size={48} className="text-indigo-600" />,
-                    title: `Cicilan Aktif (${paidTerms.length}/${terms.length || 2} Termin)`,
-                    subtitle: 'Pembayaran DP telah berhasil. Akses program Anda aktif.',
+                    title: t('transaction.statusActiveInstallmentTitle', 'Cicilan Aktif ({{paid}}/{{total}} Termin)', { paid: paidTerms.length, total: terms.length || 2 }),
+                    subtitle: t('transaction.statusActiveInstallmentSubtitle', 'Pembayaran DP telah berhasil. Akses program Anda aktif.'),
                     gradient: 'from-indigo-600 to-blue-600',
                     statusBadge: (
                         <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
                             <Clock size={14} />
-                            Cicilan Aktif ({paidTerms.length}/{terms.length || 2})
+                            {t('transaction.badgeActiveInstallment', 'Cicilan Aktif ({{paid}}/{{total}})', { paid: paidTerms.length, total: terms.length || 2 })}
                         </span>
                     ),
                 };
             } else {
                 return {
                     icon: <Clock size={48} className="text-yellow-600" />,
-                    title: 'Menunggu Pembayaran DP (Termin 1)',
-                    subtitle: 'Selesaikan pembayaran DP untuk mengaktifkan akses program dan jadwal cicilan',
+                    title: t('transaction.statusWaitingDPTitle', 'Menunggu Pembayaran DP (Termin 1)'),
+                    subtitle: t('transaction.statusWaitingDPSubtitle', 'Selesaikan pembayaran DP untuk mengaktifkan akses program dan jadwal cicilan'),
                     gradient: 'from-yellow-500 to-orange-600',
                     statusBadge: (
                         <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
                             <Clock size={14} />
-                            Menunggu DP
+                            {t('transaction.badgeWaitingDP', 'Menunggu DP')}
                         </span>
                     ),
                 };
@@ -310,52 +315,52 @@ export default function TransactionShow({ invoice }: Props) {
         if (invoice.status === 'paid') {
             return {
                 icon: <CheckCircle2 size={48} className="text-green-600" />,
-                title: 'Pembayaran Berhasil!',
-                subtitle: 'Transaksi Anda telah berhasil diproses',
+                title: t('transaction.statusPaidTitle', 'Pembayaran Berhasil!'),
+                subtitle: t('transaction.statusPaidSubtitle', 'Transaksi Anda telah berhasil diproses'),
                 gradient: 'from-green-500 to-emerald-600',
                 statusBadge: (
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
                         <CheckCircle2 size={14} />
-                        Berhasil
+                        {t('transaction.badgeSuccess', 'Berhasil')}
                     </span>
                 ),
             };
         } else if (invoice.status === 'pending' && !isExpired) {
             return {
                 icon: <Clock size={48} className="text-yellow-600" />,
-                title: 'Menunggu Pembayaran',
-                subtitle: `Selesaikan pembayaran dalam ${hoursLeft} jam ${minutesLeft} menit`,
+                title: t('transaction.statusPendingTitle', 'Menunggu Pembayaran'),
+                subtitle: t('transaction.statusPendingSubtitle', 'Selesaikan pembayaran dalam {{hours}} jam {{minutes}} menit', { hours: hoursLeft, minutes: minutesLeft }),
                 gradient: 'from-yellow-500 to-orange-600',
                 statusBadge: (
                     <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
                         <Clock size={14} />
-                        Pending
+                        {t('transaction.badgePending', 'Pending')}
                     </span>
                 ),
             };
         } else if (invoice.status === 'pending' && isExpired) {
             return {
                 icon: <XCircle size={48} className="text-red-600" />,
-                title: 'Pembayaran Kedaluwarsa',
-                subtitle: 'Waktu pembayaran telah habis',
+                title: t('transaction.statusExpiredTitle', 'Pembayaran Kedaluwarsa'),
+                subtitle: t('transaction.statusExpiredSubtitle', 'Waktu pembayaran telah habis'),
                 gradient: 'from-red-500 to-rose-600',
                 statusBadge: (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
                         <XCircle size={14} />
-                        Kedaluwarsa
+                        {t('transaction.badgeExpired', 'Kedaluwarsa')}
                     </span>
                 ),
             };
         } else {
             return {
                 icon: <XCircle size={48} className="text-red-600" />,
-                title: 'Pembayaran Dibatalkan',
-                subtitle: 'Transaksi telah dibatalkan',
+                title: t('transaction.statusCancelledTitle', 'Pembayaran Dibatalkan'),
+                subtitle: t('transaction.statusCancelledSubtitle', 'Transaksi telah dibatalkan'),
                 gradient: 'from-red-500 to-rose-600',
                 statusBadge: (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
                         <XCircle size={14} />
-                        Dibatalkan
+                        {t('transaction.badgeCancelled', 'Dibatalkan')}
                     </span>
                 ),
             };
@@ -376,13 +381,13 @@ export default function TransactionShow({ invoice }: Props) {
                         <BreadcrumbList>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/">Beranda</Link>
+                                    <Link href="/">{t('transaction.breadcrumbHome', 'Beranda')}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/profile/transactions">Transaksi Saya</Link>
+                                    <Link href="/profile/transactions">{t('transaction.breadcrumbTransactions', 'Transaksi Saya')}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
@@ -428,39 +433,39 @@ export default function TransactionShow({ invoice }: Props) {
                                             {invoice.discount_amount > 0 && (
                                                 <>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-600 dark:text-gray-400">Harga Asli</span>
+                                                        <span className="text-gray-600 dark:text-gray-400">{t('transaction.originalPrice', 'Harga Asli')}</span>
                                                         <span className="text-gray-500 line-through">
-                                                            Rp {(invoice.discount_amount + invoice.nett_amount).toLocaleString('id-ID')}
+                                                            Rp {(invoice.discount_amount + invoice.nett_amount).toLocaleString(numLocale)}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-gray-600 dark:text-gray-400">Diskon</span>
+                                                        <span className="text-gray-600 dark:text-gray-400">{t('transaction.discount', 'Diskon')}</span>
                                                         <span className="font-medium text-green-600">
-                                                            - Rp {invoice.discount_amount.toLocaleString('id-ID')}
+                                                            - Rp {invoice.discount_amount.toLocaleString(numLocale)}
                                                         </span>
                                                     </div>
                                                 </>
                                             )}
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('transaction.subtotal', 'Subtotal')}</span>
                                                 <span className="font-medium text-gray-900 dark:text-white">
-                                                    Rp {invoice.nett_amount.toLocaleString('id-ID')}
+                                                    Rp {invoice.nett_amount.toLocaleString(numLocale)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-gray-600 dark:text-gray-400">Biaya Transaksi</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('transaction.transactionFee', 'Biaya Transaksi')}</span>
                                                 <span className="font-medium text-gray-900 dark:text-white">
-                                                    Rp {(invoice.amount - invoice.nett_amount).toLocaleString('id-ID')}
+                                                    Rp {(invoice.amount - invoice.nett_amount).toLocaleString(numLocale)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between border-t pt-2 dark:border-gray-700">
-                                                <span className="font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                                <span className="font-semibold text-gray-900 dark:text-white">{t('transaction.totalAmount', 'Total Pembayaran')}</span>
                                                 <span className="text-lg font-bold text-gray-900 dark:text-white">
-                                                    Rp {invoice.amount.toLocaleString('id-ID')}
+                                                    Rp {invoice.amount.toLocaleString(numLocale)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-gray-600 dark:text-gray-400">Status</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('transaction.status', 'Status')}</span>
                                                 {statusConfig.statusBadge}
                                             </div>
                                         </div>
@@ -473,26 +478,26 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="mb-4 flex items-center justify-between">
                                             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                                 <Calendar className="h-5 w-5 text-indigo-600" />
-                                                Jadwal & Status Cicilan
+                                                {t('transaction.installmentSchedule', 'Jadwal & Status Cicilan')}
                                             </h3>
                                             <Link
                                                 href={route('profile.installments')}
                                                 className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                                             >
-                                                Halaman Cicilan &rarr;
+                                                {t('transaction.installmentPageLink', 'Halaman Cicilan →')}
                                             </Link>
                                         </div>
                                         <div className="space-y-3">
                                             {terms.map((term) => {
                                                 const isPaid = term.status === 'paid';
                                                 const isOverdue = term.status === 'overdue';
-                                                const dueDateFormatted = new Date(term.due_date).toLocaleDateString('id-ID', {
+                                                const dueDateFormatted = new Date(term.due_date).toLocaleDateString(dateLocaleStr, {
                                                     day: 'numeric',
                                                     month: 'short',
                                                     year: 'numeric',
                                                 });
                                                 const paidDateFormatted = term.paid_at
-                                                    ? new Date(term.paid_at).toLocaleDateString('id-ID', {
+                                                    ? new Date(term.paid_at).toLocaleDateString(dateLocaleStr, {
                                                           day: 'numeric',
                                                           month: 'short',
                                                           year: 'numeric',
@@ -513,45 +518,47 @@ export default function TransactionShow({ invoice }: Props) {
                                                         <div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="font-semibold text-gray-900 dark:text-white">
-                                                                    Termin {term.term_number} {term.term_number === 1 ? '(DP)' : ''}
+                                                                    {term.term_number === 1
+                                                                        ? t('transaction.termDP', 'Termin ke-{{number}} (DP)', { number: term.term_number })
+                                                                        : t('transaction.termNumber', 'Termin ke-{{number}}', { number: term.term_number })}
                                                                 </span>
                                                                 {isPaid ? (
                                                                     <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">
                                                                         <CheckCircle2 size={12} />
-                                                                        Lunas
+                                                                        {t('transaction.termPaid', 'Lunas')}
                                                                     </span>
                                                                 ) : isOverdue ? (
                                                                     <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
                                                                         <AlertTriangle size={12} />
-                                                                        Jatuh Tempo
+                                                                        {t('transaction.termOverdueTag', 'Jatuh Tempo')}
                                                                     </span>
                                                                 ) : (
                                                                     <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
                                                                         <Clock size={12} />
-                                                                        Belum Lunas
+                                                                        {t('transaction.termUnpaid', 'Belum Lunas')}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                                 {isPaid && paidDateFormatted
-                                                                    ? `Dibayar pada ${paidDateFormatted}`
-                                                                    : `Jatuh tempo: ${dueDateFormatted}`}
+                                                                    ? t('transaction.paidAtPrefix', 'Dibayar pada {{date}}', { date: paidDateFormatted })
+                                                                    : t('transaction.dueAtPrefix', 'Jatuh tempo: {{date}}', { date: dueDateFormatted })}
                                                             </p>
                                                         </div>
 
                                                         <div className="flex items-center gap-3">
                                                             <span className="font-bold text-gray-900 dark:text-white">
-                                                                Rp {Number(term.amount).toLocaleString('id-ID')}
+                                                                Rp {Number(term.amount).toLocaleString(numLocale)}
                                                             </span>
                                                             {!isPaid && (
                                                                 <Button asChild size="sm" variant={isOverdue ? 'destructive' : 'default'}>
                                                                     {term.invoice?.invoice_url ? (
                                                                         <a href={term.invoice.invoice_url} target="_blank" rel="noopener noreferrer">
-                                                                            Bayar
+                                                                            {t('transaction.payBtn', 'Bayar')}
                                                                         </a>
                                                                     ) : (
                                                                         <Link href={route('profile.installments')}>
-                                                                            Bayar
+                                                                            {t('transaction.payBtn', 'Bayar')}
                                                                         </Link>
                                                                     )}
                                                                 </Button>
@@ -566,19 +573,19 @@ export default function TransactionShow({ invoice }: Props) {
 
                                 {/* Payment Details */}
                                 <div className="mb-6 rounded-lg border bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-900/50">
-                                    <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">Informasi Pembayaran</h3>
+                                    <h3 className="mb-4 font-semibold text-gray-900 dark:text-white">{t('transaction.paymentInfo', 'Informasi Pembayaran')}</h3>
                                     <div className="space-y-2 text-sm">
                                         {invoice.payment_method && (
                                             <div className="flex items-center justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Metode Pembayaran</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('transaction.paymentMethod', 'Metode Pembayaran')}</span>
                                                 <span className="font-medium text-gray-900 dark:text-white">{invoice.payment_method}</span>
                                             </div>
                                         )}
                                         {invoice.paid_at && (
                                             <div className="flex items-center justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Dibayar pada</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('transaction.paidOn', 'Dibayar pada')}</span>
                                                 <span className="font-medium text-gray-900 dark:text-white">
-                                                    {new Date(invoice.paid_at).toLocaleString('id-ID', {
+                                                    {new Date(invoice.paid_at).toLocaleString(dateLocaleStr, {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
@@ -590,9 +597,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         )}
                                         {invoice.expires_at && invoice.status === 'pending' && (
                                             <div className="flex items-center justify-between">
-                                                <span className="text-gray-600 dark:text-gray-400">Kedaluwarsa</span>
+                                                <span className="text-gray-600 dark:text-gray-400">{t('transaction.expiresOn', 'Kedaluwarsa')}</span>
                                                 <span className="font-medium text-gray-900 dark:text-white">
-                                                    {new Date(invoice.expires_at).toLocaleString('id-ID', {
+                                                    {new Date(invoice.expires_at).toLocaleString(dateLocaleStr, {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
@@ -611,9 +618,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex items-start gap-3">
                                             <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600" />
                                             <div>
-                                                <p className="font-medium text-red-800 dark:text-red-200">Akses Belajar Sedang Dibekukan</p>
+                                                <p className="font-medium text-red-800 dark:text-red-200">{t('transaction.alertSuspendedTitle', 'Akses Belajar Sedang Dibekukan')}</p>
                                                 <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                                                    Termin cicilan Anda telah melewati tanggal jatuh tempo. Silakan segera lunasi termin yang tertagih untuk membuka dan memulihkan kembali akses belajar Anda.
+                                                    {t('transaction.alertSuspendedDesc', 'Termin cicilan Anda telah melewati tanggal jatuh tempo. Silakan segera lunasi termin yang tertagih untuk membuka dan memulihkan kembali akses belajar Anda.')}
                                                 </p>
                                             </div>
                                         </div>
@@ -625,9 +632,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex items-start gap-3">
                                             <Clock className="mt-0.5 h-5 w-5 text-indigo-600" />
                                             <div>
-                                                <p className="font-medium text-indigo-800 dark:text-indigo-200">Skema Cicilan Aktif</p>
+                                                <p className="font-medium text-indigo-800 dark:text-indigo-200">{t('transaction.alertActiveInstallmentTitle', 'Skema Cicilan Aktif')}</p>
                                                 <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
-                                                    Akses program Anda telah aktif. Pastikan untuk melunasi termin berikutnya sebelum tanggal jatuh tempo agar proses belajar tidak terganggu.
+                                                    {t('transaction.alertActiveInstallmentDesc', 'Akses program Anda telah aktif. Pastikan untuk melunasi termin berikutnya sebelum tanggal jatuh tempo agar proses belajar tidak terganggu.')}
                                                 </p>
                                             </div>
                                         </div>
@@ -639,9 +646,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex items-start gap-3">
                                             <Clock className="mt-0.5 h-5 w-5 text-yellow-600" />
                                             <div>
-                                                <p className="font-medium text-yellow-800 dark:text-yellow-200">Segera Selesaikan Pembayaran DP (Termin 1)!</p>
+                                                <p className="font-medium text-yellow-800 dark:text-yellow-200">{t('transaction.alertWaitingDPTitle', 'Segera Selesaikan Pembayaran DP (Termin 1)!')}</p>
                                                 <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                                                    Setelah pembayaran Termin 1 berhasil, akses materi dan jadwal pembayaran termin cicilan berikutnya akan langsung aktif secara otomatis.
+                                                    {t('transaction.alertWaitingDPDesc', 'Setelah pembayaran Termin 1 berhasil, akses materi dan jadwal pembayaran termin cicilan berikutnya akan langsung aktif secara otomatis.')}
                                                 </p>
                                             </div>
                                         </div>
@@ -653,10 +660,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex items-start gap-3">
                                             <Clock className="mt-0.5 h-5 w-5 text-yellow-600" />
                                             <div>
-                                                <p className="font-medium text-yellow-800 dark:text-yellow-200">Segera selesaikan pembayaran!</p>
+                                                <p className="font-medium text-yellow-800 dark:text-yellow-200">{t('transaction.alertPendingTitle', 'Segera selesaikan pembayaran!')}</p>
                                                 <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                                                    Pembayaran akan kedaluwarsa dalam {hoursLeft} jam {minutesLeft} menit. Setelah kedaluwarsa,
-                                                    invoice tidak dapat digunakan.
+                                                    {t('transaction.alertPendingDesc', 'Pembayaran akan kedaluwarsa dalam {{hours}} jam {{minutes}} menit. Setelah kedaluwarsa, invoice tidak dapat digunakan.', { hours: hoursLeft, minutes: minutesLeft })}
                                                 </p>
                                             </div>
                                         </div>
@@ -668,10 +674,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex items-start gap-3">
                                             <XCircle className="mt-0.5 h-5 w-5 text-red-600" />
                                             <div>
-                                                <p className="font-medium text-red-800 dark:text-red-200">Invoice Kedaluwarsa</p>
+                                                <p className="font-medium text-red-800 dark:text-red-200">{t('transaction.alertExpiredTitle', 'Invoice Kedaluwarsa')}</p>
                                                 <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                                                    Invoice ini sudah kedaluwarsa dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih
-                                                    ingin membeli.
+                                                    {t('transaction.alertExpiredDesc', 'Invoice ini sudah kedaluwarsa dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih ingin membeli.')}
                                                 </p>
                                             </div>
                                         </div>
@@ -683,10 +688,9 @@ export default function TransactionShow({ invoice }: Props) {
                                         <div className="flex items-start gap-3">
                                             <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600" />
                                             <div>
-                                                <p className="font-medium text-red-800 dark:text-red-200">Pembayaran Dibatalkan</p>
+                                                <p className="font-medium text-red-800 dark:text-red-200">{t('transaction.alertFailedTitle', 'Pembayaran Dibatalkan')}</p>
                                                 <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                                                    Invoice ini telah dibatalkan dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih
-                                                    ingin membeli.
+                                                    {t('transaction.alertFailedDesc', 'Invoice ini telah dibatalkan dan tidak dapat dibayar lagi. Silakan buat pesanan baru jika masih ingin membeli.')}
                                                 </p>
                                             </div>
                                         </div>
@@ -712,7 +716,7 @@ export default function TransactionShow({ invoice }: Props) {
                                                 }
                                             >
                                                 <ExternalLink className="mr-2 h-5 w-5" />
-                                                Akses {productInfo.badge}
+                                                {t('transaction.accessProduct', 'Akses {{product}}', { product: productInfo.badge })}
                                             </Link>
                                         </Button>
                                     )}
@@ -722,7 +726,7 @@ export default function TransactionShow({ invoice }: Props) {
                                         <Button asChild variant="outline" className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30" size="lg">
                                             <Link href={route('profile.installments')}>
                                                 <CreditCard className="mr-2 h-5 w-5" />
-                                                Kelola & Jadwal Cicilan
+                                                {t('transaction.manageInstallments', 'Kelola & Jadwal Cicilan')}
                                             </Link>
                                         </Button>
                                     )}
@@ -732,7 +736,7 @@ export default function TransactionShow({ invoice }: Props) {
                                         <Button asChild variant="outline" className="w-full" size="lg">
                                             <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
                                                 <FileText className="mr-2 h-5 w-5" />
-                                                Unduh Invoice (PDF)
+                                                {t('transaction.downloadPdf', 'Unduh Invoice (PDF)')}
                                             </a>
                                         </Button>
                                     )}
@@ -742,28 +746,27 @@ export default function TransactionShow({ invoice }: Props) {
                                         <>
                                             <Button asChild className="w-full" size="lg">
                                                 <a href={invoice.invoice_url} target="_blank" rel="noopener noreferrer">
-                                                    {isInstallment ? 'Bayar Termin 1 (DP)' : 'Lanjutkan Pembayaran'}
+                                                    {isInstallment ? t('transaction.payDP', 'Bayar Termin 1 (DP)') : t('transaction.continuePayment', 'Lanjutkan Pembayaran')}
                                                 </a>
                                             </Button>
 
                                             <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                                 <AlertDialogTrigger asChild>
                                                     <Button variant="outline" size="lg" className="w-full" disabled={cancelLoading}>
-                                                        {cancelLoading ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                                        {cancelLoading ? t('transaction.cancelling', 'Membatalkan...') : t('transaction.cancelOrder', 'Batalkan Pesanan')}
                                                     </Button>
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>
                                                     <AlertDialogHeader>
-                                                        <AlertDialogTitle>Batalkan Pesanan?</AlertDialogTitle>
+                                                        <AlertDialogTitle>{t('transaction.cancelDialogTitle', 'Batalkan Pesanan?')}</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            Apakah Anda yakin ingin membatalkan pesanan ini? Invoice akan dinonaktifkan dan tidak
-                                                            dapat dibayar lagi. Tindakan ini tidak dapat dibatalkan.
+                                                            {t('transaction.cancelDialogDesc', 'Apakah Anda yakin ingin membatalkan pesanan ini? Invoice akan dinonaktifkan dan tidak dapat dibayar lagi. Tindakan ini tidak dapat dibatalkan.')}
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel>Tidak, Pertahankan</AlertDialogCancel>
+                                                        <AlertDialogCancel>{t('transaction.cancelDialogKeep', 'Tidak, Pertahankan')}</AlertDialogCancel>
                                                         <AlertDialogAction onClick={handleCancelConfirm} className="bg-red-600 hover:bg-red-700">
-                                                            Ya, Batalkan Pesanan
+                                                            {t('transaction.cancelDialogConfirm', 'Ya, Batalkan Pesanan')}
                                                         </AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
@@ -776,7 +779,7 @@ export default function TransactionShow({ invoice }: Props) {
                                             <Button asChild className="w-full" size="lg">
                                                 <Link href="/">
                                                     <Home className="mr-2 h-5 w-5" />
-                                                    Kembali ke Beranda
+                                                    {t('transaction.backHome', 'Kembali ke Beranda')}
                                                 </Link>
                                             </Button>
 
@@ -792,7 +795,7 @@ export default function TransactionShow({ invoice }: Props) {
                                                         }
                                                     >
                                                         <ExternalLink className="mr-2 h-5 w-5" />
-                                                        Lihat Detail Produk
+                                                        {t('transaction.viewProductDetail', 'Lihat Detail Produk')}
                                                     </Link>
                                                 </Button>
                                             )}
@@ -800,7 +803,7 @@ export default function TransactionShow({ invoice }: Props) {
                                     )}
 
                                     <Button asChild variant="ghost" className="w-full" size="lg">
-                                        <Link href="/profile/transactions">Lihat Semua Transaksi</Link>
+                                        <Link href="/profile/transactions">{t('transaction.viewAllTransactions', 'Lihat Semua Transaksi')}</Link>
                                     </Button>
                                 </div>
                             </div>
@@ -808,14 +811,14 @@ export default function TransactionShow({ invoice }: Props) {
                             {/* Footer */}
                             <div className="border-t bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-900/50">
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Butuh bantuan?{' '}
+                                    {t('transaction.needHelp', 'Butuh bantuan?')}{' '}
                                     <a
                                         href="https://wa.me/+6289528514480"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="font-medium text-orange-600 hover:underline"
                                     >
-                                        Hubungi Customer Service
+                                        {t('transaction.contactSupport', 'Hubungi Customer Service')}
                                     </a>
                                 </p>
                             </div>

@@ -5,9 +5,10 @@ import { Magnetic } from '@/components/ui/magnetic';
 import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { Calendar, GalleryVerticalEnd, Package, Percent } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface BundleItem {
     id: string;
@@ -40,6 +41,8 @@ interface BundlingSectionProps {
 }
 
 export default function BundlingSection({ bundles }: BundlingSectionProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
 
@@ -65,15 +68,17 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-12" id="bundles">
-            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">Pilih Paket Bundling Terbaik Untukmu</h2>
+            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">
+                {t('bundling.dashboard.catalog.title')}
+            </h2>
             <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">
-                Hemat lebih banyak dengan membeli paket bundling program pembelajaran.
+                {t('bundling.dashboard.catalog.subtitle')}
             </p>
 
             <div className="mb-6">
                 <Input
                     type="search"
-                    placeholder="Cari paket bundling..."
+                    placeholder={t('bundling.dashboard.catalog.searchPlaceholder')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="mx-auto max-w-md"
@@ -85,7 +90,7 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
                         <img src="/assets/images/not-found.webp" alt="Paket Bundling Belum Tersedia" className="w-48" />
                         <div className="text-center text-gray-500">
-                            {search ? 'Tidak ada paket bundling yang sesuai dengan pencarian.' : 'Belum ada paket bundling yang tersedia saat ini.'}
+                            {search ? t('bundling.dashboard.catalog.emptySearch') : t('bundling.dashboard.catalog.emptyDefault')}
                         </div>
                     </div>
                 ) : (
@@ -114,7 +119,7 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                             <div className="absolute top-3 right-3">
                                                 <Badge className="bg-red-500 text-white shadow-lg">
                                                     <Percent size={12} className="mr-1" />
-                                                    Hemat {discount}%
+                                                    {t('bundling.dashboard.catalog.savePercent', { percent: discount })}
                                                 </Badge>
                                             </div>
                                         )}
@@ -126,11 +131,11 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                                 className="bg-white/90 text-gray-900 backdrop-blur-sm dark:bg-gray-900/90 dark:text-white"
                                             >
                                                 <Package size={12} className="mr-1" />
-                                                {bundle.bundle_items_count} Program
+                                                {t('bundling.dashboard.catalog.programsCount', { count: bundle.bundle_items_count })}
                                             </Badge>
                                             {bundle.batch && (
                                                 <Badge className="border-orange-300 bg-orange-100 text-orange-700 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
-                                                    Batch {bundle.batch}
+                                                    {t('bundling.dashboard.catalog.batch', { batch: bundle.batch })}
                                                 </Badge>
                                             )}
                                         </div>
@@ -140,7 +145,7 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                     <div className="flex flex-1 flex-col p-4">
                                         {bundle.batch && (
                                             <span className="mb-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
-                                                Batch {bundle.batch}
+                                                {t('bundling.dashboard.catalog.batch', { batch: bundle.batch })}
                                             </span>
                                         )}
                                         <h3 className="mb-2 line-clamp-2 text-lg font-semibold text-gray-900 dark:text-white">{bundle.title}</h3>
@@ -152,7 +157,7 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                         {/* Price */}
                                         <div className="mt-auto">
                                             {bundle.price === 0 ? (
-                                                <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('bundling.dashboard.catalog.free')}</p>
                                             ) : (
                                                 <div className="mb-3">
                                                     {bundle.strikethrough_price > 0 && (
@@ -170,10 +175,9 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                                                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                                         <Calendar size={14} className="text-red-500" />
                                                         <span>
-                                                            Daftar sebelum:{' '}
-                                                            <span className="font-medium text-gray-900 dark:text-white">
-                                                                {format(new Date(bundle.registration_deadline!), 'dd MMM yyyy', { locale: id })}
-                                                            </span>
+                                                            {t('bundling.dashboard.catalog.registerBefore', {
+                                                                date: format(new Date(bundle.registration_deadline!), 'dd MMM yyyy', { locale: dateLocale }),
+                                                            })}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -191,7 +195,7 @@ export default function BundlingSection({ bundles }: BundlingSectionProps) {
                 <div className="flex justify-center">
                     <Magnetic>
                         <Button type="button" className="mt-4 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
+                            {t('bundling.dashboard.catalog.loadMore')} <GalleryVerticalEnd />
                         </Button>
                     </Magnetic>
                 </div>

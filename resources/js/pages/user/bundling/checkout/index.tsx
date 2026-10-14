@@ -1,3 +1,4 @@
+import { parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +16,7 @@ import axios from 'axios';
 import { BadgeCheck, Check, Hourglass, LoaderCircle, Package, RefreshCw, User, X, ShoppingCart, RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import InstallmentOptions, { ActiveInstallmentData, InstallmentTermOption } from '@/components/installment-options';
 
 interface Product {
@@ -122,11 +124,26 @@ export default function CheckoutBundle({
     installmentTerms = [],
     activeInstallment: initialActiveInstallment = null,
 }: CheckoutBundleProps) {
+    const { t, i18n } = useTranslation('user');
+    const numLocale = i18n.language === 'en' ? 'en-US' : 'id-ID';
     const { auth } = usePage<SharedData>().props;
     const isLoggedIn = !!auth.user;
     const isProfileComplete = isLoggedIn && auth.user?.phone_number && auth.user?.instance && auth.user?.city;
 
     const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment);
+    const isAnyTermOverdue = !initialActiveInstallment && installmentTerms.some((t: any) => {
+        if (!t.due_date) return false;
+        try {
+            const d = typeof t.due_date === 'string' ? parseISO(t.due_date) : new Date(t.due_date);
+            if (isNaN(d.getTime())) return false;
+            const endOfDay = new Date(d);
+            endOfDay.setHours(23, 59, 59, 999);
+            return new Date() > endOfDay;
+        } catch {
+            return false;
+        }
+    });
+
     const [paymentTab, setPaymentTab] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -209,19 +226,19 @@ export default function CheckoutBundle({
                 setPromoError('');
             } else {
                 setDiscountData(null);
-                setPromoError(response.data.message || 'Kode promo tidak valid');
+                setPromoError(response.data.message || t('bundling.checkout.errors.invalidPromo'));
             }
         } catch (error: unknown) {
             setDiscountData(null);
             if (axios.isAxiosError(error)) {
-                setPromoError(error.response?.data?.message || 'Terjadi kesalahan saat memvalidasi kode promo');
+                setPromoError(error.response?.data?.message || t('bundling.checkout.errors.promoValidateError'));
             } else {
-                setPromoError('Terjadi kesalahan saat memvalidasi kode promo');
+                setPromoError(t('bundling.checkout.errors.promoValidateError'));
             }
         } finally {
             setPromoLoading(false);
         }
-    }, [bundle.id, bundle.price, emailExists, guestFormData.email, isLoggedIn, promoCode]);
+    }, [bundle.id, bundle.price, emailExists, guestFormData.email, isLoggedIn, promoCode, t]);
 
     const validateReferralCode = useCallback(async () => {
         if (!promoCode.trim()) return;
@@ -241,19 +258,19 @@ export default function CheckoutBundle({
                 setReferralError('');
             } else {
                 setReferralData(null);
-                setReferralError(data.message || 'Kode referral tidak valid');
+                setReferralError(data.message || t('bundling.checkout.errors.invalidReferral'));
             }
         } catch (error: unknown) {
             setReferralData(null);
             if (axios.isAxiosError(error)) {
-                setReferralError(error.response?.data?.message || 'Terjadi kesalahan saat memvalidasi kode referral');
+                setReferralError(error.response?.data?.message || t('bundling.checkout.errors.referralValidateError'));
             } else {
-                setReferralError('Terjadi kesalahan saat memvalidasi kode referral');
+                setReferralError(t('bundling.checkout.errors.referralValidateError'));
             }
         } finally {
             setReferralLoading(false);
         }
-    }, [promoCode, isLoggedIn, guestFormData.email]);
+    }, [promoCode, isLoggedIn, guestFormData.email, t]);
 
     useEffect(() => {
         if (!promoCode.trim()) {
@@ -350,34 +367,34 @@ export default function CheckoutBundle({
         const diff = expiry.getTime() - now.getTime();
 
         if (diff <= 0) {
-            return { time: 'Sudah kadaluarsa', status: 'expired' };
+            return { time: t('bundling.checkout.expiryExpired'), status: 'expired' };
         }
 
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
         if (hours < 1) {
-            return { time: `${minutes} menit lagi`, status: 'urgent' };
+            return { time: t('bundling.checkout.expiryMinutes', { minutes }), status: 'urgent' };
         }
 
-        return { time: `${hours} jam ${minutes} menit lagi`, status: hours < 3 ? 'urgent' : 'normal' };
+        return { time: t('bundling.checkout.expiryHoursMinutes', { hours, minutes }), status: hours < 3 ? 'urgent' : 'normal' };
     };
 
     const ensureAuthenticated = async (): Promise<boolean> => {
         if (isLoggedIn) return true;
 
         if (!guestFormData.email || !guestFormData.phone_number) {
-            toast.error('Email dan nomor telepon wajib diisi.');
+            toast.error(t('bundling.checkout.errors.emailPhoneRequired'));
             return false;
         }
 
         if (!guestFormData.instance) {
-            toast.error('Instansi wajib diisi.');
+            toast.error(t('bundling.checkout.errors.instanceRequired'));
             return false;
         }
 
         if (!guestFormData.city) {
-            toast.error('Kota domisili wajib diisi.');
+            toast.error(t('bundling.checkout.errors.cityRequired'));
             return false;
         }
 
@@ -395,11 +412,11 @@ export default function CheckoutBundle({
                 const loginData = loginResponse.data;
 
                 if (!loginData.success) {
-                    throw new Error(loginData.message || 'Gagal login otomatis.');
+                    throw new Error(loginData.message || t('bundling.checkout.errors.autoLoginFailed'));
                 }
             } else {
                 if (!guestFormData.name) {
-                    toast.error('Nama wajib diisi.');
+                    toast.error(t('bundling.checkout.errors.nameRequired'));
                     setLoading(false);
                     return false;
                 }
@@ -416,7 +433,7 @@ export default function CheckoutBundle({
                 });
 
                 if (regResponse.data && regResponse.data.success === false) {
-                    throw new Error(regResponse.data.message || 'Gagal registrasi.');
+                    throw new Error(regResponse.data.message || t('bundling.checkout.errors.registerFailed'));
                 }
             }
 
@@ -424,9 +441,9 @@ export default function CheckoutBundle({
         } catch (error: unknown) {
             setLoading(false);
             if (axios.isAxiosError(error)) {
-                toast.error(error.response?.data?.message || getErrorMessage(error, 'Gagal memproses login/registrasi otomatis.'));
+                toast.error(error.response?.data?.message || getErrorMessage(error, t('bundling.checkout.errors.processLoginFailed')));
             } else {
-                toast.error(getErrorMessage(error, 'Gagal memproses login/registrasi otomatis.'));
+                toast.error(getErrorMessage(error, t('bundling.checkout.errors.processLoginFailed')));
             }
             return false;
         }
@@ -468,21 +485,21 @@ export default function CheckoutBundle({
                 if (data.success && data.payment_url) {
                     window.location.href = data.payment_url;
                 } else {
-                    throw new Error(data.message || 'Gagal membuat invoice.');
+                    throw new Error(data.message || t('bundling.checkout.errors.createInvoiceFailed'));
                 }
             } catch (error) {
                 console.error('Payment error:', error);
                 throw error;
             }
         },
-        [bundle.id, bundle.price, bundleDiscount, transactionFee, pointsChecked, pointsToUse, codeType, referralData, promoCode, referralInfo],
+        [bundle.id, bundle.price, bundleDiscount, transactionFee, pointsChecked, pointsToUse, codeType, referralData, promoCode, referralInfo, t],
     );
 
     const handleCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!termsAccepted) {
-            alert('Anda harus menyetujui syarat dan ketentuan!');
+            alert(t('bundling.checkout.errors.termsRequired'));
             return;
         }
 
@@ -498,10 +515,10 @@ export default function CheckoutBundle({
             await submitPayment(discountData);
         } catch (error: unknown) {
             const message = axios.isAxiosError(error)
-                ? error.response?.data?.message || 'Terjadi kesalahan saat proses pembayaran.'
+                ? error.response?.data?.message || t('bundling.checkout.errors.paymentFailed')
                 : error instanceof Error
                   ? error.message
-                  : 'Terjadi kesalahan saat proses pembayaran.';
+                  : t('bundling.checkout.errors.paymentFailed');
             toast.error(message);
             setLoading(false);
         }
@@ -510,19 +527,19 @@ export default function CheckoutBundle({
     if (isLoggedIn && !isProfileComplete) {
         return (
             <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 py-12">
-                <Head title="Profil Belum Lengkap" />
+                <Head title={t('bundling.checkout.incompleteProfileTitle')} />
                 <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-xs text-center space-y-6">
                     <div className="mx-auto w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
                         <User size={32} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Profil Belum Lengkap</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('bundling.checkout.incompleteProfileTitle')}</h2>
                         <p className="text-sm text-gray-500">
-                            Harap lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu untuk membeli paket bundling.
+                            {t('bundling.checkout.incompleteProfileDesc')}
                         </p>
                     </div>
                     <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
-                        <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
+                        <Link href={route('profile.edit', { redirect: window.location.href })}>{t('bundling.checkout.btnCompleteProfile')}</Link>
                     </Button>
                 </div>
             </div>
@@ -533,7 +550,7 @@ export default function CheckoutBundle({
         <form onSubmit={handleCheckout} className="space-y-4">
             {/* Pilihan Jenis Kode */}
             <div className="space-y-2">
-                <Label className="font-semibold text-gray-700">Jenis Kode</Label>
+                <Label className="font-semibold text-gray-700">{t('bundling.checkout.codeType')}</Label>
                 <RadioGroup
                     value={codeType}
                     onValueChange={(val: 'voucher' | 'referral') => {
@@ -552,11 +569,11 @@ export default function CheckoutBundle({
                 >
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="voucher" id="code-voucher" />
-                        <Label htmlFor="code-voucher" className="cursor-pointer font-medium">Voucher</Label>
+                        <Label htmlFor="code-voucher" className="cursor-pointer font-medium">{t('bundling.checkout.voucher')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="referral" id="code-referral" />
-                        <Label htmlFor="code-referral" className="cursor-pointer font-medium">Referral</Label>
+                        <Label htmlFor="code-referral" className="cursor-pointer font-medium">{t('bundling.checkout.referral')}</Label>
                     </div>
                 </RadioGroup>
             </div>
@@ -564,14 +581,14 @@ export default function CheckoutBundle({
             {/* Input Kode Promo */}
             <div className="space-y-2">
                 <Label htmlFor="promo-code" className="font-semibold text-gray-700">
-                    Punya Kode Promo?
+                    {t('bundling.checkout.havePromoCode')}
                 </Label>
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Input
                             id="promo-code"
                             type="text"
-                            placeholder={codeType === 'voucher' ? 'Masukkan kode voucher' : 'Masukkan kode referral'}
+                            placeholder={codeType === 'voucher' ? t('bundling.checkout.enterVoucherCode') : t('bundling.checkout.enterReferralCode')}
                             value={promoCode}
                             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                             className="rounded-xl pr-10"
@@ -623,11 +640,11 @@ export default function CheckoutBundle({
                         <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-green-600" />
                             <p className="text-sm font-medium text-green-800">
-                                Voucher "{discountData.discount_code.code}" berhasil diterapkan!
+                                {t('bundling.checkout.voucherSuccess', { code: discountData.discount_code.code })}
                             </p>
                         </div>
                         <p className="mt-1 text-xs text-green-600">
-                            {discountData.discount_code.name} - Diskon {discountData.discount_code.formatted_value}
+                            {t('bundling.checkout.voucherDiscount', { name: discountData.discount_code.name, value: discountData.discount_code.formatted_value })}
                         </p>
                     </div>
                 )}
@@ -639,11 +656,11 @@ export default function CheckoutBundle({
                         <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-green-600" />
                             <p className="text-sm font-medium text-green-800">
-                                Kode referral valid!
+                                {t('bundling.checkout.referralSuccess')}
                             </p>
                         </div>
                         <p className="mt-1 text-xs text-green-600">
-                            Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
+                            {t('bundling.checkout.referralReferredBy', { name: referralData.referrer?.name })}
                         </p>
                     </div>
                 )}
@@ -654,9 +671,9 @@ export default function CheckoutBundle({
                 <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            <Label className="text-base font-semibold text-gray-700">Gunakan Reward Point</Label>
+                            <Label className="text-base font-semibold text-gray-700">{t('bundling.checkout.useRewardPoints')}</Label>
                             <p className="text-muted-foreground text-xs">
-                                Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
+                                {t('bundling.checkout.pointsBalance', { points: userPoints.toLocaleString(numLocale), rupiah: userPoints.toLocaleString(numLocale) })}
                             </p>
                         </div>
                         <Switch
@@ -678,7 +695,7 @@ export default function CheckoutBundle({
 
                     {pointsChecked && (
                         <div className="space-y-2">
-                            <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">Jumlah poin yang digunakan</Label>
+                            <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">{t('bundling.checkout.pointsToUse')}</Label>
                             <div className="flex items-center gap-2">
                                 <Input
                                     id="points-input"
@@ -689,9 +706,9 @@ export default function CheckoutBundle({
                                     onChange={(e) => {
                                         const val = parseInt(e.target.value) || 0;
                                         if (val > userPoints) {
-                                            setPointsError('Poin melebihi saldo Anda.');
+                                            setPointsError(t('bundling.checkout.pointsExceedBalance'));
                                         } else if (val > maxPointsAllowed) {
-                                            setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
+                                            setPointsError(t('bundling.checkout.pointsExceedMax', { max: maxPointsAllowed }));
                                         } else {
                                             setPointsError('');
                                         }
@@ -709,12 +726,12 @@ export default function CheckoutBundle({
                                     }}
                                     className="rounded-xl border-orange-200 text-orange-500 hover:bg-orange-50"
                                 >
-                                    Maksimal
+                                    {t('bundling.checkout.maxPoints')}
                                 </Button>
                             </div>
                             {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
                             {codeType === 'voucher' && !!discountData?.valid && (
-                                <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                <p className="text-xs text-amber-600">{t('bundling.checkout.pointsConflictVoucher')}</p>
                             )}
                         </div>
                     )}
@@ -723,7 +740,7 @@ export default function CheckoutBundle({
 
             <div className="space-y-2 pt-2 text-sm">
                 <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Harga Normal</span>
+                    <span className="text-gray-600">{t('bundling.checkout.normalPrice')}</span>
                     <span className="font-semibold text-gray-500 line-through">
                         {rupiahFormatter.format(bundle.strikethrough_price)}
                     </span>
@@ -731,13 +748,13 @@ export default function CheckoutBundle({
 
                 {bundleDiscount > 0 && (
                     <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Diskon Bundle</span>
+                        <span className="text-gray-600">{t('bundling.checkout.bundleDiscount')}</span>
                         <span className="font-semibold text-red-500">-{rupiahFormatter.format(bundleDiscount)}</span>
                     </div>
                 )}
 
                 <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Harga Bundle</span>
+                    <span className="text-gray-600">{t('bundling.checkout.bundlePrice')}</span>
                     <span className="font-semibold text-gray-800">
                         {rupiahFormatter.format(bundle.price)}
                     </span>
@@ -746,7 +763,7 @@ export default function CheckoutBundle({
                 {/* Promo Discount */}
                 {codeType === 'voucher' && discountData?.valid && (
                     <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Diskon Promo ({discountData.discount_code.code})</span>
+                        <span className="text-gray-600">{t('bundling.checkout.promoDiscount', { code: discountData.discount_code.code })}</span>
                         <span className="font-semibold text-green-600">
                             -{rupiahFormatter.format(discountData.discount_amount)}
                         </span>
@@ -756,7 +773,7 @@ export default function CheckoutBundle({
                 {/* Points Discount */}
                 {pointsChecked && pointsToUse > 0 && !pointsError && (
                     <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Potongan Poin</span>
+                        <span className="text-gray-600">{t('bundling.checkout.pointsDiscount')}</span>
                         <span className="font-semibold text-green-600">
                             -{rupiahFormatter.format(pointsToUse)}
                         </span>
@@ -764,14 +781,14 @@ export default function CheckoutBundle({
                 )}
 
                 <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Biaya Transaksi</span>
+                    <span className="text-gray-600">{t('bundling.checkout.transactionFee')}</span>
                     <span className="font-semibold text-gray-800">
                         {rupiahFormatter.format(transactionFee)}
                     </span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex items-center justify-between text-base">
-                    <span className="font-bold text-gray-900">Total Pembayaran</span>
+                    <span className="font-bold text-gray-900">{t('bundling.checkout.totalPayment')}</span>
                     <span className="text-[#FA5F25] text-xl font-bold">
                         {rupiahFormatter.format(totalPrice)}
                     </span>
@@ -782,10 +799,10 @@ export default function CheckoutBundle({
             {referralInfo.hasActive && (
                 <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
                     <p className="text-sm font-medium text-blue-800">
-                        🎁 Menggunakan kode referral: <span className="font-bold">{referralInfo.code}</span>
+                        {t('bundling.checkout.referralActiveNotice', { code: referralInfo.code })}
                     </p>
                     <p className="mt-1 text-xs text-blue-600">
-                        Anda membantu teman Anda mendapatkan komisi!
+                        {t('bundling.checkout.referralHelpFriend')}
                     </p>
                 </div>
             )}
@@ -798,16 +815,16 @@ export default function CheckoutBundle({
                     className="mt-0.5"
                 />
                 <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
-                    Saya menyetujui{' '}
+                    {t('bundling.checkout.agreeTerms')}{' '}
                     <a
                         href="/terms-and-conditions"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-orange-600 hover:underline font-semibold"
                     >
-                        syarat dan ketentuan
+                        {t('bundling.checkout.termsAndConditions')}
                     </a>{' '}
-                    yang berlaku
+                    {t('bundling.checkout.termsNoticeSuffix')}
                 </Label>
             </div>
             <Button
@@ -815,35 +832,35 @@ export default function CheckoutBundle({
                 type="submit"
                 disabled={!termsAccepted || loading}
             >
-                {loading ? 'Memproses...' : 'Bayar Sekarang'}
+                {loading ? t('bundling.checkout.processing') : t('bundling.checkout.btnPayNow')}
             </Button>
             <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
-                Pembayaran aman dan terenkripsi 🔒
+                {t('bundling.checkout.safePaymentNotice')}
             </p>
         </form>
     );
 
     return (
         <UserLayout>
-            <Head title={`Checkout - ${bundle.title}`} />
+            <Head title={`${t('bundling.checkout.headTitle')} - ${bundle.title}`} />
             <div className="min-h-screen w-full bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat py-8 px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto w-full max-w-7xl">
                     {/* Breadcrumbs */}
                     <div className="text-xs md:text-sm text-gray-500 mb-2 flex items-center gap-1.5 font-medium">
                         <Link href="/bundling" className="hover:text-orange-600">
-                            Paket Bundling
+                            {t('bundling.checkout.breadcrumbBundling')}
                         </Link>
                         <span className="text-gray-400">/</span>
                         <Link href={`/bundling/${bundle.slug}`} className="hover:text-orange-600 truncate max-w-[200px] sm:max-w-none">
                             {bundle.title}
                         </Link>
                         <span className="text-gray-400">/</span>
-                        <span className="text-gray-900 font-medium">Checkout</span>
+                        <span className="text-gray-900 font-medium">{t('bundling.checkout.breadcrumbCheckout')}</span>
                     </div>
 
                     {/* Page Title */}
                     <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-6">
-                        Checkout Paket Bundling
+                        {t('bundling.checkout.headTitle')}
                     </h1>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
@@ -853,7 +870,7 @@ export default function CheckoutBundle({
                             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-6">
                                 <div className="flex items-center gap-2 pb-4 border-b border-gray-100">
                                     <ShoppingCart className="h-5 w-5 text-gray-900" />
-                                    <h3 className="font-bold text-gray-900 text-lg">Detail Pesanan</h3>
+                                    <h3 className="font-bold text-gray-900 text-lg">{t('bundling.checkout.orderDetail')}</h3>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                                     <img
@@ -863,7 +880,7 @@ export default function CheckoutBundle({
                                     />
                                     <div className="flex-1 text-center sm:text-left">
                                         <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-2">
-                                            Paket Bundling
+                                            {t('bundling.checkout.breadcrumbBundling')}
                                         </span>
                                         <h4 className="text-base md:text-lg font-bold text-gray-900 leading-snug">
                                             {bundle.title}
@@ -879,7 +896,7 @@ export default function CheckoutBundle({
                                 <Separator />
 
                                 <div>
-                                    <h4 className="font-bold text-gray-900 mb-4">Isi Paket ({bundle.bundle_items_count} Program)</h4>
+                                    <h4 className="font-bold text-gray-900 mb-4">{t('bundling.checkout.itemsCount', { count: bundle.bundle_items_count })}</h4>
                                     <div className="space-y-3">
                                         {bundle.bundle_items.map((item, idx) => (
                                             <div key={item.id} className="flex items-center gap-3 rounded-xl border border-gray-100 p-3 bg-gray-50/50">
@@ -890,14 +907,14 @@ export default function CheckoutBundle({
                                                     <p className="truncate font-semibold text-gray-900 text-sm">{item.bundleable.title}</p>
                                                     <p className="text-[10px] text-gray-500 font-medium">
                                                         {item.bundleable_type.includes('Course')
-                                                            ? 'Kelas Online'
+                                                            ? t('bundling.checkout.course')
                                                             : item.bundleable_type.includes('Bootcamp')
-                                                              ? 'Bootcamp'
-                                                              : 'Webinar'}
+                                                              ? t('bundling.checkout.bootcamp')
+                                                              : t('bundling.checkout.webinar')}
                                                     </p>
                                                 </div>
                                                 <span className="text-sm font-semibold text-gray-700">
-                                                    {item.price === 0 ? 'Gratis' : rupiahFormatter.format(item.price)}
+                                                    {item.price === 0 ? t('bundling.checkout.free') : rupiahFormatter.format(item.price)}
                                                 </span>
                                             </div>
                                         ))}
@@ -909,26 +926,26 @@ export default function CheckoutBundle({
                                 <div className="rounded-xl bg-green-50 p-4 border border-green-100">
                                     <h4 className="mb-2 flex items-center gap-2 font-bold text-green-800">
                                         <BadgeCheck size={18} />
-                                        Keuntungan Paket Bundling
+                                        {t('bundling.checkout.packageBenefits')}
                                     </h4>
                                     <ul className="space-y-2">
                                         <li className="flex items-start gap-2 text-xs text-green-700 font-medium">
                                             <Check size={14} className="mt-0.5 flex-shrink-0" />
                                             <span>
-                                                Hemat {Math.round(((bundle.strikethrough_price - bundle.price) / bundle.strikethrough_price) * 100)}% dari harga normal
+                                                {t('bundling.checkout.benefitSave', { percent: Math.round(((bundle.strikethrough_price - bundle.price) / bundle.strikethrough_price) * 100) })}
                                             </span>
                                         </li>
                                         <li className="flex items-start gap-2 text-xs text-green-700 font-medium">
                                             <Check size={14} className="mt-0.5 flex-shrink-0" />
-                                            <span>Akses ke {bundle.bundle_items_count} program pembelajaran sekaligus</span>
+                                            <span>{t('bundling.checkout.benefitAccess', { count: bundle.bundle_items_count })}</span>
                                         </li>
                                         <li className="flex items-start gap-2 text-xs text-green-700 font-medium">
                                             <Check size={14} className="mt-0.5 flex-shrink-0" />
-                                            <span>Sertifikat untuk semua program yang diselesaikan</span>
+                                            <span>{t('bundling.checkout.benefitCertificate')}</span>
                                         </li>
                                         <li className="flex items-start gap-2 text-xs text-green-700 font-medium">
                                             <Check size={14} className="mt-0.5 flex-shrink-0" />
-                                            <span>Akses selamanya ke semua materi pembelajaran</span>
+                                            <span>{t('bundling.checkout.lifetimeAccess')}</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -940,10 +957,10 @@ export default function CheckoutBundle({
                             {hasAccess ? (
                                 <div className="flex flex-col items-center justify-center space-y-4 rounded-2xl border border-gray-100 bg-white p-6 text-center shadow-xs">
                                     <BadgeCheck size={64} className="text-green-500" />
-                                    <h2 className="text-xl font-bold">Anda Sudah Memiliki Akses</h2>
-                                    <p className="text-sm text-gray-500">Anda sudah terdaftar di kelas ini. Silakan mulai belajar.</p>
+                                    <h2 className="text-xl font-bold">{t('bundling.checkout.alreadyHaveAccessTitle')}</h2>
+                                    <p className="text-sm text-gray-500">{t('bundling.checkout.alreadyHaveAccessDesc')}</p>
                                     <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
-                                        <a href={route('profile.index')}>Lihat Dashboard</a>
+                                        <a href={route('profile.index')}>{t('bundling.checkout.dashboardBtn')}</a>
                                     </Button>
                                 </div>
                             ) : (pendingInvoice || pendingInvoiceUrl) ? (
@@ -965,14 +982,14 @@ export default function CheckoutBundle({
                                                 return (
                                                     <>
                                                         <X className="h-5 w-5 text-red-600" />
-                                                        <h4 className="font-bold text-red-700">Pembayaran Gagal / Kadaluarsa</h4>
+                                                        <h4 className="font-bold text-red-700">{t('bundling.checkout.paymentFailedOrExpired')}</h4>
                                                     </>
                                                 );
                                             }
                                             return (
                                                 <>
                                                     <Hourglass className="h-5 w-5 text-yellow-600 animate-pulse" />
-                                                    <h4 className="font-bold text-yellow-950">Pembayaran Tertunda</h4>
+                                                    <h4 className="font-bold text-yellow-950">{t('bundling.checkout.pendingPayment')}</h4>
                                                 </>
                                             );
                                         })()}
@@ -982,13 +999,13 @@ export default function CheckoutBundle({
                                         {pendingInvoice && (
                                             <div className="space-y-2 rounded-xl bg-gray-50/50 p-4 border border-gray-100 text-sm">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-gray-500">No. Invoice</span>
+                                                    <span className="text-gray-500">{t('bundling.checkout.invoiceCodeLabel')}</span>
                                                     <span className="font-semibold text-gray-800">{pendingInvoice.invoice_code}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-gray-500">Total Pembayaran</span>
+                                                    <span className="text-gray-500">{t('bundling.checkout.totalPayment')}</span>
                                                     <span className="text-lg font-bold text-[#FA5F25]">
-                                                        Rp {pendingInvoice.amount.toLocaleString('id-ID')}
+                                                        Rp {pendingInvoice.amount.toLocaleString(numLocale)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1001,7 +1018,7 @@ export default function CheckoutBundle({
                                             if (isExpired) {
                                                 return (
                                                     <div className="rounded-xl bg-red-50 p-4 text-xs text-red-700 leading-relaxed">
-                                                        Waktu pembayaran telah habis. Jika Anda butuh bantuan, silakan hubungi admin atau batalkan pesanan untuk membuat transaksi baru.
+                                                        {t('bundling.checkout.paymentExpiredHelp')}
                                                     </div>
                                                 );
                                             }
@@ -1009,14 +1026,14 @@ export default function CheckoutBundle({
                                             const targetUrl = pendingInvoice?.invoice_url || pendingInvoiceUrl;
                                             return targetUrl ? (
                                                 <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
-                                                    <a href={targetUrl}>Lanjutkan Pembayaran</a>
+                                                    <a href={targetUrl}>{t('bundling.checkout.btnContinuePayment')}</a>
                                                 </Button>
                                             ) : null;
                                         })()}
 
                                         <div className="flex gap-2">
                                             <Button onClick={() => window.location.reload()} variant="outline" className="flex-1 py-6 rounded-full border-gray-200 text-gray-700">
-                                                Cek Status
+                                                {t('bundling.checkout.btnCheckStatus')}
                                             </Button>
                                             {pendingInvoice && (
                                                 <Button
@@ -1025,29 +1042,29 @@ export default function CheckoutBundle({
                                                     className="flex-1 py-6 rounded-full border-red-200 text-red-600 hover:bg-red-50"
                                                     disabled={cancellingInvoice}
                                                     onClick={async () => {
-                                                        if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                        if (confirm(t('bundling.checkout.confirmCancel'))) {
                                                             setCancellingInvoice(true);
                                                             try {
                                                                 const res = await axios.post(route('invoice.cancel', pendingInvoice.id));
                                                                 if (res.data?.success) {
-                                                                    toast.success('Pesanan berhasil dibatalkan.');
+                                                                    toast.success(t('bundling.checkout.cancelSuccess'));
                                                                     window.location.reload();
                                                                 } else {
-                                                                    toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
+                                                                    toast.error(res.data?.message || t('bundling.checkout.cancelFailed'));
                                                                     setCancellingInvoice(false);
                                                                 }
                                                             } catch (err: unknown) {
                                                                 if (axios.isAxiosError(err)) {
-                                                                    toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                                    toast.error(err.response?.data?.message || t('bundling.checkout.cancelFailed'));
                                                                 } else {
-                                                                    toast.error('Gagal membatalkan pesanan.');
+                                                                    toast.error(t('bundling.checkout.cancelFailed'));
                                                                 }
                                                                 setCancellingInvoice(false);
                                                             }
                                                         }
                                                     }}
                                                 >
-                                                    {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                                    {cancellingInvoice ? t('bundling.checkout.cancelling') : t('bundling.checkout.btnCancelOrder')}
                                                 </Button>
                                             )}
                                         </div>
@@ -1055,14 +1072,14 @@ export default function CheckoutBundle({
                                 </div>
                             ) : (
                                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
-                                    <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pembayaran</h3>
+                                    <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">{t('bundling.checkout.paymentSummary')}</h3>
 
                                     {/* Data Diri for guest */}
                                     {!isLoggedIn && (
                                         <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
-                                            <h4 className="font-bold text-gray-900">Data Diri</h4>
+                                            <h4 className="font-bold text-gray-900">{t('bundling.checkout.personalDataTitle')}</h4>
                                             <div className="space-y-2">
-                                                <Label htmlFor="guest-email" className="font-semibold text-gray-700">Email</Label>
+                                                <Label htmlFor="guest-email" className="font-semibold text-gray-700">{t('bundling.checkout.emailLabel')}</Label>
                                                 <div className="flex gap-2">
                                                     <Input
                                                         id="guest-email"
@@ -1074,18 +1091,18 @@ export default function CheckoutBundle({
                                                         required
                                                     />
                                                 </div>
-                                                {checkingEmail && <p className="text-xs text-gray-500">Mengecek email...</p>}
+                                                {checkingEmail && <p className="text-xs text-gray-500">{t('bundling.checkout.checkingEmail')}</p>}
                                                 {emailExists && (
-                                                    <p className="text-xs text-green-600">Email ditemukan. Login otomatis akan digunakan.</p>
+                                                    <p className="text-xs text-green-600">{t('bundling.checkout.emailFound')}</p>
                                                 )}
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="guest-name" className="font-semibold text-gray-700">Nama</Label>
+                                                <Label htmlFor="guest-name" className="font-semibold text-gray-700">{t('bundling.checkout.nameLabel')}</Label>
                                                 <Input
                                                     id="guest-name"
                                                     type="text"
-                                                    placeholder="Nama lengkap"
+                                                    placeholder={t('bundling.checkout.namePlaceholder')}
                                                     value={guestFormData.name}
                                                     onChange={(e) => updateGuestForm('name', e.target.value)}
                                                     disabled={emailExists}
@@ -1095,11 +1112,11 @@ export default function CheckoutBundle({
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="guest-phone" className="font-semibold text-gray-700">No. Telepon</Label>
+                                                <Label htmlFor="guest-phone" className="font-semibold text-gray-700">{t('bundling.checkout.phoneLabel')}</Label>
                                                 <Input
                                                     id="guest-phone"
                                                     type="tel"
-                                                    placeholder="08xxxxxxxxxx"
+                                                    placeholder={t('bundling.checkout.phonePlaceholder')}
                                                     value={guestFormData.phone_number}
                                                     onChange={(e) => updateGuestForm('phone_number', e.target.value)}
                                                     disabled={emailExists}
@@ -1107,21 +1124,21 @@ export default function CheckoutBundle({
                                                     required
                                                 />
                                                 {!emailExists && (
-                                                    <p className="text-xs text-gray-500">Nomor telepon akan digunakan sebagai password akun Anda.</p>
+                                                    <p className="text-xs text-gray-500">{t('bundling.checkout.phoneNotice')}</p>
                                                 )}
                                                 {emailExists && (
                                                     <p className="text-xs text-blue-600">
-                                                        Data akun ditemukan dan dikunci agar sesuai akun terdaftar.
+                                                        {t('bundling.checkout.accountLockedNotice')}
                                                     </p>
                                                 )}
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="guest-instance" className="font-semibold text-gray-700">Instansi</Label>
+                                                <Label htmlFor="guest-instance" className="font-semibold text-gray-700">{t('bundling.checkout.instanceLabel')}</Label>
                                                 <Input
                                                     id="guest-instance"
                                                     type="text"
-                                                    placeholder="Instansi / perusahaan"
+                                                    placeholder={t('bundling.checkout.instancePlaceholder')}
                                                     value={guestFormData.instance}
                                                     onChange={(e) => updateGuestForm('instance', e.target.value)}
                                                     disabled={loading}
@@ -1131,11 +1148,11 @@ export default function CheckoutBundle({
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="guest-city" className="font-semibold text-gray-700">Kota Domisili</Label>
+                                                <Label htmlFor="guest-city" className="font-semibold text-gray-700">{t('bundling.checkout.cityLabel')}</Label>
                                                 <Input
                                                     id="guest-city"
                                                     type="text"
-                                                    placeholder="Kota domisili Anda"
+                                                    placeholder={t('bundling.checkout.cityPlaceholder')}
                                                     value={guestFormData.city}
                                                     onChange={(e) => updateGuestForm('city', e.target.value)}
                                                     disabled={loading}
@@ -1152,10 +1169,14 @@ export default function CheckoutBundle({
                                             value={paymentTab}
                                             onValueChange={(val) => {
                                                 if (val === 'full' && activeInstallment && !activeInstallment.is_fully_paid) {
-                                                    toast.error('Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.');
+                                                    toast.error(t('bundling.checkout.activeInstallmentFullDisabled'));
                                                     return;
                                                 }
-                                                setPaymentTab(val as 'full' | 'installment');
+                                                if (val === 'installment' && isAnyTermOverdue && !activeInstallment) {
+                                                toast.error(t('bundling.checkout.overdueInstallmentError'));
+                                                return;
+                                            }
+                                            setPaymentTab(val as 'full' | 'installment');
                                             }}
                                             className="w-full space-y-4"
                                         >
@@ -1165,10 +1186,10 @@ export default function CheckoutBundle({
                                                     disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
                                                     className="text-xs sm:text-sm"
                                                 >
-                                                    Bayar Penuh
+                                                    {t('bundling.checkout.tabFullPayment')}
                                                 </TabsTrigger>
-                                                <TabsTrigger value="installment" className="text-xs sm:text-sm">
-                                                    Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
+                                                <TabsTrigger value="installment" disabled={isAnyTermOverdue && !activeInstallment} className="text-xs sm:text-sm">
+                                                    {t('bundling.checkout.tabInstallment')} ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
                                                 </TabsTrigger>
                                             </TabsList>
 
@@ -1187,11 +1208,11 @@ export default function CheckoutBundle({
                                                     onTermsAcceptedChange={setTermsAccepted}
                                                     onBeforePay={async () => {
                                                         if (!activeInstallment && !termsAccepted) {
-                                                            toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                            toast.error(t('bundling.checkout.errors.termsRequired'));
                                                             return false;
                                                         }
                                                         if (!isLoggedIn && (!guestFormData.email || !guestFormData.phone_number || !guestFormData.instance || !guestFormData.city || (!emailExists && !guestFormData.name))) {
-                                                            toast.error('Lengkapi semua data diri terlebih dahulu.');
+                                                            toast.error(t('bundling.checkout.errors.completePersonalData'));
                                                             return false;
                                                         }
                                                         const authenticated = await ensureAuthenticated();

@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { ArrowRight, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Article {
     id: string;
@@ -23,6 +24,9 @@ interface ArticleSectionProps {
 }
 
 export default function ArticleSection({ articles }: ArticleSectionProps) {
+    const { t, i18n } = useTranslation('home');
+    const dateFnsLocale = i18n.language === 'en' ? enUS : id;
+
     if (!articles || articles.length === 0) {
         return null;
     }
@@ -51,12 +55,12 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
         if (!article) {
             return {
                 id: `placeholder-${index}`,
-                title: 'Artikel Segera Hadir',
+                title: t('article.placeholderTitle'),
                 slug: '#',
-                excerpt: 'Nantikan artikel menarik lainnya dari kami',
+                excerpt: t('article.placeholderExcerpt'),
                 thumbnail: '',
                 is_featured: false,
-                category: { id: '', name: 'Umum' },
+                category: { id: '', name: t('article.generalCategory') },
                 published_at: new Date().toISOString(),
             };
         }
@@ -69,10 +73,10 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
         <section className="mx-auto mb-4 w-full max-w-7xl p-4 sm:mb-8">
             <div className="mb-8 text-center">
                 <h2 className="mb-3 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white">
-                    Artikel & <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Insights</span>
+                    {t('article.title')} <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">{t('article.insights')}</span>
                 </h2>
                 <p className="mx-auto max-w-2xl text-gray-600 dark:text-gray-400">
-                    Temukan inspirasi, tips, dan panduan lengkap seputar pembelajaran dan teknologi terkini
+                    {t('article.subtitle')}
                 </p>
             </div>
 
@@ -99,7 +103,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
                             <p className="mb-3 line-clamp-2 text-sm text-white/90">{displayArticle1.excerpt}</p>
                             <div className="flex items-center gap-2 text-xs text-white/80">
                                 <Calendar className="h-3.5 w-3.5" />
-                                {format(new Date(displayArticle1.published_at), 'dd MMMM yyyy', { locale: id })}
+                                {format(new Date(displayArticle1.published_at), 'dd MMMM yyyy', { locale: dateFnsLocale })}
                             </div>
                         </div>
                     </Link>
@@ -125,7 +129,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
                             <p className="mb-3 line-clamp-2 text-sm text-white/90">{displayArticle2.excerpt}</p>
                             <div className="flex items-center gap-2 text-xs text-white/80">
                                 <Calendar className="h-3.5 w-3.5" />
-                                {format(new Date(displayArticle2.published_at), 'dd MMMM yyyy', { locale: id })}
+                                {format(new Date(displayArticle2.published_at), 'dd MMMM yyyy', { locale: dateFnsLocale })}
                             </div>
                         </div>
                     </Link>
@@ -151,7 +155,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
                             <p className="mb-2 line-clamp-2 text-sm text-white/90">{displayArticle4.excerpt}</p>
                             <div className="flex items-center gap-2 text-xs text-white/80">
                                 <Calendar className="h-3 w-3" />
-                                {format(new Date(displayArticle4.published_at), 'dd MMM yyyy', { locale: id })}
+                                {format(new Date(displayArticle4.published_at), 'dd MMM yyyy', { locale: dateFnsLocale })}
                             </div>
                         </div>
                     </Link>
@@ -177,7 +181,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
                             <p className="mb-3 line-clamp-2 text-sm text-white/90">{displayArticle5.excerpt}</p>
                             <div className="flex items-center gap-2 text-xs text-white/80">
                                 <Calendar className="h-3.5 w-3.5" />
-                                {format(new Date(displayArticle5.published_at), 'dd MMMM yyyy', { locale: id })}
+                                {format(new Date(displayArticle5.published_at), 'dd MMMM yyyy', { locale: dateFnsLocale })}
                             </div>
                         </div>
                     </Link>
@@ -205,7 +209,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
                             <p className="mb-2 line-clamp-2 text-sm text-white/90">{displayArticle3.excerpt}</p>
                             <div className="flex items-center gap-2 text-xs text-white/80">
                                 <Calendar className="h-3 w-3" />
-                                {format(new Date(displayArticle3.published_at), 'dd MMM yyyy', { locale: id })}
+                                {format(new Date(displayArticle3.published_at), 'dd MMM yyyy', { locale: dateFnsLocale })}
                             </div>
                         </div>
                     </Link>
@@ -231,7 +235,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
                             <p className="mb-3 line-clamp-2 text-sm text-white/90">{displayArticle6.excerpt}</p>
                             <div className="flex items-center gap-2 text-xs text-white/80">
                                 <Calendar className="h-3.5 w-3.5" />
-                                {format(new Date(displayArticle6.published_at), 'dd MMMM yyyy', { locale: id })}
+                                {format(new Date(displayArticle6.published_at), 'dd MMMM yyyy', { locale: dateFnsLocale })}
                             </div>
                         </div>
                     </Link>
@@ -242,7 +246,7 @@ export default function ArticleSection({ articles }: ArticleSectionProps) {
             <div className="mt-8 text-center">
                 <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
                     <Link href="/article">
-                        Lihat Semua Artikel
+                        {t('article.viewAll')}
                         <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                 </Button>

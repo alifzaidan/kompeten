@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Head } from '@inertiajs/react';
 import { BookOpen, Info, Lightbulb, User, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AboutSection from './about-section';
 import BenefitsSection from './benefits-section';
 import HeroSection from './hero-section';
@@ -57,6 +58,7 @@ interface ReferralInfo {
 }
 
 export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; referralInfo: ReferralInfo }) {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('tentang');
 
     useEffect(() => {
@@ -82,7 +84,7 @@ export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; r
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title={`${webinar.title} - Webinar`} />
+            <Head title={t('webinar.detail.headTitle', { title: webinar.title })} />
 
             <HeroSection webinar={webinar} onRegisterClick={handleRegisterClick} />
 
@@ -94,7 +96,7 @@ export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; r
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <BookOpen className="h-5 w-5" />
-                            Tentang
+                            {t('webinar.detail.tabAbout')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -102,7 +104,7 @@ export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; r
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Lightbulb className="h-5 w-5" />
-                            Benefit
+                            {t('webinar.detail.tabBenefits')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -110,7 +112,7 @@ export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; r
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Wrench className="h-5 w-5" />
-                            Tools
+                            {t('webinar.detail.tabTools')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -118,7 +120,7 @@ export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; r
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <User className="h-5 w-5" />
-                            Mentor
+                            {t('webinar.detail.tabMentor')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -126,7 +128,7 @@ export default function Webinar({ webinar, referralInfo }: { webinar: Webinar; r
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Info className="h-5 w-5" />
-                            Informasi Program
+                            {t('webinar.detail.tabProgramInfo')}
                         </TabsTrigger>
                     </TabsList>
                 </div>

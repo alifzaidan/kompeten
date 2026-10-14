@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { rupiahFormatter } from '@/lib/utils';
 import { BookText, ExternalLink, MonitorPlay, Presentation } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
     id: string;
@@ -37,6 +38,8 @@ interface BundleItemsSectionProps {
 }
 
 export default function BundleItemsSection({ bundle, groupedItems, totalOriginalPrice }: BundleItemsSectionProps) {
+    const { t } = useTranslation('user');
+
     const getProductUrl = (type: string, slug: string) => {
         switch (type) {
             case 'course':
@@ -56,28 +59,31 @@ export default function BundleItemsSection({ bundle, groupedItems, totalOriginal
         const config = {
             course: {
                 icon: BookText,
-                label: 'KELAS ONLINE',
+                label: t('bundling.detail.items.courseLabel'),
+                badge: t('bundling.detail.items.courseBadge'),
                 badgeClass: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400',
                 iconColor: 'text-blue-600 dark:text-blue-400',
                 cardBorder: 'border-blue-200 dark:border-blue-800',
             },
             bootcamp: {
                 icon: Presentation,
-                label: 'BOOTCAMP',
+                label: t('bundling.detail.items.bootcampLabel'),
+                badge: t('bundling.detail.items.bootcampBadge'),
                 badgeClass: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400',
                 iconColor: 'text-purple-600 dark:text-purple-400',
                 cardBorder: 'border-purple-200 dark:border-purple-800',
             },
             webinar: {
                 icon: MonitorPlay,
-                label: 'WEBINAR',
+                label: t('bundling.detail.items.webinarLabel'),
+                badge: t('bundling.detail.items.webinarBadge'),
                 badgeClass: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400',
                 iconColor: 'text-green-600 dark:text-green-400',
                 cardBorder: 'border-green-200 dark:border-green-800',
             },
         };
 
-        const { icon: Icon, label, badgeClass, iconColor, cardBorder } = config[type];
+        const { icon: Icon, label, badge, badgeClass, iconColor, cardBorder } = config[type];
 
         return (
             <div className="mb-6">
@@ -122,7 +128,7 @@ export default function BundleItemsSection({ bundle, groupedItems, totalOriginal
                                         </div>
 
                                         <Badge variant="outline" className={`mb-auto w-fit text-xs ${badgeClass}`}>
-                                            {type === 'course' ? 'Course' : type.charAt(0).toUpperCase() + type.slice(1)}
+                                            {badge}
                                         </Badge>
 
                                         {/* Price Comparison */}
@@ -147,9 +153,11 @@ export default function BundleItemsSection({ bundle, groupedItems, totalOriginal
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <h2 className="mb-2 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
-                    {bundle.bundle_items_count} Program Pembelajaran
+                    {t('bundling.detail.items.title', { count: bundle.bundle_items_count })}
                 </h2>
-                <p className="mb-8 text-center text-gray-600 dark:text-gray-400">Dapatkan akses ke semua program ini dalam satu paket bundling</p>
+                <p className="mb-8 text-center text-gray-600 dark:text-gray-400">
+                    {t('bundling.detail.items.subtitle')}
+                </p>
 
                 <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100 p-6 shadow-sm dark:border-gray-700 dark:from-gray-900 dark:to-gray-800">
                     {renderItems(groupedItems.courses, 'course')}
@@ -159,14 +167,18 @@ export default function BundleItemsSection({ bundle, groupedItems, totalOriginal
                     <div className="border-primary/50 mt-6 space-y-3 rounded-xl border-2 border-dashed bg-white p-6 dark:bg-gray-800">
                         {/* Normal Price */}
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Harga Normal:</span>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                {t('bundling.detail.items.totalNormalPrice')}
+                            </span>
                             <span className="text-lg font-semibold text-gray-500 line-through dark:text-gray-400">
                                 {rupiahFormatter.format(totalOriginalPrice)}
                             </span>
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <span className="text-base font-semibold text-gray-700 dark:text-gray-300">Harga Paket Bundling:</span>
+                            <span className="text-base font-semibold text-gray-700 dark:text-gray-300">
+                                {t('bundling.detail.items.bundlePrice')}
+                            </span>
                             <span className="text-primary text-3xl font-bold">{rupiahFormatter.format(bundle.price)}</span>
                         </div>
                     </div>

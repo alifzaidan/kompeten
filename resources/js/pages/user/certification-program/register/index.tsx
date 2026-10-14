@@ -13,10 +13,11 @@ import UserLayout from '@/layouts/user-layout';
 import { SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { format, parseISO } from 'date-fns';
+import { enUS, id } from 'date-fns/locale';
 import { AlertCircle, BadgeCheck, Calendar, CheckCircle2, Clock, GraduationCap, Loader2, Lock, Tag, User, RotateCcw, ShoppingCart } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import InstallmentOptions, { ActiveInstallmentData, InstallmentTermOption } from '@/components/installment-options';
 
@@ -132,6 +133,9 @@ export default function Register({
     installmentTerms = [],
     activeInstallment: initialActiveInstallment = null,
 }: RegisterProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
+    const numLocale = i18n.language === 'en' ? 'en-US' : 'id-ID';
     const { auth } = usePage<SharedData>().props;
     const user = auth.user as
         | {
@@ -147,6 +151,19 @@ export default function Register({
     const isProfileComplete = !!(isLoggedIn && user?.phone_number && user?.instance && user?.city);
 
     const [activeInstallment, setActiveInstallment] = useState<ActiveInstallmentData | null>(initialActiveInstallment);
+    const isAnyTermOverdue = !initialActiveInstallment && installmentTerms.some((t: any) => {
+        if (!t.due_date) return false;
+        try {
+            const d = typeof t.due_date === 'string' ? parseISO(t.due_date) : new Date(t.due_date);
+            if (isNaN(d.getTime())) return false;
+            const endOfDay = new Date(d);
+            endOfDay.setHours(23, 59, 59, 999);
+            return new Date() > endOfDay;
+        } catch {
+            return false;
+        }
+    });
+
     const [paymentTab, setPaymentTab] = useState<'full' | 'installment'>(initialActiveInstallment ? 'installment' : 'full');
     const [isLoading, setIsLoading] = useState(false);
     const [cancellingInvoice, setCancellingInvoice] = useState(false);
@@ -424,17 +441,17 @@ export default function Register({
         if (isLoggedIn) return true;
 
         if (!guestFormData.email || !guestFormData.phone_number) {
-            toast.error('Email dan nomor telepon wajib diisi.');
+            toast.error(t('certificationProgram.register.emailPhoneRequired', 'Email dan nomor telepon wajib diisi.'));
             return false;
         }
 
         if (!guestFormData.instance) {
-            toast.error('Instansi wajib diisi.');
+            toast.error(t('certificationProgram.register.instanceRequired', 'Instansi wajib diisi.'));
             return false;
         }
 
         if (!guestFormData.city) {
-            toast.error('Kota domisili wajib diisi.');
+            toast.error(t('certificationProgram.register.cityRequired', 'Kota domisili wajib diisi.'));
             return false;
         }
 
@@ -455,7 +472,7 @@ export default function Register({
                 }
             } else {
                 if (!guestFormData.name) {
-                    toast.error('Nama wajib diisi.');
+                    toast.error(t('certificationProgram.register.nameRequired', 'Nama wajib diisi.'));
                     setIsLoading(false);
                     return false;
                 }
@@ -486,7 +503,7 @@ export default function Register({
             }
             return false;
         }
-    }, [emailExists, guestFormData.email, guestFormData.instance, guestFormData.city, guestFormData.name, guestFormData.phone_number, isLoggedIn, referralInfo]);
+    }, [emailExists, guestFormData.email, guestFormData.instance, guestFormData.city, guestFormData.name, guestFormData.phone_number, isLoggedIn, referralInfo, t]);
 
     // Show scholarship prompt only when the user hasn't applied yet or their application was rejected.
     // For guests, consider `guestScholarshipStatus` returned by `/api/check-email`.
@@ -506,7 +523,7 @@ export default function Register({
 
     const handleDocumentSubmit = () => {
         if (!documentAttachment) {
-            toast.error('Pilih dokumen pendukung terlebih dahulu');
+            toast.error(t('certificationProgram.register.chooseDocFirst', 'Pilih dokumen pendukung terlebih dahulu'));
             return;
         }
 
@@ -518,10 +535,10 @@ export default function Register({
             onSuccess: () => {
                 setIsDocumentDialogOpen(false);
                 setDocumentAttachment(null);
-                toast.success('Dokumen berhasil dikirim. Menunggu verifikasi admin.');
+                toast.success(t('certificationProgram.register.docDialogSuccess', 'Dokumen berhasil dikirim. Menunggu verifikasi admin.'));
             },
             onError: () => {
-                toast.error('Gagal mengirim dokumen pendukung');
+                toast.error(t('certificationProgram.register.docDialogError', 'Gagal mengirim dokumen pendukung'));
             },
         });
     };
@@ -578,13 +595,13 @@ export default function Register({
 
     const handleCheckout = useCallback(async () => {
         if (!termsAccepted && displayPrice > 0) {
-            toast.error('Anda harus menyetujui syarat dan ketentuan.');
+            toast.error(t('certificationProgram.register.agreeTermsError', 'Anda harus menyetujui syarat dan ketentuan.'));
             return;
         }
 
         // Check if guest form is complete before proceeding
         if (!isLoggedIn && !isGuestFormComplete()) {
-            toast.error('Lengkapi semua data diri terlebih dahulu.');
+            toast.error(t('certificationProgram.register.completeDataFirst', 'Lengkapi semua data diri terlebih dahulu.'));
             return;
         }
 
@@ -623,12 +640,12 @@ export default function Register({
         ensureAuthenticated,
         hasApprovedDocument,
         isDocumentPending,
-        isDocumentRejected,
         requiresDocumentUpload,
         submitPayment,
         termsAccepted,
         isLoggedIn,
         isGuestFormComplete,
+        t,
     ]);
 
     const ensureAuthenticatedForDocument = useCallback(async () => {
@@ -642,7 +659,7 @@ export default function Register({
     if (hasAccess) {
         return (
             <UserLayout>
-                <Head title={`Terdaftar - ${program.title}`} />
+                <Head title={t('certificationProgram.register.headTitleEnrolled', { title: program.title, defaultValue: `Terdaftar - ${program.title}` })} />
                 <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-zinc-900 dark:to-zinc-800">
                     <div className="to-primary relative overflow-hidden bg-gradient-to-tl from-black px-4 py-8 md:py-12">
                         <div className="absolute inset-0 opacity-10">
@@ -651,16 +668,16 @@ export default function Register({
                         </div>
                         <div className="relative mx-auto w-full max-w-3xl text-center">
                             <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-300" />
-                            <h1 className="text-3xl font-bold text-white md:text-4xl">Anda Sudah Terdaftar!</h1>
-                            <p className="mt-2 text-blue-100 md:text-lg">Akses materi pembelajaran tersedia di dashboard.</p>
+                            <h1 className="text-3xl font-bold text-white md:text-4xl">{t('certificationProgram.register.enrolledTitle', 'Anda Sudah Terdaftar!')}</h1>
+                            <p className="mt-2 text-blue-100 md:text-lg">{t('certificationProgram.register.enrolledDesc', 'Akses materi pembelajaran tersedia di dashboard.')}</p>
                         </div>
                     </div>
                     <div className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 py-8">
                         <Button asChild className="w-full">
-                            <Link href={route('user.dashboard')}>Ke Dashboard</Link>
+                            <Link href={route('user.dashboard')}>{t('certificationProgram.register.btnToDashboard', 'Ke Dashboard')}</Link>
                         </Button>
                         <Button asChild variant="outline" className="w-full">
-                            <Link href={route('certification-programs.index')}>Lihat Program Lain</Link>
+                            <Link href={route('certification-programs.index')}>{t('certificationProgram.register.btnViewOtherPrograms', 'Lihat Program Lain')}</Link>
                         </Button>
                     </div>
                 </div>
@@ -671,7 +688,7 @@ export default function Register({
     if (isLoggedIn && !isProfileComplete) {
         return (
             <UserLayout>
-                <Head title={`Daftar - ${program.title}`} />
+                <Head title={t('certificationProgram.register.headTitle', { title: program.title, defaultValue: `Daftar - ${program.title}` })} />
                 <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-zinc-900 dark:to-zinc-800">
                     <div className="to-primary relative overflow-hidden bg-gradient-to-tl from-black px-4 py-8 md:py-12">
                         <div className="absolute inset-0 opacity-10">
@@ -680,15 +697,15 @@ export default function Register({
                         </div>
                         <div className="relative mx-auto w-full max-w-3xl text-center">
                             <User className="mx-auto mb-4 h-16 w-16 text-amber-300" />
-                            <h1 className="text-3xl font-bold text-white md:text-4xl">Profil Belum Lengkap</h1>
+                            <h1 className="text-3xl font-bold text-white md:text-4xl">{t('certificationProgram.register.incompleteProfileTitle', 'Profil Belum Lengkap')}</h1>
                             <p className="mt-2 text-blue-100 md:text-lg">
-                                Silakan lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu sebelum melanjutkan pendaftaran.
+                                {t('certificationProgram.register.incompleteProfileDesc', 'Silakan lengkapi nomor telepon, instansi, dan kota domisili terlebih dahulu sebelum melanjutkan pendaftaran.')}
                             </p>
                         </div>
                     </div>
                     <div className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 py-8">
                         <Button asChild className="w-full">
-                            <Link href={route('profile.edit', { redirect: window.location.href })}>Lengkapi Profil</Link>
+                            <Link href={route('profile.edit', { redirect: window.location.href })}>{t('certificationProgram.register.btnCompleteProfile', 'Lengkapi Profil')}</Link>
                         </Button>
                     </div>
                 </div>
@@ -705,7 +722,7 @@ export default function Register({
             // If guest, need to authenticate first
             if (!isLoggedIn) {
                 if (!isGuestFormComplete()) {
-                    toast.error('Lengkapi semua data diri terlebih dahulu.');
+                    toast.error(t('certificationProgram.register.completeDataFirst', 'Lengkapi semua data diri terlebih dahulu.'));
                     return;
                 }
 
@@ -723,21 +740,21 @@ export default function Register({
 
     return (
         <UserLayout>
-            <Head title={`Daftar - ${program.title}`} />
+            <Head title={t('certificationProgram.register.headTitle', { title: program.title, defaultValue: `Daftar - ${program.title}` })} />
             <div className="min-h-screen w-full bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat py-8 px-4 sm:px-6 lg:px-8">
                 <div className="mx-auto w-full max-w-7xl">
                     {/* Breadcrumb */}
                     <div className="text-xs md:text-sm text-gray-500 mb-2 flex items-center gap-1.5 font-medium">
-                        <span>Sertifikasi</span>
+                        <span>{t('certificationProgram.detail.hero.breadcrumbCertification', 'Sertifikasi')}</span>
                         <span className="text-gray-400">/</span>
                         <span className="truncate max-w-[200px] sm:max-w-none">{program.title}</span>
                         <span className="text-gray-400">/</span>
-                        <span className="text-gray-900 font-medium">Daftar</span>
+                        <span className="text-gray-900 font-medium">{t('certificationProgram.detail.hero.btnRegisterNow', 'Daftar')}</span>
                     </div>
 
                     {/* Page Title */}
                     <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-6">
-                        Daftar Sertifikasi
+                        {t('certificationProgram.dashboard.headTitle', 'Program Sertifikasi')}
                     </h1>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 items-start">
@@ -747,7 +764,7 @@ export default function Register({
                             <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
                                 <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
                                     <ShoppingCart className="h-5 w-5 text-gray-900" />
-                                    <h3 className="font-bold text-gray-900 text-lg">Detail Pesanan</h3>
+                                    <h3 className="font-bold text-gray-900 text-lg">{t('certificationProgram.register.orderDetail', 'Detail Pesanan')}</h3>
                                 </div>
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                                     <img
@@ -757,7 +774,7 @@ export default function Register({
                                     />
                                     <div className="flex-1 text-center sm:text-left">
                                         <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-2">
-                                            Sertifikasi ({isScholarship ? 'Beasiswa' : 'Reguler'})
+                                            {t('certificationProgram.detail.hero.breadcrumbCertification', 'Sertifikasi')} ({isScholarship ? t('certificationProgram.detail.hero.badgeScholarship', 'Beasiswa') : t('certificationProgram.detail.hero.badgeRegular', 'Reguler')})
                                         </span>
                                         <h4 className="text-base md:text-lg font-bold text-gray-900 leading-snug">
                                             {program.title}
@@ -766,7 +783,7 @@ export default function Register({
                                             <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-gray-500 font-medium mt-2">
                                                 <Calendar className="h-4 w-4" />
                                                 <span>
-                                                    Mulai: {format(new Date(getDate(program.schedules[0])), 'dd MMMM yyyy', { locale: id })}
+                                                    {t('certificationProgram.register.startSchedule', 'Mulai:')} {format(new Date(getDate(program.schedules[0])), 'dd MMMM yyyy', { locale: dateLocale })}
                                                 </span>
                                             </div>
                                         )}
@@ -778,10 +795,10 @@ export default function Register({
                             {requiresDocumentUpload && (
                                 <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20 rounded-2xl">
                                     <Lock className="h-4 w-4 text-amber-600" />
-                                    <AlertTitle className="text-amber-900 dark:text-amber-200 font-semibold">Dokumen Pendukung Diperlukan</AlertTitle>
+                                    <AlertTitle className="text-amber-900 dark:text-amber-200 font-semibold">{t('certificationProgram.register.docStatusTitle', 'Dokumen Pendukung Diperlukan')}</AlertTitle>
                                     <AlertDescription className="space-y-3 text-amber-800 dark:text-amber-300">
                                         <p>
-                                            {program.document_description ?? 'Program ini memerlukan dokumen pendukung sebelum pendaftaran diproses.'}
+                                            {program.document_description ?? t('certificationProgram.register.docDialogAcceptedFormats', 'Program ini memerlukan dokumen pendukung sebelum pendaftaran diproses.')}
                                         </p>
                                         {!documentStatus && (
                                             <Button
@@ -791,14 +808,14 @@ export default function Register({
                                                 variant="secondary"
                                                 onClick={() => handlePrimaryAction()}
                                             >
-                                                Upload Dokumen Pendukung
+                                                {t('certificationProgram.register.btnUploadDoc', 'Upload Dokumen Pendukung')}
                                             </Button>
                                         )}
-                                        {isDocumentPending && <p>Dokumen sudah dikirim dan sedang menunggu verifikasi admin.</p>}
+                                        {isDocumentPending && <p>{t('certificationProgram.register.docStatusPending', 'Dokumen Anda sedang dalam proses peninjauan oleh admin. Mohon menunggu konfirmasi.')}</p>}
                                         {isDocumentRejected && (
                                             <div className="space-y-2">
                                                 <p className="text-red-600 dark:text-red-300 font-semibold">
-                                                    Dokumen Anda ditolak. Silakan unggah ulang dokumen yang sesuai untuk diverifikasi kembali.
+                                                    {t('certificationProgram.register.docStatusRejected', 'Dokumen pendukung Anda ditolak. Silakan unggah ulang dokumen yang sesuai.')}
                                                 </p>
                                                 <Button
                                                     type="button"
@@ -807,7 +824,7 @@ export default function Register({
                                                     variant="outline"
                                                     onClick={() => handlePrimaryAction()}
                                                 >
-                                                    Unggah Ulang Dokumen
+                                                    {t('certificationProgram.register.btnReuploadDoc', 'Unggah Ulang Dokumen')}
                                                 </Button>
                                             </div>
                                         )}
@@ -818,11 +835,11 @@ export default function Register({
                             {showScholarshipWarning && (
                                 <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20 rounded-2xl">
                                     <Lock className="h-4 w-4 text-amber-600" />
-                                    <AlertTitle className="text-amber-900 dark:text-amber-200 font-semibold">Aplikasi Beasiswa Diperlukan</AlertTitle>
+                                    <AlertTitle className="text-amber-900 dark:text-amber-200 font-semibold">{t('certificationProgram.register.scholarshipRegistration', 'Aplikasi Beasiswa Diperlukan')}</AlertTitle>
                                     <AlertDescription className="text-amber-800 dark:text-amber-300">
-                                        Silakan ajukan aplikasi beasiswa dan tunggu persetujuan admin.
+                                        {t('certificationProgram.register.docStatusPending', 'Silakan ajukan aplikasi beasiswa dan tunggu persetujuan admin.')}
                                         <Button asChild size="sm" className="mt-2 w-full rounded-full" variant="secondary">
-                                            <Link href={route('certification-programs.scholarship-apply', program.slug)}>Ajukan Beasiswa</Link>
+                                            <Link href={route('certification-programs.scholarship-apply', program.slug)}>{t('certificationProgram.detail.register.btnApplyScholarship', 'Ajukan Beasiswa')}</Link>
                                         </Button>
                                     </AlertDescription>
                                 </Alert>
@@ -831,13 +848,13 @@ export default function Register({
                             {regularApplication && regularApplication.status !== 'approved' && (
                                 <Alert className="rounded-2xl">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Status Dokumen: {regularApplication.status}</AlertTitle>
+                                    <AlertTitle>{t('certificationProgram.register.docStatusTitle', 'Status Dokumen')}: {regularApplication.status}</AlertTitle>
                                     <AlertDescription>
                                         {regularApplication.status === 'pending' ? (
-                                            'Dokumen Anda sedang diverifikasi oleh admin.'
+                                            t('certificationProgram.register.docStatusPending', 'Dokumen Anda sedang diverifikasi oleh admin.')
                                         ) : (
                                             <div className="space-y-2">
-                                                <span className="text-red-600 dark:text-red-300 font-semibold">Dokumen Anda ditolak. Silakan ajukan ulang.</span>
+                                                <span className="text-red-600 dark:text-red-300 font-semibold">{t('certificationProgram.register.docStatusRejected', 'Dokumen Anda ditolak. Silakan ajukan ulang.')}</span>
                                                 <Button
                                                     type="button"
                                                     size="sm"
@@ -845,7 +862,7 @@ export default function Register({
                                                     variant="secondary"
                                                     onClick={() => handlePrimaryAction()}
                                                 >
-                                                    Unggah Ulang Dokumen
+                                                    {t('certificationProgram.register.btnReuploadDoc', 'Unggah Ulang Dokumen')}
                                                 </Button>
                                             </div>
                                         )}
@@ -856,13 +873,13 @@ export default function Register({
                             {scholarshipApplication && scholarshipApplication.status !== 'approved' && (
                                 <Alert className="rounded-2xl">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Status Beasiswa: {scholarshipApplication.status}</AlertTitle>
+                                    <AlertTitle>{t('certificationProgram.register.scholarshipRegistration', 'Status Beasiswa')}: {scholarshipApplication.status}</AlertTitle>
                                     <AlertDescription>
                                         {scholarshipApplication.status === 'pending' ? (
-                                            'Aplikasi beasiswa Anda sedang diverifikasi oleh admin.'
+                                            t('certificationProgram.register.docStatusPending', 'Aplikasi beasiswa Anda sedang diverifikasi oleh admin.')
                                         ) : (
                                             <span className="text-red-600 dark:text-red-300 font-semibold">
-                                                Aplikasi beasiswa Anda ditolak. Silakan ajukan ulang.
+                                                {t('certificationProgram.register.docStatusRejected', 'Aplikasi beasiswa Anda ditolak. Silakan ajukan ulang.')}
                                             </span>
                                         )}
                                     </AlertDescription>
@@ -872,13 +889,13 @@ export default function Register({
                             {guestScholarshipStatus && guestScholarshipStatus !== 'approved' && (
                                 <Alert className="rounded-2xl">
                                     <AlertCircle className="h-4 w-4" />
-                                    <AlertTitle>Status Beasiswa: {guestScholarshipStatus}</AlertTitle>
+                                    <AlertTitle>{t('certificationProgram.register.scholarshipRegistration', 'Status Beasiswa')}: {guestScholarshipStatus}</AlertTitle>
                                     <AlertDescription>
                                         {guestScholarshipStatus === 'pending' ? (
-                                            'Aplikasi beasiswa Anda sedang diverifikasi oleh admin.'
+                                            t('certificationProgram.register.docStatusPending', 'Aplikasi beasiswa Anda sedang diverifikasi oleh admin.')
                                         ) : (
                                             <span className="text-red-600 dark:text-red-300 font-semibold">
-                                                Aplikasi beasiswa Anda ditolak. Silakan ajukan ulang.
+                                                {t('certificationProgram.register.docStatusRejected', 'Aplikasi beasiswa Anda ditolak. Silakan ajukan ulang.')}
                                             </span>
                                         )}
                                     </AlertDescription>
@@ -888,18 +905,18 @@ export default function Register({
                             {guestScholarshipStatus === 'approved' && (
                                 <Alert className="border-emerald-200 bg-emerald-50 rounded-2xl">
                                     <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                                    <AlertTitle>Status Beasiswa: Disetujui</AlertTitle>
-                                    <AlertDescription>Pengajuan beasiswa Anda telah disetujui. Silakan lanjutkan pendaftaran.</AlertDescription>
+                                    <AlertTitle>{t('certificationProgram.register.scholarshipRegistration', 'Status Beasiswa')}: {t('certificationProgram.register.docStatusApproved', 'Disetujui')}</AlertTitle>
+                                    <AlertDescription>{t('certificationProgram.register.docStatusApproved', 'Pengajuan beasiswa Anda telah disetujui. Silakan lanjutkan pendaftaran.')}</AlertDescription>
                                 </Alert>
                             )}
 
                             {/* Guest Form Card (Masukkan Data Diri Anda) */}
                             {!isLoggedIn && !hasAccess && !pendingInvoiceUrl && !pendingInvoice && (
                                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
-                                    <h3 className="font-bold text-gray-900 text-lg mb-4">Masukkan Data Diri Anda</h3>
+                                    <h3 className="font-bold text-gray-900 text-lg mb-4">{t('certificationProgram.register.personalDataTitle', 'Masukkan Data Diri Anda')}</h3>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="guest-email" className="font-semibold text-gray-700">Email</Label>
+                                            <Label htmlFor="guest-email" className="font-semibold text-gray-700">{t('certificationProgram.register.labelEmail', 'Email')}</Label>
                                             <div className="flex gap-2">
                                                 <Input
                                                     id="guest-email"
@@ -923,16 +940,16 @@ export default function Register({
                                                     <RotateCcw className="h-4 w-4" />
                                                 </Button>
                                             </div>
-                                            {checkingEmail && <p className="text-xs text-gray-500">Mengecek email...</p>}
-                                            {emailExists && <p className="text-xs text-green-600">Email ditemukan. Login otomatis akan digunakan.</p>}
+                                            {checkingEmail && <p className="text-xs text-gray-500">{t('certificationProgram.register.checkingEmail', 'Mengecek email...')}</p>}
+                                            {emailExists && <p className="text-xs text-green-600">{t('certificationProgram.register.emailFound', 'Email ditemukan. Login otomatis akan digunakan.')}</p>}
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="guest-name" className="font-semibold text-gray-700">Nama</Label>
+                                            <Label htmlFor="guest-name" className="font-semibold text-gray-700">{t('certificationProgram.register.labelName', 'Nama')}</Label>
                                             <Input
                                                 id="guest-name"
                                                 type="text"
-                                                placeholder="Nama lengkap Anda"
+                                                placeholder={t('certificationProgram.register.placeholderName', 'Nama lengkap Anda')}
                                                 value={guestFormData.name}
                                                 onChange={(event) => updateGuestForm('name', event.target.value)}
                                                 disabled={emailExists}
@@ -942,7 +959,7 @@ export default function Register({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="guest-phone" className="font-semibold text-gray-700">No. Telepon</Label>
+                                            <Label htmlFor="guest-phone" className="font-semibold text-gray-700">{t('certificationProgram.register.labelPhone', 'No. Telepon')}</Label>
                                             <Input
                                                 id="guest-phone"
                                                 type="tel"
@@ -954,19 +971,19 @@ export default function Register({
                                                 required
                                             />
                                             {!emailExists && (
-                                                <p className="text-xs text-gray-500">Nomor telepon akan digunakan sebagai password anda</p>
+                                                <p className="text-xs text-gray-500">{t('certificationProgram.register.personalDataDesc', 'Nomor telepon akan digunakan sebagai password anda')}</p>
                                             )}
                                             {emailExists && (
-                                                <p className="text-xs text-blue-600">Data akun ditemukan dan dikunci agar sesuai akun terdaftar.</p>
+                                                <p className="text-xs text-blue-600">{t('certificationProgram.register.emailFound', 'Data akun ditemukan dan dikunci agar sesuai akun terdaftar.')}</p>
                                             )}
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="guest-instance" className="font-semibold text-gray-700">Instansi/Perusahaan</Label>
+                                            <Label htmlFor="guest-instance" className="font-semibold text-gray-700">{t('certificationProgram.register.labelInstance', 'Instansi/Perusahaan')}</Label>
                                             <Input
                                                 id="guest-instance"
                                                 type="text"
-                                                placeholder="Instansi atau perusahaan Anda"
+                                                placeholder={t('certificationProgram.register.placeholderInstance', 'Instansi atau perusahaan Anda')}
                                                 value={guestFormData.instance}
                                                 onChange={(event) => updateGuestForm('instance', event.target.value)}
                                                 disabled={isLoading}
@@ -976,11 +993,11 @@ export default function Register({
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="guest-city" className="font-semibold text-gray-700">Kota Domisili</Label>
+                                            <Label htmlFor="guest-city" className="font-semibold text-gray-700">{t('certificationProgram.register.labelCity', 'Kota Domisili')}</Label>
                                             <Input
                                                 id="guest-city"
                                                 type="text"
-                                                placeholder="Kota domisili Anda"
+                                                placeholder={t('certificationProgram.register.placeholderCity', 'Kota domisili Anda')}
                                                 value={guestFormData.city}
                                                 onChange={(event) => updateGuestForm('city', event.target.value)}
                                                 disabled={isLoading}
@@ -1014,14 +1031,14 @@ export default function Register({
                                                 return (
                                                     <>
                                                         <AlertCircle className="h-5 w-5 text-red-600" />
-                                                        <h4 className="font-bold text-red-700">Pembayaran Gagal / Kadaluarsa</h4>
+                                                        <h4 className="font-bold text-red-700">{t('certificationProgram.register.invoiceExpired', 'Pembayaran Gagal / Kadaluarsa')}</h4>
                                                     </>
                                                 );
                                             }
                                             return (
                                                 <>
                                                     <Clock className="h-5 w-5 text-yellow-600 animate-pulse" />
-                                                    <h4 className="font-bold text-yellow-950">Pembayaran Tertunda</h4>
+                                                    <h4 className="font-bold text-yellow-950">{t('certificationProgram.register.pendingInvoiceTitle', 'Pembayaran Tertunda')}</h4>
                                                 </>
                                             );
                                         })()}
@@ -1031,13 +1048,13 @@ export default function Register({
                                         {pendingInvoice && (
                                             <div className="space-y-2 rounded-xl bg-gray-50/50 p-4 border border-gray-100 text-sm">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-gray-500">No. Invoice</span>
+                                                    <span className="text-gray-500">{t('certificationProgram.register.invoiceCodeLabel', 'No. Invoice')}</span>
                                                     <span className="font-semibold text-gray-800">{pendingInvoice.invoice_code}</span>
                                                 </div>
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-gray-500">Total Pembayaran</span>
+                                                    <span className="text-gray-500">{t('certificationProgram.register.totalPayment', 'Total Pembayaran')}</span>
                                                     <span className="text-lg font-bold text-[#FA5F25]">
-                                                        Rp {pendingInvoice.amount.toLocaleString('id-ID')}
+                                                        Rp {pendingInvoice.amount.toLocaleString(numLocale)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -1050,7 +1067,7 @@ export default function Register({
                                             if (isExpired) {
                                                 return (
                                                     <div className="rounded-xl bg-red-50 p-4 text-xs text-red-700 leading-relaxed">
-                                                        Waktu pembayaran telah habis. Jika Anda butuh bantuan, silakan hubungi admin atau batalkan pesanan untuk membuat transaksi baru.
+                                                        {t('certificationProgram.register.invoiceExpiredNotice', 'Waktu pembayaran telah habis. Jika Anda butuh bantuan, silakan hubungi admin atau batalkan pesanan untuk membuat transaksi baru.')}
                                                     </div>
                                                 );
                                             }
@@ -1058,14 +1075,14 @@ export default function Register({
                                             const targetUrl = pendingInvoice?.invoice_url || pendingInvoiceUrl;
                                             return targetUrl ? (
                                                 <Button asChild className="w-full py-6 rounded-full bg-[#F9A885] hover:bg-[#F9A885]/90 text-white font-semibold shadow-xs">
-                                                    <a href={targetUrl}>Lanjutkan Pembayaran</a>
+                                                    <a href={targetUrl}>{t('certificationProgram.register.btnContinuePayment', 'Lanjutkan Pembayaran')}</a>
                                                 </Button>
                                             ) : null;
                                         })()}
 
                                         <div className="flex gap-2">
                                             <Button onClick={() => window.location.reload()} variant="outline" className="flex-1 py-6 rounded-full border-gray-200 text-gray-700">
-                                                Cek Status
+                                                {t('certificationProgram.register.btnCheckStatus', 'Cek Status')}
                                             </Button>
                                             {pendingInvoice && (
                                                 <Button
@@ -1074,29 +1091,29 @@ export default function Register({
                                                     className="flex-1 py-6 rounded-full border-red-200 text-red-600 hover:bg-red-50"
                                                     disabled={cancellingInvoice}
                                                     onClick={async () => {
-                                                        if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?')) {
+                                                        if (confirm(t('certificationProgram.register.confirmCancelInvoice', 'Apakah Anda yakin ingin membatalkan transaksi ini dan membuat pesanan baru?'))) {
                                                             setCancellingInvoice(true);
                                                             try {
                                                                 const res = await axios.post(route('invoice.cancel', pendingInvoice.id));
                                                                 if (res.data?.success) {
-                                                                    toast.success('Pesanan berhasil dibatalkan.');
+                                                                    toast.success(t('certificationProgram.register.cancelSuccess', 'Pesanan berhasil dibatalkan.'));
                                                                     window.location.reload();
                                                                 } else {
-                                                                    toast.error(res.data?.message || 'Gagal membatalkan pesanan.');
+                                                                    toast.error(res.data?.message || t('certificationProgram.register.cancelFailed', 'Gagal membatalkan pesanan.'));
                                                                     setCancellingInvoice(false);
                                                                 }
                                                             } catch (err: unknown) {
                                                                 if (axios.isAxiosError(err)) {
-                                                                    toast.error(err.response?.data?.message || 'Gagal membatalkan pesanan.');
+                                                                    toast.error(err.response?.data?.message || t('certificationProgram.register.cancelFailed', 'Gagal membatalkan pesanan.'));
                                                                 } else {
-                                                                    toast.error('Gagal membatalkan pesanan.');
+                                                                    toast.error(t('certificationProgram.register.cancelFailed', 'Gagal membatalkan pesanan.'));
                                                                 }
                                                                 setCancellingInvoice(false);
                                                             }
                                                         }
                                                     }}
                                                 >
-                                                    {cancellingInvoice ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                                                    {cancellingInvoice ? t('certificationProgram.register.cancellingInvoice', 'Membatalkan...') : t('certificationProgram.register.btnCancelInvoice', 'Batalkan Pesanan')}
                                                 </Button>
                                             )}
                                         </div>
@@ -1104,14 +1121,18 @@ export default function Register({
                                 </div>
                             ) : (
                                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs space-y-4">
-                                    <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Ringkasan Pendaftaran</h3>
+                                    <h3 className="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">{t('certificationProgram.register.priceSummary', 'Ringkasan Pendaftaran')}</h3>
 
                                     {((installmentTerms && installmentTerms.length > 0) || (activeInstallment && !activeInstallment.is_fully_paid)) && !isScholarship && displayPrice > 0 ? (
                                         <Tabs
                                             value={paymentTab}
                                             onValueChange={(val) => {
                                                 if (val === 'full' && activeInstallment && !activeInstallment.is_fully_paid) {
-                                                    toast.error('Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.');
+                                                    toast.error(t('certificationProgram.register.activeInstallmentError', 'Anda memiliki cicilan aktif. Pembayaran penuh dinonaktifkan.'));
+                                                    return;
+                                                }
+                                                if (val === 'installment' && isAnyTermOverdue && !activeInstallment) {
+                                                    toast.error(t('certificationProgram.register.overdueInstallmentError', 'Batas waktu pembayaran cicilan telah terlewat.'));
                                                     return;
                                                 }
                                                 setPaymentTab(val as 'full' | 'installment');
@@ -1124,10 +1145,10 @@ export default function Register({
                                                     disabled={!!activeInstallment && !activeInstallment.is_fully_paid}
                                                     className="text-xs sm:text-sm"
                                                 >
-                                                    Bayar Penuh
+                                                    {t('certificationProgram.register.tabFull', 'Bayar Penuh')}
                                                 </TabsTrigger>
-                                                <TabsTrigger value="installment" className="text-xs sm:text-sm">
-                                                    Cicilan ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
+                                                <TabsTrigger value="installment" disabled={isAnyTermOverdue && !activeInstallment} className="text-xs sm:text-sm">
+                                                    {t('certificationProgram.register.tabInstallment', 'Cicilan')} ({activeInstallment && !activeInstallment.is_fully_paid ? (activeInstallment.total_terms || activeInstallment.terms?.length) : installmentTerms.length}x)
                                                 </TabsTrigger>
                                             </TabsList>
 
@@ -1136,7 +1157,7 @@ export default function Register({
                                                 <div className="space-y-4">
                                                     {/* Pilihan Jenis Kode */}
                                                     <div className="space-y-2">
-                                                        <Label className="font-semibold text-gray-700">Jenis Kode</Label>
+                                                        <Label className="font-semibold text-gray-700">{t('certificationProgram.register.codeType', 'Jenis Kode')}</Label>
                                                         <RadioGroup
                                                             value={codeType}
                                                             onValueChange={(val: 'voucher' | 'referral') => {
@@ -1155,11 +1176,11 @@ export default function Register({
                                                         >
                                                             <div className="flex items-center space-x-2">
                                                                 <RadioGroupItem value="voucher" id="code-voucher" />
-                                                                <Label htmlFor="code-voucher" className="cursor-pointer font-medium">Voucher</Label>
+                                                                <Label htmlFor="code-voucher" className="cursor-pointer font-medium">{t('certificationProgram.register.voucherTab', 'Voucher')}</Label>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
                                                                 <RadioGroupItem value="referral" id="code-referral" />
-                                                                <Label htmlFor="code-referral" className="cursor-pointer font-medium">Referral</Label>
+                                                                <Label htmlFor="code-referral" className="cursor-pointer font-medium">{t('certificationProgram.register.referralTab', 'Referral')}</Label>
                                                             </div>
                                                         </RadioGroup>
                                                     </div>
@@ -1167,14 +1188,14 @@ export default function Register({
                                                     {/* Input Kode Promo */}
                                                     <div className="space-y-2">
                                                         <Label htmlFor="promo-code" className="font-semibold text-gray-700">
-                                                            Punya Kode Promo?
+                                                            {t('certificationProgram.register.havePromoCode', 'Punya Kode Promo?')}
                                                         </Label>
                                                         <div className="flex gap-2">
                                                             <div className="relative flex-1">
                                                                 <Input
                                                                     id="promo-code"
                                                                     type="text"
-                                                                    placeholder={codeType === 'voucher' ? 'Masukkan kode voucher' : 'Masukkan kode referral'}
+                                                                    placeholder={codeType === 'voucher' ? t('certificationProgram.register.voucherPlaceholder', 'Masukkan kode voucher') : t('certificationProgram.register.referralPlaceholder', 'Masukkan kode referral')}
                                                                     value={promoCode}
                                                                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                                                     className="rounded-xl pr-10"
@@ -1226,10 +1247,10 @@ export default function Register({
                                                                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
                                                                 <div>
                                                                     <p className="font-semibold">
-                                                                        Voucher "{discountData.discount_code.code}" berhasil diterapkan!
+                                                                        {t('certificationProgram.register.voucherApplied', { code: discountData.discount_code.code, defaultValue: `Voucher "${discountData.discount_code.code}" berhasil diterapkan!` })}
                                                                     </p>
                                                                     <p className="text-green-600 dark:text-green-500">
-                                                                        Hemat {formatRupiah(discountData.discount_amount)}
+                                                                        {t('certificationProgram.register.saveAmount', { amount: formatRupiah(discountData.discount_amount), defaultValue: `Hemat ${formatRupiah(discountData.discount_amount)}` })}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -1240,10 +1261,10 @@ export default function Register({
                                                         {codeType === 'referral' && referralData?.valid && (
                                                             <div className="rounded-lg border border-green-200 bg-green-50 p-3">
                                                                 <p className="text-sm font-medium text-green-800">
-                                                                    Kode referral valid!
+                                                                    {t('certificationProgram.register.referralValid', 'Kode referral valid!')}
                                                                 </p>
                                                                 <p className="mt-1 text-xs text-green-600">
-                                                                    Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
+                                                                    {t('certificationProgram.register.referralDesc', { name: referralData.referrer?.name, defaultValue: `Pembelian pertama Anda dirujuk oleh ${referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.` })}
                                                                 </p>
                                                             </div>
                                                         )}
@@ -1254,9 +1275,9 @@ export default function Register({
                                                         <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
                                                             <div className="flex items-center justify-between">
                                                                 <div className="space-y-0.5">
-                                                                    <Label className="text-base font-semibold text-gray-700">Gunakan Reward Point</Label>
+                                                                    <Label className="text-base font-semibold text-gray-700">{t('certificationProgram.register.pointsOption', 'Gunakan Reward Point')}</Label>
                                                                     <p className="text-muted-foreground text-xs">
-                                                                        Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
+                                                                        {t('certificationProgram.register.pointsAvailable', { points: userPoints.toLocaleString(numLocale) })} (Rp {userPoints.toLocaleString(numLocale)})
                                                                     </p>
                                                                 </div>
                                                                 <Switch
@@ -1278,7 +1299,7 @@ export default function Register({
 
                                                             {pointsChecked && (
                                                                 <div className="space-y-2">
-                                                                    <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">Jumlah poin yang digunakan</Label>
+                                                                    <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">{t('certificationProgram.register.pointsInputPlaceholder', 'Jumlah poin yang digunakan')}</Label>
                                                                     <div className="flex items-center gap-2">
                                                                         <Input
                                                                             id="points-input"
@@ -1289,9 +1310,9 @@ export default function Register({
                                                                             onChange={(e) => {
                                                                                 const val = parseInt(e.target.value) || 0;
                                                                                 if (val > userPoints) {
-                                                                                    setPointsError('Poin melebihi saldo Anda.');
+                                                                                    setPointsError(t('certificationProgram.register.pointsExceed', 'Poin melebihi saldo Anda.'));
                                                                                 } else if (val > maxPointsAllowed) {
-                                                                                    setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
+                                                                                    setPointsError(t('certificationProgram.register.pointsMaxAllowed', { max: maxPointsAllowed, defaultValue: `Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.` }));
                                                                                 } else {
                                                                                     setPointsError('');
                                                                                 }
@@ -1309,12 +1330,12 @@ export default function Register({
                                                                             }}
                                                                             className="rounded-xl border-orange-200 text-orange-500 hover:bg-orange-50"
                                                                         >
-                                                                            Maksimal
+                                                                            {t('certificationProgram.register.btnUseMaxPoints', 'Maksimal')}
                                                                         </Button>
                                                                     </div>
                                                                     {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
                                                                     {codeType === 'voucher' && !!discountData?.valid && (
-                                                                        <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                                                        <p className="text-xs text-amber-600">{t('certificationProgram.register.pointsVoucherConflict', 'Poin tidak dapat digunakan bersamaan dengan kode voucher.')}</p>
                                                                     )}
                                                                 </div>
                                                             )}
@@ -1323,36 +1344,36 @@ export default function Register({
 
                                                     <div className="space-y-2 text-sm">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
+                                                            <span className="text-gray-600 dark:text-gray-400">{t('certificationProgram.register.programType', 'Tipe Program')}</span>
                                                             <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
                                                                 <GraduationCap size={12} className="mr-1" />
-                                                                {isScholarship ? 'Beasiswa' : 'Reguler'}
+                                                                {isScholarship ? t('certificationProgram.detail.hero.badgeScholarship', 'Beasiswa') : t('certificationProgram.detail.hero.badgeRegular', 'Reguler')}
                                                             </Badge>
                                                         </div>
 
                                                         {displayPrice > 0 && (
                                                             <>
                                                                 <div className="flex items-center justify-between">
-                                                                    <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
+                                                                    <span className="text-gray-600 dark:text-gray-400">{t('certificationProgram.register.originalPrice', 'Harga Sertifikasi')}</span>
                                                                     <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
                                                                 </div>
 
                                                                 {codeType === 'voucher' && discountData?.valid && (
                                                                     <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                                                                        <span>Diskon Promo ({discountData.discount_code.code})</span>
+                                                                        <span>{t('certificationProgram.register.discount', 'Diskon Promo')} ({discountData.discount_code.code})</span>
                                                                         <span>-{formatRupiah(discountData.discount_amount)}</span>
                                                                     </div>
                                                                 )}
 
                                                                 {pointsChecked && pointsToUse > 0 && !pointsError && (
                                                                     <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                                                                        <span>Potongan Poin</span>
+                                                                        <span>{t('certificationProgram.register.pointsUsed', 'Potongan Poin')}</span>
                                                                         <span>-{formatRupiah(pointsToUse)}</span>
                                                                     </div>
                                                                 )}
 
                                                                 <div className="flex items-center justify-between">
-                                                                    <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
+                                                                    <span className="text-gray-600 dark:text-gray-400">{t('certificationProgram.register.adminFee', 'Biaya Admin')}</span>
                                                                     <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
                                                                 </div>
                                                             </>
@@ -1367,25 +1388,25 @@ export default function Register({
                                                             </p>
                                                         )}
                                                         <div className="flex items-baseline justify-between">
-                                                            <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                                            <span className="text-base font-semibold text-gray-900 dark:text-white">{t('certificationProgram.register.totalPayment', 'Total Pembayaran')}</span>
                                                             <div className="text-right">
                                                                 {displayPrice > 0 ? (
                                                                     <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                                                        {totalPrice <= 0 ? 'GRATIS' : formatRupiah(totalPrice)}
+                                                                        {totalPrice <= 0 ? t('certificationProgram.register.free', 'GRATIS') : formatRupiah(totalPrice)}
                                                                     </p>
                                                                 ) : (
-                                                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                                                    <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('certificationProgram.register.free', 'GRATIS')}</p>
                                                                 )}
                                                             </div>
                                                         </div>
                                                         {codeType === 'voucher' && discountData?.valid && (
                                                             <p className="text-right text-xs text-green-600 dark:text-green-500">
-                                                                Sudah termasuk diskon {discountData.discount_code.formatted_value}
+                                                                {t('certificationProgram.register.includesDiscount', { value: discountData.discount_code.formatted_value, defaultValue: `Sudah termasuk diskon ${discountData.discount_code.formatted_value}` })}
                                                             </p>
                                                         )}
                                                         {pointsChecked && pointsToUse > 0 && !pointsError && (
                                                             <p className="text-right text-xs text-green-600 dark:text-green-500">
-                                                                Sudah termasuk potongan poin {formatRupiah(pointsToUse)}
+                                                                {t('certificationProgram.register.includesPoints', { amount: formatRupiah(pointsToUse), defaultValue: `Sudah termasuk potongan poin ${formatRupiah(pointsToUse)}` })}
                                                             </p>
                                                         )}
                                                     </div>
@@ -1394,9 +1415,9 @@ export default function Register({
                                                         <div className="mt-4 flex items-start gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
                                                             <Calendar size="16" className="text-orange-500 mt-0.5" />
                                                             <div>
-                                                                <p className="font-semibold">Batas Pendaftaran:</p>
+                                                                <p className="font-semibold">{t('certificationProgram.register.deadline', 'Batas Pendaftaran:')}</p>
                                                                 <p className="text-gray-500">
-                                                                    {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                                                    {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: dateLocale })} WIB
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1410,7 +1431,7 @@ export default function Register({
                                                             className="mt-0.5"
                                                         />
                                                         <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
-                                                            Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.
+                                                            {t('certificationProgram.register.agreeTerms', 'Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.')}
                                                         </Label>
                                                     </div>
 
@@ -1433,18 +1454,18 @@ export default function Register({
                                                         >
                                                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                                             {isLoading
-                                                                ? 'Memproses...'
+                                                                ? t('certificationProgram.register.processing', 'Memproses...')
                                                                 : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending
                                                               ? isDocumentRejected
-                                                                  ? 'Unggah Ulang Dokumen'
-                                                                  : 'Upload Dokumen Pendukung'
-                                                                  : 'Bayar Sekarang'}
+                                                                  ? t('certificationProgram.register.btnReuploadDoc', 'Unggah Ulang Dokumen')
+                                                                  : t('certificationProgram.register.btnUploadDoc', 'Upload Dokumen Pendukung')
+                                                                  : t('certificationProgram.register.btnPayNow', 'Bayar Sekarang')}
                                                         </Button>
                                                         <Button asChild variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
-                                                            <Link href={route('certification-programs.detail', program.slug)}>Kembali</Link>
+                                                            <Link href={route('certification-programs.detail', program.slug)}>{t('certificationProgram.register.btnBackToDetail', 'Kembali')}</Link>
                                                         </Button>
                                                         <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
-                                                            Pembayaran aman dan terenkripsi 🔒
+                                                            {t('certificationProgram.register.securePayment', 'Pembayaran aman dan terenkripsi 🔒')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1462,11 +1483,11 @@ export default function Register({
                                                     onTermsAcceptedChange={setTermsAccepted}
                                                     onBeforePay={async () => {
                                                         if (!activeInstallment && !termsAccepted) {
-                                                            toast.error('Anda harus menyetujui syarat dan ketentuan!');
+                                                            toast.error(t('certificationProgram.register.agreeTermsError', 'Anda harus menyetujui syarat dan ketentuan!'));
                                                             return false;
                                                         }
                                                         if (!isLoggedIn && !isGuestFormComplete()) {
-                                                            toast.error('Lengkapi semua data diri terlebih dahulu.');
+                                                            toast.error(t('certificationProgram.register.completeDataFirst', 'Lengkapi semua data diri terlebih dahulu.'));
                                                             return false;
                                                         }
                                                         const authenticated = await ensureAuthenticated();
@@ -1479,7 +1500,7 @@ export default function Register({
                                         <div className="space-y-4">
                                             {/* Pilihan Jenis Kode */}
                                             <div className="space-y-2">
-                                                <Label className="font-semibold text-gray-700">Jenis Kode</Label>
+                                                <Label className="font-semibold text-gray-700">{t('certificationProgram.register.codeTypeLabel', 'Jenis Kode')}</Label>
                                                 <RadioGroup
                                                     value={codeType}
                                                     onValueChange={(val: 'voucher' | 'referral') => {
@@ -1498,11 +1519,11 @@ export default function Register({
                                                 >
                                                     <div className="flex items-center space-x-2">
                                                         <RadioGroupItem value="voucher" id="code-voucher" />
-                                                        <Label htmlFor="code-voucher" className="cursor-pointer font-medium">Voucher</Label>
+                                                        <Label htmlFor="code-voucher" className="cursor-pointer font-medium">{t('certificationProgram.register.voucher', 'Voucher')}</Label>
                                                     </div>
                                                     <div className="flex items-center space-x-2">
                                                         <RadioGroupItem value="referral" id="code-referral" />
-                                                        <Label htmlFor="code-referral" className="cursor-pointer font-medium">Referral</Label>
+                                                        <Label htmlFor="code-referral" className="cursor-pointer font-medium">{t('certificationProgram.register.referral', 'Referral')}</Label>
                                                     </div>
                                                 </RadioGroup>
                                             </div>
@@ -1510,14 +1531,14 @@ export default function Register({
                                             {/* Input Kode Promo */}
                                             <div className="space-y-2">
                                                 <Label htmlFor="promo-code" className="font-semibold text-gray-700">
-                                                    Punya Kode Promo?
+                                                    {t('certificationProgram.register.havePromoCode', 'Punya Kode Promo?')}
                                                 </Label>
                                                 <div className="flex gap-2">
                                                     <div className="relative flex-1">
                                                         <Input
                                                             id="promo-code"
                                                             type="text"
-                                                            placeholder={codeType === 'voucher' ? 'Masukkan kode voucher' : 'Masukkan kode referral'}
+                                                            placeholder={codeType === 'voucher' ? t('certificationProgram.register.voucherPlaceholder', 'Masukkan kode voucher') : t('certificationProgram.register.referralPlaceholder', 'Masukkan kode referral')}
                                                             value={promoCode}
                                                             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                                             className="rounded-xl pr-10"
@@ -1569,10 +1590,10 @@ export default function Register({
                                                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
                                                         <div>
                                                             <p className="font-semibold">
-                                                                Voucher "{discountData.discount_code.code}" berhasil diterapkan!
+                                                                {t('certificationProgram.register.voucherApplied', 'Voucher "{{code}}" berhasil diterapkan!', { code: discountData.discount_code.code })}
                                                             </p>
                                                             <p className="text-green-600 dark:text-green-500">
-                                                                Hemat {formatRupiah(discountData.discount_amount)}
+                                                                {t('certificationProgram.register.savedAmount', 'Hemat {{amount}}', { amount: formatRupiah(discountData.discount_amount) })}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -1583,10 +1604,10 @@ export default function Register({
                                                 {codeType === 'referral' && referralData?.valid && (
                                                     <div className="rounded-lg border border-green-200 bg-green-50 p-3">
                                                         <p className="text-sm font-medium text-green-800">
-                                                            Kode referral valid!
+                                                            {t('certificationProgram.register.referralValid', 'Kode referral valid!')}
                                                         </p>
                                                         <p className="mt-1 text-xs text-green-600">
-                                                            Pembelian pertama Anda dirujuk oleh {referralData.referrer?.name}. Reward poin akan masuk setelah pembayaran sukses.
+                                                            {t('certificationProgram.register.referralDesc', 'Pembelian pertama Anda dirujuk oleh {{name}}. Reward poin akan masuk setelah pembayaran sukses.', { name: referralData.referrer?.name })}
                                                         </p>
                                                     </div>
                                                 )}
@@ -1597,9 +1618,12 @@ export default function Register({
                                                 <div className="space-y-4 rounded-xl border border-gray-100 p-4 bg-gray-50/50">
                                                     <div className="flex items-center justify-between">
                                                         <div className="space-y-0.5">
-                                                            <Label className="text-base font-semibold text-gray-700">Gunakan Reward Point</Label>
+                                                            <Label className="text-base font-semibold text-gray-700">{t('certificationProgram.register.useRewardPoints', 'Gunakan Reward Point')}</Label>
                                                             <p className="text-muted-foreground text-xs">
-                                                                Anda memiliki {userPoints.toLocaleString('id-ID')} poin (Rp {userPoints.toLocaleString('id-ID')})
+                                                                {t('certificationProgram.register.userPointsBalance', 'Anda memiliki {{points}} poin ({{amount}})', {
+                                                                    points: userPoints.toLocaleString(numLocale),
+                                                                    amount: formatRupiah(userPoints)
+                                                                })}
                                                             </p>
                                                         </div>
                                                         <Switch
@@ -1621,7 +1645,7 @@ export default function Register({
 
                                                     {pointsChecked && (
                                                         <div className="space-y-2">
-                                                            <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">Jumlah poin yang digunakan</Label>
+                                                            <Label htmlFor="points-input" className="text-sm font-medium text-gray-700">{t('certificationProgram.register.pointsAmountUsed', 'Jumlah poin yang digunakan')}</Label>
                                                             <div className="flex items-center gap-2">
                                                                 <Input
                                                                     id="points-input"
@@ -1632,9 +1656,9 @@ export default function Register({
                                                                     onChange={(e) => {
                                                                         const val = parseInt(e.target.value) || 0;
                                                                         if (val > userPoints) {
-                                                                            setPointsError('Poin melebihi saldo Anda.');
+                                                                            setPointsError(t('certificationProgram.register.pointsExceedBalance', 'Poin melebihi saldo Anda.'));
                                                                         } else if (val > maxPointsAllowed) {
-                                                                            setPointsError(`Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`);
+                                                                            setPointsError(t('certificationProgram.register.maxPointsNotice', `Maksimal poin yang dapat digunakan adalah ${maxPointsAllowed}.`, { max: maxPointsAllowed }));
                                                                         } else {
                                                                             setPointsError('');
                                                                         }
@@ -1652,12 +1676,12 @@ export default function Register({
                                                                     }}
                                                                     className="rounded-xl border-orange-200 text-orange-500 hover:bg-orange-50"
                                                                 >
-                                                                    Maksimal
+                                                                    {t('certificationProgram.register.btnUseMax', 'Maksimal')}
                                                                 </Button>
                                                             </div>
                                                             {pointsError && <p className="text-xs text-red-600">{pointsError}</p>}
                                                             {codeType === 'voucher' && !!discountData?.valid && (
-                                                                <p className="text-xs text-amber-600">Poin tidak dapat digunakan bersamaan dengan kode voucher.</p>
+                                                                <p className="text-xs text-amber-600">{t('certificationProgram.register.pointsVoucherConflict', 'Poin tidak dapat digunakan bersamaan dengan kode voucher.')}</p>
                                                             )}
                                                         </div>
                                                     )}
@@ -1666,36 +1690,36 @@ export default function Register({
 
                                             <div className="space-y-2 text-sm">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-gray-600 dark:text-gray-400">Tipe Program</span>
+                                                    <span className="text-gray-600 dark:text-gray-400">{t('certificationProgram.register.programType', 'Tipe Program')}</span>
                                                     <Badge className={isScholarship ? 'bg-amber-100 text-amber-700' : ''}>
                                                         <GraduationCap size={12} className="mr-1" />
-                                                        {isScholarship ? 'Beasiswa' : 'Reguler'}
+                                                        {isScholarship ? t('certificationProgram.register.scholarshipBadge', 'Beasiswa') : t('certificationProgram.register.regularBadge', 'Reguler')}
                                                     </Badge>
                                                 </div>
 
                                                 {displayPrice > 0 && (
                                                     <>
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-gray-600 dark:text-gray-400">Harga Sertifikasi</span>
+                                                            <span className="text-gray-600 dark:text-gray-400">{t('certificationProgram.register.certificationPrice', 'Harga Sertifikasi')}</span>
                                                             <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(displayPrice)}</span>
                                                         </div>
 
                                                         {codeType === 'voucher' && discountData?.valid && (
                                                             <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                                                                <span>Diskon Promo ({discountData.discount_code.code})</span>
+                                                                <span>{t('certificationProgram.register.promoDiscount', 'Diskon Promo ({{code}})', { code: discountData.discount_code.code })}</span>
                                                                 <span>-{formatRupiah(discountData.discount_amount)}</span>
                                                             </div>
                                                         )}
 
                                                         {pointsChecked && pointsToUse > 0 && !pointsError && (
                                                             <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                                                                <span>Potongan Poin</span>
+                                                                <span>{t('certificationProgram.register.pointsUsed', 'Potongan Poin')}</span>
                                                                 <span>-{formatRupiah(pointsToUse)}</span>
                                                             </div>
                                                         )}
 
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-gray-600 dark:text-gray-400">Biaya Admin</span>
+                                                            <span className="text-gray-600 dark:text-gray-400">{t('certificationProgram.register.adminFee', 'Biaya Admin')}</span>
                                                             <span className="font-medium text-gray-900 dark:text-gray-100">{formatRupiah(5000)}</span>
                                                         </div>
                                                     </>
@@ -1710,25 +1734,25 @@ export default function Register({
                                                     </p>
                                                 )}
                                                 <div className="flex items-baseline justify-between">
-                                                    <span className="text-base font-semibold text-gray-900 dark:text-white">Total Pembayaran</span>
+                                                    <span className="text-base font-semibold text-gray-900 dark:text-white">{t('certificationProgram.register.totalPayment', 'Total Pembayaran')}</span>
                                                     <div className="text-right">
                                                         {displayPrice > 0 ? (
                                                             <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                                                                {totalPrice <= 0 ? 'GRATIS' : formatRupiah(totalPrice)}
+                                                                {totalPrice <= 0 ? t('certificationProgram.register.free', 'GRATIS') : formatRupiah(totalPrice)}
                                                             </p>
                                                         ) : (
-                                                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">GRATIS</p>
+                                                            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('certificationProgram.register.free', 'GRATIS')}</p>
                                                         )}
                                                     </div>
                                                 </div>
                                                 {codeType === 'voucher' && discountData?.valid && (
                                                     <p className="text-right text-xs text-green-600 dark:text-green-500">
-                                                        Sudah termasuk diskon {discountData.discount_code.formatted_value}
+                                                        {t('certificationProgram.register.discountIncluded', 'Sudah termasuk diskon {{value}}', { value: discountData.discount_code.formatted_value })}
                                                     </p>
                                                 )}
                                                 {pointsChecked && pointsToUse > 0 && !pointsError && (
                                                     <p className="text-right text-xs text-green-600 dark:text-green-500">
-                                                        Sudah termasuk potongan poin {formatRupiah(pointsToUse)}
+                                                        {t('certificationProgram.register.pointsIncluded', 'Sudah termasuk potongan poin {{amount}}', { amount: formatRupiah(pointsToUse) })}
                                                     </p>
                                                 )}
                                             </div>
@@ -1737,9 +1761,9 @@ export default function Register({
                                                 <div className="mt-4 flex items-start gap-2 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
                                                     <Calendar size="16" className="text-orange-500 mt-0.5" />
                                                     <div>
-                                                        <p className="font-semibold">Batas Pendaftaran:</p>
+                                                        <p className="font-semibold">{t('certificationProgram.register.deadline', 'Batas Pendaftaran:')}</p>
                                                         <p className="text-gray-500">
-                                                            {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                                            {format(deadline, "dd MMMM yyyy 'pukul' HH:mm", { locale: dateLocale })} WIB
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1753,7 +1777,7 @@ export default function Register({
                                                     className="mt-0.5"
                                                 />
                                                 <Label htmlFor="terms" className="text-xs text-gray-600 leading-tight">
-                                                    Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.
+                                                    {t('certificationProgram.register.agreeTerms', 'Saya menyetujui syarat dan ketentuan pendaftaran yang berlaku.')}
                                                 </Label>
                                             </div>
 
@@ -1776,18 +1800,18 @@ export default function Register({
                                                 >
                                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                                     {isLoading
-                                                        ? 'Memproses...'
+                                                        ? t('certificationProgram.register.processing', 'Memproses...')
                                                         : requiresDocumentUpload && !hasApprovedDocument && !isDocumentPending
                                                               ? isDocumentRejected
-                                                                  ? 'Unggah Ulang Dokumen'
-                                                                  : 'Upload Dokumen Pendukung'
-                                                          : 'Bayar Sekarang'}
+                                                                  ? t('certificationProgram.register.btnReuploadDoc', 'Unggah Ulang Dokumen')
+                                                                  : t('certificationProgram.register.btnUploadDoc', 'Upload Dokumen Pendukung')
+                                                            : t('certificationProgram.register.btnPayNow', 'Bayar Sekarang')}
                                                 </Button>
                                                 <Button asChild variant="outline" className="w-full py-6 rounded-full border-gray-200 text-gray-700">
-                                                    <Link href={route('certification-programs.detail', program.slug)}>Kembali</Link>
+                                                    <Link href={route('certification-programs.detail', program.slug)}>{t('certificationProgram.register.btnBackToDetail', 'Kembali')}</Link>
                                                 </Button>
                                                 <p className="text-center text-xs text-gray-500 flex items-center justify-center gap-1.5 mt-2">
-                                                    Pembayaran aman dan terenkripsi 🔒
+                                                    {t('certificationProgram.register.securePayment', 'Pembayaran aman dan terenkripsi 🔒')}
                                                 </p>
                                             </div>
                                         </div>
@@ -1803,27 +1827,31 @@ export default function Register({
                 <Dialog open={isDocumentDialogOpen} onOpenChange={setIsDocumentDialogOpen}>
                     <DialogContent className="max-w-lg">
                         <DialogHeader>
-                            <DialogTitle>Upload Dokumen Pendukung</DialogTitle>
+                            <DialogTitle>{t('certificationProgram.register.docDialogTitle', 'Upload Dokumen Pendukung')}</DialogTitle>
                             <DialogDescription>
-                                {program.document_description ?? 'Unggah dokumen yang diminta agar admin dapat memverifikasi pendaftaran Anda.'}
+                                {program.document_description ?? t('certificationProgram.register.docDialogDefaultDesc', 'Unggah dokumen yang diminta agar admin dapat memverifikasi pendaftaran Anda.')}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="space-y-4">
                             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
-                                <p className="font-semibold">Format dokumen yang diterima</p>
-                                <p className="mt-1">PDF, JPG, JPEG, PNG, atau WebP. Maksimal 5 MB.</p>
+                                <p className="font-semibold">{t('certificationProgram.register.docDialogAccepted', 'Format dokumen yang diterima')}</p>
+                                <p className="mt-1">{t('certificationProgram.register.docDialogAcceptedFormats', 'PDF, JPG, JPEG, PNG, atau WebP. Maksimal 5 MB.')}</p>
                             </div>
                             <Input type="file" accept=".pdf,image/*" onChange={(event) => setDocumentAttachment(event.target.files?.[0] ?? null)} />
-                            {documentAttachment && <p className="text-muted-foreground text-sm">File terpilih: {documentAttachment.name}</p>}
+                            {documentAttachment && (
+                                <p className="text-muted-foreground text-sm">
+                                    {t('certificationProgram.register.docDialogSelected', 'File terpilih: {{fileName}}', { fileName: documentAttachment.name })}
+                                </p>
+                            )}
                         </div>
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDocumentDialogOpen(false)}>
-                                Batal
+                                {t('certificationProgram.register.docDialogCancel', 'Batal')}
                             </Button>
                             <Button type="button" onClick={handleDocumentSubmit} disabled={isLoading || !documentAttachment}>
-                                Upload Dokumen
+                                {isLoading ? t('certificationProgram.register.docDialogUploading', 'Mengunggah...') : t('certificationProgram.register.docDialogSubmit', 'Upload Dokumen')}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

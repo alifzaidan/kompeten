@@ -1,0 +1,266 @@
+{
+  "title": "Home",
+  "hero": {
+    "title": "Smart solutions to elevate your skills",
+    "subtitle": "Carefully designed to help you grasp concepts faster, without hassle, and ready to apply immediately.",
+    "searchPlaceholder": "Search courses, bootcamps, webinars, or bundles...",
+    "tagline": "Learning and leveling up is easier—everything is right here.",
+    "services": "Our Services",
+    "contact": "Contact Us",
+    "alumniCount": "5000+ Alumni",
+    "userCount": "4500+ Users"
+  },
+  "offer": {
+    "title": "What We Offer",
+    "subtitle": "Discover various training and certification programs designed to elevate your skills",
+    "certificationTitle": "Certification",
+    "certificationDesc": "Upgrade your skills and earn official certification that makes your CV stand out!",
+    "bootcampTitle": "Bootcamp",
+    "bootcampDesc": "Intensive learning, hands-on practice, and skill upgrades the fun and fast way!",
+    "webinarTitle": "Webinar",
+    "webinarDesc": "Join easy-to-follow online learning sessions packed with insights from seasoned mentors!",
+    "courseTitle": "Online Courses",
+    "courseDesc": "Learn with structured video lessons that you can access anytime, anywhere.",
+    "bundleTitle": "Bundling Packages",
+    "bundleDesc": "Learn more, pay less—all your favorite topics in one comprehensive package!"
+  },
+  "about": {
+    "badge": "Why Choose Kompeten?",
+    "title1": "Solutions",
+    "title2": "carefully designed for",
+    "titleHighlight": "learning",
+    "title3": "made simple",
+    "webDev": {
+      "title": "Web & App Development",
+      "desc": "Build responsive and high-performance web and mobile applications"
+    },
+    "dataScience": {
+      "title": "Data Science",
+      "desc": "Analyze data to gain valuable and actionable insights"
+    },
+    "graphicDesign": {
+      "title": "Graphic Design",
+      "desc": "Design attractive, engaging, and functional user interfaces"
+    },
+    "accounting": {
+      "title": "Accounting, Finance, & Tax",
+      "desc": "Manage finances and prepare reliable financial statements"
+    },
+    "title": "Start Your Professional Career From Here",
+    "desc": "We provide practical, certification-based, and online training in Accounting and Tax to prepare you for the professional world.",
+    "knowMore": "Get to Know Us"
+  },
+  "program": {
+    "badge": "Our Programs",
+    "learnNow": "Learn Now",
+    "course": {
+      "title": "Online Courses",
+      "subtitle": "Master in-demand skills with one-time payment, hands-on practice, and certificates.",
+      "point1": "Flexible learning via video lessons, projects, and case studies",
+      "point2": "Practical & actionable. Structured from Beginner to Advanced levels",
+      "point3": "Lifetime community discussion groups. Free classes every month"
+    },
+    "bootcamp": {
+      "title": "Bootcamp",
+      "subtitle": "Intensive live classes with experts. Practical & comprehensive.",
+      "point1": "Hands-on case studies and real practice in every session. Basic to advanced",
+      "point2": "Semi-private group mentoring to build your job-ready portfolio",
+      "point3": "Curated expert mentors with over 30,000 satisfied alumni"
+    },
+    "webinar": {
+      "title": "Webinar",
+      "subtitle": "Explore current topics taught by industry experts.",
+      "point1": "Gain insightful learning from seasoned domain experts",
+      "point2": "Practical & Actionable. Step-by-step from Basic to Advanced",
+      "point3": "Lifetime discussion community. Free classes every month"
+    }
+  },
+  "tools": {
+    "badge": "Tools & Frameworks",
+    "title": "Professional tools used"
+  },
+  "latest": {
+    "badge": "Latest Products",
+    "title": "Find the latest Kompeten programs ready to level up your skills",
+    "empty": "No products are currently available.",
+    "allOwned": "You already have access to all our latest products! 😁🙏",
+    "thankYou": "Thank you for being part of Kompeten!",
+    "alreadyOwned": "Already Owned",
+    "save": "Save {{discount}}%",
+    "free": "Free",
+    "registerBefore": "Register within {{days}} days",
+    "registrationClosed": "Registration closed",
+    "registerUntil": "Register until {{date}}",
+    "badges": {
+      "course": "Class",
+      "bootcamp": "Bootcamp",
+      "webinar": "Webinar",
+      "bundle": "Bundle",
+      "private": "Private",
+      "scholarship": "Scholarship",
+      "regular": "Regular",
+      "certification": "Certification"
+    },
+    "levels": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "recentTraining": "Latest Training",
+    "viewMore": "View More...",
+    "registeredMentors": "{{count}} registered mentors",
+    "noBio": "No bio available",
+    "startsPrefix": "Starts: ",
+    "registrationDeadlinePrefix": "Registration Deadline: ",
+    "mentorSingular": "Mentor",
+    "mentorsCount": "{{count}} Mentors",
+    "moreMentors": "+{{count}} more"
+  },
+  "mentor": {
+    "title": "Top industry mentors ensuring your learning is relevant and impactful.",
+    "subtitle": "Real knowledge from industry experts."
+  },
+  "testimony": {
+    "badge": "Trusted by over 1,000+ alumni",
+    "title": "Don't just take our word for it—the proof is right here.",
+    "subtitle": "Read testimonials from participants who have experienced real growth after joining classes at Kompeten",
+    "joinNow": "Join Now"
+  },
+  "article": {
+    "title": "Articles &",
+    "insights": "Insights",
+    "subtitle": "Find inspiration, tips, and comprehensive guides on modern skills and learning",
+    "viewAll": "View All Articles",
+    "placeholderTitle": "Article Coming Soon",
+    "placeholderExcerpt": "Stay tuned for more interesting articles from us",
+    "generalCategory": "General"
+  },
+  "faq": {
+    "badge": "FAQ",
+    "title": "Find answers to your questions here",
+    "subtitle": "Gain a more comprehensive understanding through our curated list of questions and answers.",
+    "categories": {
+      "general": "General & Registration",
+      "learning": "Learning System",
+      "certificate": "Certificates & Competency",
+      "payment": "Payment System",
+      "technical": "Technical"
+    },
+    "items": {
+      "general": [
+        {
+          "q": "What is Kompeten IDN?",
+          "a": "Kompeten IDN is a digital education platform designed to support modern skill development across fields ranging from accounting, economics, taxation, technology, to design."
+        },
+        {
+          "q": "What is available at Kompeten?",
+          "a": "Kompeten offers various services such as Online Classes, Bootcamps, Webinars, and Certification Programs."
+        },
+        {
+          "q": "Is this training open to the public?",
+          "a": "Certainly, our training is open to college students, fresh graduates, and professionals looking to enhance their skills in accounting, economics, taxation, technology, and design."
+        },
+        {
+          "q": "How do I register for training at Kompeten?",
+          "a": "Registration can be completed directly through our website or via the registration link in our Instagram bio @kompeten.idn. You only need to fill out the form and confirm your payment."
+        },
+        {
+          "q": "Can I register for more than one program at the same time?",
+          "a": "Yes, absolutely. However, please ensure that Live Class schedules do not conflict so you can get the most out of each interactive session."
+        },
+        {
+          "q": "Where can I get more information about Kompeten?",
+          "a": "You can reach our admin at +6289528514480 or follow Kompeten's social media accounts on Instagram, TikTok, and LinkedIn."
+        },
+        {
+          "q": "How do I enroll in my desired class?",
+          "a": "You can enroll by clicking the \"Register\" button on the class page, completing the registration form, and making your payment."
+        }
+      ],
+      "learning": [
+        {
+          "q": "How does the learning path work at Kompeten?",
+          "a": "Your learning journey at Kompeten begins with selecting your chosen class or bootcamp. You will then receive instant access to learning materials available anytime, complete with modules, quizzes, and discussion forums."
+        },
+        {
+          "q": "Are classes held offline or online?",
+          "a": "Currently, all our training is held Online via Zoom (Live Sessions) and our Learning Management System (LMS) for self-paced study."
+        },
+        {
+          "q": "What if I am unable to attend a Live Class session?",
+          "a": "No worries. Every session is recorded, and recordings can be re-accessed anytime without any expiration. Recordings are uploaded within a maximum of 24 hours after the session ends."
+        },
+        {
+          "q": "How long do I have access to training materials?",
+          "a": "Access to learning materials (video recordings and modules) is lifetime without time limits, allowing you to review at your own pace."
+        }
+      ],
+      "certificate": [
+        {
+          "q": "Will I receive a certificate?",
+          "a": "Yes, every participant who completes the training and fulfills completion criteria (such as completing post-tests or assignments) receives an official e-certificate from Kompeten IDN."
+        },
+        {
+          "q": "Can certificates from Kompeten IDN be used for job applications?",
+          "a": "Absolutely, our certificates list all competencies covered, bolstering your resume and portfolio in the eyes of recruiters."
+        },
+        {
+          "q": "How can I verify the credibility of the e-certificate?",
+          "a": "Each e-certificate includes a scannable QR code displaying participant credentials, training date, and program enrolled, preventing unauthorized tampering."
+        }
+      ],
+      "payment": [
+        {
+          "q": "What payment methods are available?",
+          "a": "Payments can be made via QRIS, Bank Transfer via Virtual Account, and e-wallets (GoPay, OVO, DANA)."
+        },
+        {
+          "q": "What if my payment has not been confirmed?",
+          "a": "If payment is not confirmed within 24 hours, please contact our support team along with your proof of payment."
+        },
+        {
+          "q": "What should I do after completing my payment?",
+          "a": "After completing payment, you can confirm with our admin (MinKo) or directly join the WhatsApp group."
+        }
+      ],
+      "technical": [
+        {
+          "q": "What device do I need to attend the training?",
+          "a": "We recommend using a laptop or PC (Windows or Mac), or a tablet for ease during practical exercises."
+        },
+        {
+          "q": "I'm having trouble logging into the member area, what should I do?",
+          "a": "Please use the \"Forgot Password\" feature on the login page. If the issue persists, contact our admin (MinKo) at +62 895-2851-4480."
+        },
+        {
+          "q": "How do I reset my password?",
+          "a": "Click \"Forgot Password\" on the login page, enter your registered email address, and follow the instructions sent to your inbox."
+        },
+        {
+          "q": "What if course videos cannot be played?",
+          "a": "Ensure your internet connection is stable, update your browser, and try clearing your browser cache."
+        }
+      ]
+    }
+  },
+  "cta": {
+    "badge": "Join 1,000+ alumni",
+    "title": "Let's Get In Touch.",
+    "subtitle": "Join thousands of learners who have accelerated their careers with our classes. Gain access to premium materials, experienced mentors, and a supportive community.",
+    "button": "Explore Classes",
+    "desc": "We are here to ease your online learning journey. We are ready to assist you.",
+    "getInTouch": "Get in Touch",
+    "exploreBootcamp": "Explore Our Bootcamp"
+  },
+  "notification": {
+    "justPurchased": "Just purchased {{type}}: "
+  },
+  "promotion": {
+    "alt": "Kompeten Promotion",
+    "clickForDetail": "Click for details",
+    "clickToClose": "Click to close"
+  },
+  "galery": {
+    "title": "Kompeten Gallery"
+  }
+}

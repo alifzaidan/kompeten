@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import { Link } from '@inertiajs/react';
 import { Star, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Bootcamp {
     mentors?: {
@@ -13,6 +14,7 @@ interface Bootcamp {
 }
 
 export default function MentorSection({ bootcamp }: { bootcamp: Bootcamp }) {
+    const { t } = useTranslation('user');
     const getInitials = useInitials();
 
     if (!bootcamp.mentors || bootcamp.mentors.length === 0) {
@@ -26,7 +28,9 @@ export default function MentorSection({ bootcamp }: { bootcamp: Bootcamp }) {
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Dibimbing oleh expert</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('bootcamp.detail.guidedByExpert', 'Dibimbing mentor expert')}
+                </h2>
 
                 <div
                     className={`${

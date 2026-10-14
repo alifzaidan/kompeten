@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 // Key points section: renders terms & scholarship flow (sanitized)
 
 function sanitizeHtml(input?: string | null): string {
@@ -53,12 +55,14 @@ interface CertificationProgram {
 }
 
 export default function KeyPointsSection({ program }: { program: CertificationProgram }) {
+    const { t } = useTranslation('user');
+
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">
             {program.terms_conditions && (
                 <div className="rounded-2xl bg-neutral-100 p-6">
                     <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
-                        Syarat & Ketentuan
+                        {t('certificationProgram.detail.keyPoints.termsHeading')}
                     </h2>
                     <div
                         className="prose md:prose-lg max-w-none text-neutral-700"
@@ -70,7 +74,7 @@ export default function KeyPointsSection({ program }: { program: CertificationPr
             {program.type === 'scholarship' && program.scholarship_flow && (
                 <div className="rounded-2xl bg-neutral-100 p-6">
                     <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
-                        Alur Beasiswa
+                        {t('certificationProgram.detail.keyPoints.scholarshipFlowHeading')}
                     </h2>
                     <div
                         className="prose md:prose-lg max-w-none text-neutral-700"

@@ -3,6 +3,7 @@ import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
 import { MessageCircle } from 'lucide-react';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import AboutSection from './about-section';
 import ArticleSection from './article-section';
 import FaqSection from './faq-section';
@@ -96,6 +97,8 @@ interface HomeProps {
 }
 
 export default function Home({ tools, latestProducts, latestArticles, myProductIds, activePromotion, referralInfo }: HomeProps) {
+    const { t, i18n } = useTranslation('home');
+
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const refFromUrl = urlParams.get('ref');
@@ -107,9 +110,15 @@ export default function Home({ tools, latestProducts, latestArticles, myProductI
         }
     }, [referralInfo]);
 
+    const waText = encodeURIComponent(
+        i18n.language === 'en'
+            ? 'Hello Kompeten Admin, I would like to inquire about online classes.'
+            : 'Halo Admin Kompeten, saya ingin bertanya tentang kelas online.',
+    );
+
     return (
         <UserLayout>
-            <Head title="Beranda" />
+            <Head title={t('title')} />
 
             {activePromotion && <PromotionPopup promotion={activePromotion} suppressDuration={3} />}
 
@@ -123,11 +132,11 @@ export default function Home({ tools, latestProducts, latestArticles, myProductI
             <FaqSection />
 
             <a
-                href="https://wa.me/+6289528514480?text=Halo%20Admin%Kompeten,%20saya%20ingin%20bertanya%20tentang%20kelas%20online."
+                href={`https://wa.me/+6289528514480?text=${waText}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-secondary hover:bg-primary/80 fixed right-4 bottom-18 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition duration-1000 md:right-8 lg:bottom-6"
-                aria-label="Chat WhatsApp"
+                aria-label={i18n.language === 'en' ? 'Chat on WhatsApp' : 'Chat WhatsApp'}
             >
                 <MessageCircle className="text-primary-foreground h-6 w-6" />
             </a>

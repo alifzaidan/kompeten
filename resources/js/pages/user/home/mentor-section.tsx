@@ -1,4 +1,5 @@
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
+import { useTranslation } from 'react-i18next';
 
 interface Mentor {
     id: number;
@@ -8,6 +9,8 @@ interface Mentor {
 }
 
 export default function MentorSection() {
+    const { t } = useTranslation('home');
+
     const mentors: Mentor[] = [
         {
             id: 1,
@@ -69,9 +72,9 @@ export default function MentorSection() {
         <section className="bg-background w-full px-4 py-8" id="mentor-section">
             <div className="mx-auto max-w-7xl">
                 <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">
-                    Mentor terbaik dari industri untuk memastikan pembelajaranmu relevan dan impactful.
+                    {t('mentor.title')}
                 </h2>
-                <p className="text-muted-foreground mb-12 text-center">Ilmu real dari para expert industri.</p>
+                <p className="text-muted-foreground mb-12 text-center">{t('mentor.subtitle')}</p>
 
                 <div className="relative">
                     <div className="from-background pointer-events-none absolute top-0 left-0 z-10 h-full w-32 bg-gradient-to-r to-transparent" />

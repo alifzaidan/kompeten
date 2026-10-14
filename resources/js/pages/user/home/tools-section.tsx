@@ -1,4 +1,5 @@
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
+import { useTranslation } from 'react-i18next';
 
 interface Tool {
     id: string;
@@ -8,9 +9,11 @@ interface Tool {
 }
 
 export default function ToolsSection({ tools }: { tools: Tool[] }) {
+    const { t } = useTranslation('home');
+
     return (
         <section className="w-full py-8">
-            <h2 className="mx-auto mb-8 max-w-2xl text-center text-3xl font-semibold md:text-4xl">Tools professional yang digunakan</h2>
+            <h2 className="mx-auto mb-8 max-w-2xl text-center text-3xl font-semibold md:text-4xl">{t('tools.title')}</h2>
             <div className="relative">
                 <div className="from-background pointer-events-none absolute top-0 left-0 z-10 h-full w-32 bg-gradient-to-r to-transparent" />
                 <div className="from-background pointer-events-none absolute top-0 right-0 z-10 h-full w-32 bg-gradient-to-l to-transparent" />

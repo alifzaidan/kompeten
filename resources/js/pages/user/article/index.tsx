@@ -5,10 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import UserLayout from '@/layouts/user-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { ArrowRight, BookOpen, Calendar, Clock, Eye, Search, TrendingUp, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
     id: string;
@@ -66,6 +67,8 @@ interface ArticleIndexProps {
 }
 
 export default function ArticleIndex({ articles, categories, popularArticles, filters }: ArticleIndexProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const [selectedCategory, setSelectedCategory] = useState<string>(filters.category || '');
     const [sortBy, setSortBy] = useState<string>(filters.sort || 'latest');
     const [searchQuery, setSearchQuery] = useState<string>(filters.search || '');
@@ -152,7 +155,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
 
     return (
         <UserLayout>
-            <Head title="Artikel" />
+            <Head title={t('article.headTitle', 'Artikel')} />
 
             {/* Hero Section */}
             <section className="relative overflow-hidden py-16">
@@ -183,7 +186,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                             transition={{ duration: 0.6, delay: 0.3 }}
                             className="mx-auto mb-8 max-w-2xl text-lg text-gray-600 dark:text-gray-300"
                         >
-                            Temukan inspirasi, tips, dan panduan lengkap seputar pembelajaran dan teknologi terkini
+                            {t('article.subtitle', 'Temukan inspirasi, tips, dan panduan lengkap seputar pembelajaran dan teknologi terkini')}
                         </motion.p>
 
                         {/* Search Bar */}
@@ -197,7 +200,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                 <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                 <Input
                                     type="search"
-                                    placeholder="Cari artikel yang kamu butuhkan..."
+                                    placeholder={t('common:searchPlaceholder', 'Cari artikel yang kamu butuhkan...')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="h-14 rounded-full border-2 pr-12 pl-12 text-base shadow-lg"
@@ -213,7 +216,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                             </div>
                             {searchQuery && (
                                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    Mencari: "<span className="font-semibold">{searchQuery}</span>"
+                                    {t('common:searching', 'Mencari')}: "<span className="font-semibold">{searchQuery}</span>"
                                 </p>
                             )}
                         </motion.div>
@@ -229,11 +232,11 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                         <div className="lg:hidden">
                             <Select value={sortBy} onValueChange={handleSort}>
                                 <SelectTrigger className="h-12">
-                                    <SelectValue placeholder="Urutkan" />
+                                    <SelectValue placeholder={t('article.sort', 'Urutkan')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="latest">Terbaru</SelectItem>
-                                    <SelectItem value="popular">Paling Populer</SelectItem>
+                                    <SelectItem value="latest">{t('article.sortLatest', 'Terbaru')}</SelectItem>
+                                    <SelectItem value="popular">{t('article.sortPopular', 'Paling Populer')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -241,7 +244,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                         {/* Categories Filter */}
                         <div className="overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-gray-800">
                             <div className="bg-primary-foreground border-b p-4">
-                                <h3 className="font-semibold text-white">Kategori Artikel</h3>
+                                <h3 className="font-semibold text-white">{t('article.categories', 'Kategori Artikel')}</h3>
                             </div>
                             <div className="p-4">
                                 <div className="space-y-2">
@@ -253,7 +256,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                                 : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                                         }`}
                                     >
-                                        <span className="font-medium">Semua Kategori</span>
+                                        <span className="font-medium">{t('article.allCategories', 'Semua Kategori')}</span>
                                         <Badge variant="secondary" className="ml-2">
                                             {categories.reduce((sum, cat) => sum + cat.articles_count, 0)}
                                         </Badge>
@@ -283,7 +286,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                             <div className="bg-primary-foreground border-b p-4">
                                 <div className="flex items-center gap-2 text-white">
                                     <TrendingUp className="h-5 w-5" />
-                                    <h3 className="font-semibold">Trending Now</h3>
+                                    <h3 className="font-semibold">{t('article.popularArticles', 'Trending Now')}</h3>
                                 </div>
                             </div>
                             <div className="p-4">
@@ -301,7 +304,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                                 <p className="mb-1 line-clamp-2 text-sm font-semibold group-hover:text-orange-600">{article.title}</p>
                                                 <div className="flex items-center gap-1 text-xs text-gray-500">
                                                     <Eye className="h-3 w-3" />
-                                                    {article.views.toLocaleString()} views
+                                                    {t('article.views', { count: article.views.toLocaleString(), defaultValue: `${article.views.toLocaleString()} views` })}
                                                 </div>
                                             </div>
                                         </Link>
@@ -317,9 +320,11 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                         <div className="mb-8 hidden items-center justify-between lg:flex">
                             <div>
                                 <h2 className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
-                                    {searchQuery ? 'Hasil Pencarian' : 'Latest Articles'}
+                                    {searchQuery ? t('common:searchResults', 'Hasil Pencarian') : t('article.latestArticles', 'Latest Articles')}
                                 </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Menampilkan {articles.data.length} artikel</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t('article.showingCount', { current: articles.data.length, total: articles.data.length, defaultValue: `Menampilkan ${articles.data.length} artikel` })}
+                                </p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
@@ -329,7 +334,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                     className={sortBy === 'latest' ? 'bg-orange-500 hover:bg-orange-600' : ''}
                                 >
                                     <Clock className="mr-2 h-4 w-4" />
-                                    Terbaru
+                                    {t('article.sortLatest', 'Terbaru')}
                                 </Button>
                                 <Button
                                     variant={sortBy === 'popular' ? 'default' : 'outline'}
@@ -338,7 +343,7 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                     className={sortBy === 'popular' ? 'bg-orange-500 hover:bg-orange-600' : ''}
                                 >
                                     <TrendingUp className="mr-2 h-4 w-4" />
-                                    Populer
+                                    {t('article.sortPopular', 'Populer')}
                                 </Button>
                             </div>
                         </div>
@@ -387,22 +392,22 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="flex items-center gap-1">
                                                                         <Clock className="h-3.5 w-3.5" />
-                                                                        {article.read_time} min
+                                                                        {t('article.min', { count: article.read_time, defaultValue: `${article.read_time} min` })}
                                                                     </div>
                                                                     <div className="flex items-center gap-1">
                                                                         <Eye className="h-3.5 w-3.5" />
-                                                                        {article.views}
+                                                                        {t('article.views', { count: article.views.toLocaleString(), defaultValue: `${article.views.toLocaleString()} views` })}
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     <Calendar className="h-3.5 w-3.5" />
-                                                                    {format(new Date(article.published_at), 'dd MMM', { locale: id })}
+                                                                    {format(new Date(article.published_at), 'dd MMM', { locale: dateLocale })}
                                                                 </div>
                                                             </div>
                                                         </div>
 
                                                         <div className="mt-3 flex items-center text-sm font-medium text-orange-600 opacity-0 transition-opacity group-hover:opacity-100">
-                                                            Baca Selengkapnya
+                                                            {t('common:readMore', 'Baca Selengkapnya')}
                                                             <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                                                         </div>
                                                     </div>
@@ -433,15 +438,15 @@ export default function ArticleIndex({ articles, categories, popularArticles, fi
                             <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-gray-50 dark:bg-gray-800">
                                 <BookOpen className="mb-4 h-16 w-16 text-gray-300" />
                                 <p className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-                                    {searchQuery ? `Tidak ada hasil untuk "${searchQuery}"` : 'Artikel tidak ditemukan'}
+                                    {searchQuery ? t('common:noResultsFor', { query: searchQuery, defaultValue: `Tidak ada hasil untuk "${searchQuery}"` }) : t('article.notFound', 'Artikel tidak ditemukan')}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {searchQuery ? 'Coba kata kunci lain' : 'Coba ubah filter atau kategori'}
+                                    {searchQuery ? t('common:tryOtherKeywords', 'Coba kata kunci lain') : t('article.notFoundHint', 'Coba ubah filter atau kategori')}
                                 </p>
                                 {searchQuery && (
                                     <Button onClick={clearSearch} variant="outline" className="mt-4">
                                         <X className="mr-2 h-4 w-4" />
-                                        Hapus Pencarian
+                                        {t('common:clearSearch', 'Hapus Pencarian')}
                                     </Button>
                                 )}
                             </div>

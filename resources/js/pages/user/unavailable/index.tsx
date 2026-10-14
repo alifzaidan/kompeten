@@ -2,6 +2,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
 import { AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface UnavailableItem {
     title?: string;
@@ -24,8 +25,9 @@ export default function UnavailablePage({
     backUrl?: string;
     backLabel?: string;
 }) {
-    const pageTitle = title || 'Tidak Tersedia';
-    const itemTitle = item?.title ? `"${item.title}"` : 'Halaman ini';
+    const { t } = useTranslation('user');
+    const pageTitle = title || t('unavailable.title');
+    const itemTitle = item?.title ? `"${item.title}"` : t('unavailable.thisPage');
 
     return (
         <div>
@@ -38,7 +40,7 @@ export default function UnavailablePage({
                             <BreadcrumbList>
                                 <BreadcrumbItem>
                                     <BreadcrumbLink asChild>
-                                        <Link href="/">Beranda</Link>
+                                        <Link href="/">{t('common:nav.home', 'Beranda')}</Link>
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>
                                 <BreadcrumbSeparator>/</BreadcrumbSeparator>
@@ -50,7 +52,9 @@ export default function UnavailablePage({
 
                         <div className="mt-16 flex flex-col items-center text-center">
                             <h1 className="mb-2 max-w-2xl text-3xl leading-tight font-semibold sm:text-4xl">{pageTitle}</h1>
-                            <p className="max-w-xl text-sm text-gray-600 sm:text-base">{itemTitle} saat ini belum bisa diakses.</p>
+                            <p className="max-w-xl text-sm text-gray-600 sm:text-base">
+                                {itemTitle} {t('unavailable.currentlyNotAccessible')}
+                            </p>
                         </div>
 
                         <div className="mt-10 flex justify-center">
@@ -58,22 +62,24 @@ export default function UnavailablePage({
                                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-50">
                                     <AlertTriangle size={40} className="text-yellow-500" />
                                 </div>
-                                <h2 className="text-lg font-semibold sm:text-xl">{message || 'Tidak tersedia. Silahkan hubungi admin.'}</h2>
+                                <h2 className="text-lg font-semibold sm:text-xl">
+                                    {message || t('unavailable.defaultMessage')}
+                                </h2>
                                 <p className="text-sm text-gray-500">
-                                    Jika Anda merasa ini adalah kesalahan, silakan hubungi admin untuk bantuan lebih lanjut.
+                                    {t('unavailable.errorHint')}
                                 </p>
 
                                 <div className="mt-2 flex w-full flex-col gap-2 sm:flex-row">
                                     <Button asChild variant="outline" className="flex-1">
                                         {backUrl ? (
-                                            <Link href={backUrl}>{backLabel || 'Kembali'}</Link>
+                                            <Link href={backUrl}>{backLabel || t('unavailable.back')}</Link>
                                         ) : (
-                                            <Link href="/">{backLabel || 'Kembali'}</Link>
+                                            <Link href="/">{backLabel || t('unavailable.back')}</Link>
                                         )}
                                     </Button>
                                     <Button asChild className="flex-1">
                                         <a href={adminWhatsappUrl} target="_blank" rel="noopener noreferrer">
-                                            Hubungi Admin
+                                            {t('unavailable.contactAdmin')}
                                         </a>
                                     </Button>
                                 </div>

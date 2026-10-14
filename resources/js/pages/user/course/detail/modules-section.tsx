@@ -1,6 +1,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ChevronUp, FileCheck, Lock, PlayCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
     description?: string | null;
@@ -18,6 +19,7 @@ interface Course {
 }
 
 export default function ModulesSection({ course }: { course: Course }) {
+    const { t } = useTranslation('user');
     const [expanded, setExpanded] = useState<React.Key | null>('0');
 
     return (
@@ -25,11 +27,13 @@ export default function ModulesSection({ course }: { course: Course }) {
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <div
                     className="prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300"
-                    dangerouslySetInnerHTML={{ __html: course.description || '<p>Deskripsi tidak tersedia.</p>' }}
+                    dangerouslySetInnerHTML={{ __html: course.description || `<p>${t('course.detail.noDescription', 'Deskripsi tidak tersedia.')}</p>` }}
                 ></div>
             </div>
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-4 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Materi yang akan kamu dapatkan</h2>
+                <h2 className="mb-4 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('course.detail.learningModules', 'Materi yang akan kamu dapatkan')}
+                </h2>
 
                 <Accordion
                     className="mb-8 flex w-full flex-col gap-2 divide-y divide-neutral-200 dark:divide-neutral-700"
@@ -42,9 +46,6 @@ export default function ModulesSection({ course }: { course: Course }) {
                             <AccordionTrigger className="w-full text-left text-neutral-950 hover:cursor-pointer dark:text-neutral-50">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        {/* <div className="border-primary bg-primary/20 text-primary dark:text-primary-foreground rounded-full border px-3 py-1 text-sm font-medium dark:bg-neutral-800">
-                                            <p>{idx + 1}</p>
-                                        </div> */}
                                         <FileCheck className="text-primary-foreground h-4 w-4 dark:text-neutral-50" />
                                         <p className="md:text-lg">{module.title}</p>
                                     </div>
@@ -63,7 +64,7 @@ export default function ModulesSection({ course }: { course: Course }) {
                                             </li>
                                         ))
                                     ) : (
-                                        <li className="ms-8 text-neutral-400">Belum ada materi</li>
+                                        <li className="ms-8 text-neutral-400">{t('course.detail.noLessonsYet', 'Belum ada materi')}</li>
                                     )}
                                 </ul>
                             </AccordionContent>
@@ -73,7 +74,9 @@ export default function ModulesSection({ course }: { course: Course }) {
             </div>
 
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Tools yang digunakan</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('course.detail.supportingTools', 'Tools yang digunakan')}
+                </h2>
                 <div className="flex flex-wrap justify-center gap-6">
                     {course.tools?.map((tool) => (
                         <div

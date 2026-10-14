@@ -1,7 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
 import { Calendar, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Schedule {
     id: string;
@@ -20,6 +21,8 @@ interface CertificationProgram {
 }
 
 export default function ScheduleInfoSection({ program }: { program: CertificationProgram }) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const schedules = program.schedules ?? [];
     if (schedules.length === 0) return null;
     const socializationSchedules =
@@ -36,10 +39,10 @@ export default function ScheduleInfoSection({ program }: { program: Certificatio
             return '';
         }
 
-        return format(new Date(dateValue), 'EEEE', { locale: id });
+        return format(new Date(dateValue), 'EEEE', { locale: dateLocale });
     };
 
-    const formatDate = (value: string) => format(new Date(value), 'dd MMMM yyyy', { locale: id });
+    const formatDate = (value: string) => format(new Date(value), 'dd MMMM yyyy', { locale: dateLocale });
     const formatTime = (value?: string) => (value ? value.slice(0, 5) : '');
 
     const totalSessions = schedules.length;
@@ -54,21 +57,21 @@ export default function ScheduleInfoSection({ program }: { program: Certificatio
                         <div>
                             <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wider text-white/90 uppercase">
                                 <Calendar className="h-4 w-4" />
-                                Jadwal Pelaksanaan
+                                {t('certificationProgram.detail.schedule.badge')}
                             </div>
-                            <h3 className="text-2xl font-bold md:text-3xl">Rangkaian sesi program per hari</h3>
-                            <p className="mt-1 max-w-2xl text-sm text-white/85">Detail jadwal sesi yang akan dilaksanakan.</p>
+                            <h3 className="text-2xl font-bold md:text-3xl">{t('certificationProgram.detail.schedule.title')}</h3>
+                            <p className="mt-1 max-w-2xl text-sm text-white/85">{t('certificationProgram.detail.schedule.subtitle')}</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 text-sm md:min-w-80">
                             <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                                <div className="text-white/75">Total Sesi</div>
+                                <div className="text-white/75">{t('certificationProgram.detail.schedule.totalSessions')}</div>
                                 <div className="mt-1 text-2xl font-bold">{totalSessions}</div>
                             </div>
                             <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                                <div className="text-white/75">Rentang Tanggal</div>
+                                <div className="text-white/75">{t('certificationProgram.detail.schedule.dateRange')}</div>
                                 <div className="mt-1 text-base leading-tight font-semibold">
-                                    {firstDate && lastDate ? `${formatDate(firstDate)} - ${formatDate(lastDate)}` : 'Menunggu jadwal'}
+                                    {firstDate && lastDate ? `${formatDate(firstDate)} - ${formatDate(lastDate)}` : t('certificationProgram.detail.schedule.waitingSchedule')}
                                 </div>
                             </div>
                         </div>
@@ -78,8 +81,8 @@ export default function ScheduleInfoSection({ program }: { program: Certificatio
                 <div className="p-6 md:p-8">
                     <div className="mb-4 flex items-center justify-between gap-3">
                         <div>
-                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white">Detail Jadwal per Hari</h4>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Urutan sesi ditampilkan dari hari pertama hingga terakhir.</p>
+                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white">{t('certificationProgram.detail.schedule.dailyDetailTitle')}</h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{t('certificationProgram.detail.schedule.dailyDetailSubtitle')}</p>
                         </div>
                     </div>
 
@@ -102,7 +105,7 @@ export default function ScheduleInfoSection({ program }: { program: Certificatio
 
                                             <div className="space-y-2">
                                                 <h5 className="text-base font-semibold text-slate-900 dark:text-white">
-                                                    {schedule.title || (dateValue ? formatDate(dateValue) : `Sesi ${index + 1}`)}
+                                                    {schedule.title || (dateValue ? formatDate(dateValue) : t('certificationProgram.detail.schedule.sessionPrefix', { index: index + 1 }))}
                                                 </h5>
 
                                                 {schedule.title && dateValue && schedule.day && (
@@ -135,8 +138,8 @@ export default function ScheduleInfoSection({ program }: { program: Certificatio
                     <div className="mb-4 flex items-center gap-2">
                         <Calendar className="text-primary h-5 w-5" />
                         <div>
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Jadwal Sosialisasi Beasiswa</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400">Tahapan awal sebelum proses seleksi utama dimulai.</p>
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('certificationProgram.detail.schedule.socializationBadge')}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{t('certificationProgram.detail.schedule.socializationSubtitle')}</p>
                         </div>
                     </div>
 
@@ -153,13 +156,13 @@ export default function ScheduleInfoSection({ program }: { program: Certificatio
                                 >
                                     <div className="flex items-center justify-between gap-3">
                                         <Badge className="bg-primary-foreground text-primary hover:bg-primary-foreground dark:bg-primary/15 rounded-full px-3 py-1 text-xs font-semibold dark:text-purple-200">
-                                            {schedule.title || `Tahap ${index + 1}`}
+                                            {schedule.title || t('certificationProgram.detail.schedule.socializationStage', { index: index + 1 })}
                                         </Badge>
-                                        <span className="text-primary text-xs font-medium tracking-wide uppercase">Sosialisasi</span>
+                                        <span className="text-primary text-xs font-medium tracking-wide uppercase">{t('certificationProgram.detail.schedule.socializationTag')}</span>
                                     </div>
                                     <div className="mt-3 text-sm font-medium text-slate-900 dark:text-white">
                                         {getDayLabel(schedule) && <span className="capitalize">{getDayLabel(schedule)}, </span>}
-                                        {dateValue ? formatDate(dateValue) : 'Tanggal belum tersedia'}
+                                        {dateValue ? formatDate(dateValue) : t('certificationProgram.detail.schedule.dateNotAvailable')}
                                     </div>
                                     {(startTime || endTime) && (
                                         <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">

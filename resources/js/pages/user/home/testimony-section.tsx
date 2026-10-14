@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from '@/components/ui/carousel';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Testimony {
     name: string;
@@ -13,6 +14,7 @@ interface Testimony {
 }
 
 export default function TestimonySection() {
+    const { t } = useTranslation('home');
     const testimonies: Testimony[] = [
         {
             name: 'Melina Putri Rusmawati',
@@ -348,10 +350,10 @@ export default function TestimonySection() {
         <section className="bg-background w-full px-4 py-8" id="testimony-section">
             <div className="mx-auto max-w-4xl">
                 <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">
-                    Biar nggak cuma katanya—buktinya ada di sini.
+                    {t('testimony.title')}
                 </h2>
                 <p className="text-muted-foreground mx-auto mb-12 max-w-xl text-center">
-                    Simak testimoni peserta yang udah merasakan perubahan nyata setelah ikut kelas di Kompeten
+                    {t('testimony.subtitle')}
                 </p>
 
                 <div className="relative">

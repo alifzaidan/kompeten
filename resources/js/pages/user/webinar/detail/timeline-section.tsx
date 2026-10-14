@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { File } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Bootcamp {
     curriculum?: string | null;
@@ -35,6 +36,7 @@ function parseCurriculumItems(curriculum?: string | null): string[] {
 }
 
 export default function TimelineSection({ bootcamp }: { bootcamp: Bootcamp }) {
+    const { t } = useTranslation('user');
     const hasHtmlList = /<(ol|ul)\b/i.test(bootcamp.curriculum || '');
     const curriculumItems = hasHtmlList ? [] : parseCurriculumItems(bootcamp.curriculum);
 
@@ -42,12 +44,12 @@ export default function TimelineSection({ bootcamp }: { bootcamp: Bootcamp }) {
         <section className="to-primary mt-8 w-full bg-gradient-to-tl from-black px-4">
             <div className="mx-auto my-12 w-full max-w-7xl px-4">
                 <h2 className="mx-auto mb-8 max-w-3xl bg-gradient-to-r from-[#71D0F7] via-white to-[#E6834A] bg-clip-text text-center text-3xl font-bold text-transparent italic sm:text-4xl">
-                    Materi yang akan kamu pelajari
+                    {t('webinar.detail.learningMaterial')}
                 </h2>
                 {hasHtmlList ? (
                     <div
                         className="prose prose-invert md:prose-lg mx-auto max-w-none"
-                        dangerouslySetInnerHTML={{ __html: bootcamp.curriculum || '<p>Materi belum tersedia.</p>' }}
+                        dangerouslySetInnerHTML={{ __html: bootcamp.curriculum || `<p>${t('webinar.detail.materialNotAvailable')}</p>` }}
                     />
                 ) : curriculumItems.length ? (
                     <ol className="grid list-decimal grid-cols-1 gap-x-20 gap-y-4 pl-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -63,7 +65,7 @@ export default function TimelineSection({ bootcamp }: { bootcamp: Bootcamp }) {
                         ))}
                     </ol>
                 ) : (
-                    <p className="text-primary-foreground text-center">Materi belum tersedia.</p>
+                    <p className="text-primary-foreground text-center">{t('webinar.detail.materialNotAvailable')}</p>
                 )}
             </div>
         </section>

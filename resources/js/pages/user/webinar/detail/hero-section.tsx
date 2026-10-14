@@ -1,6 +1,7 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 interface Webinar {
     title: string;
@@ -18,6 +19,9 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ webinar, onRegisterClick }: HeroSectionProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? 'en-US' : 'id-ID';
+
     return (
         <section className="relative py-12 text-gray-900">
             <div className="relative mx-auto max-w-7xl px-4">
@@ -26,13 +30,13 @@ export default function HeroSection({ webinar, onRegisterClick }: HeroSectionPro
                         <BreadcrumbList>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/">Beranda</Link>
+                                    <Link href="/">{t('breadcrumb.home', { defaultValue: 'Beranda' })}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/webinar">Webinar</Link>
+                                    <Link href="/webinar">{t('webinar.title')}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
@@ -44,19 +48,19 @@ export default function HeroSection({ webinar, onRegisterClick }: HeroSectionPro
 
                     <div className="mt-8 mb-4">
                         <span className="mt-8 mb-4 text-gray-600 dark:text-gray-400">
-                            {new Date(webinar.start_time).toLocaleDateString('id-ID', {
+                            {new Date(webinar.start_time).toLocaleDateString(dateLocale, {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric',
                             })}
                             {' | '}
-                            {new Date(webinar.start_time).toLocaleTimeString('id-ID', {
+                            {new Date(webinar.start_time).toLocaleTimeString(dateLocale, {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 timeZone: 'Asia/Jakarta',
                             })}{' '}
                             -{' '}
-                            {new Date(webinar.end_time).toLocaleTimeString('id-ID', {
+                            {new Date(webinar.end_time).toLocaleTimeString(dateLocale, {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 timeZone: 'Asia/Jakarta',
@@ -69,7 +73,9 @@ export default function HeroSection({ webinar, onRegisterClick }: HeroSectionPro
 
                     {webinar.category && (
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Kategori:</span>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                {t('webinar.detail.category')}
+                            </span>
                             <span className="border-primary-foreground bg-secondary text-primary-foreground rounded-full border px-3 py-1 text-sm font-medium">
                                 {webinar.category.name}
                             </span>
@@ -77,10 +83,10 @@ export default function HeroSection({ webinar, onRegisterClick }: HeroSectionPro
                     )}
 
                     <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <Button onClick={onRegisterClick}>Daftar Sekarang</Button>
+                        <Button onClick={onRegisterClick}>{t('webinar.detail.btnRegisterNow')}</Button>
                         <Button variant="outline" asChild>
                             <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
-                                Hubungi Kami
+                                {t('webinar.detail.btnContactUs')}
                             </a>
                         </Button>
                     </div>

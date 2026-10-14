@@ -1,6 +1,7 @@
 import { Carousel, CarouselContent, CarouselItem, CarouselNavigation } from '@/components/ui/carousel';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Product {
     title: string;
@@ -11,34 +12,36 @@ interface Product {
 }
 
 export default function AboutSection() {
+    const { t } = useTranslation('home');
+
     const products: Product[] = [
         {
-            title: 'Certification',
-            description: 'Tingkatkan skill dan kantongi sertifikat resmi yang bikin CV-mu makin standout!',
+            title: t('offer.certificationTitle'),
+            description: t('offer.certificationDesc'),
             image: '/assets/images/Sertifikasi.webp',
             href: '/certification',
         },
         {
-            title: 'Bootcamp',
-            description: 'Belajar intensif, praktik langsung, dan upgrade skill dengan cara yang seru dan cepat!',
+            title: t('offer.bootcampTitle'),
+            description: t('offer.bootcampDesc'),
             image: '/assets/images/Bootcamp.webp',
             href: '/bootcamp',
         },
         {
-            title: 'Webinar',
-            description: 'Ikuti sesi belajar online yang ringan tapi penuh insight bareng mentor berpengalaman!',
+            title: t('offer.webinarTitle'),
+            description: t('offer.webinarDesc'),
             image: '/assets/images/Webinar.webp',
             href: '/webinar',
         },
         {
-            title: 'Kelas Online',
-            description: 'Belajar dengan video pembelajaran terstruktur yang bisa kamu akses kapan saja dan di mana saja.',
+            title: t('offer.courseTitle'),
+            description: t('offer.courseDesc'),
             image: '/assets/images/Bootcamp.webp',
             href: '/course',
         },
         {
-            title: 'Paket Bundling',
-            description: 'Belajar lebih banyak, bayar lebih hemat—semua materi favoritmu ada dalam satu paket lengkap!',
+            title: t('offer.bundleTitle'),
+            description: t('offer.bundleDesc'),
             image: '/assets/images/Bundling.webp',
             href: '/bundle',
         },
@@ -79,9 +82,9 @@ export default function AboutSection() {
     return (
         <section className="mx-auto w-full max-w-7xl px-4 pt-16">
             <div className="mb-4 text-center">
-                <h2 className="mb-4 text-3xl font-semibold text-gray-900 md:text-4xl dark:text-white">Apa yang Kami Tawarkan</h2>
+                <h2 className="mb-4 text-3xl font-semibold text-gray-900 md:text-4xl dark:text-white">{t('offer.title')}</h2>
                 <p className="text-muted-foreground mx-auto max-w-2xl">
-                    Temukan berbagai program pelatihan dan sertifikasi yang dirancang untuk mengembangkan skill Anda
+                    {t('offer.subtitle')}
                 </p>
             </div>
 

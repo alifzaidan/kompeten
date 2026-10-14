@@ -6,8 +6,9 @@ import { rupiahFormatter } from '@/lib/utils';
 import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { AlertTriangle, Calendar, Check, Package, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Bundle {
     id: string;
@@ -44,6 +45,8 @@ export default function RegisterSection({
     hasOwnedItems,
     ownedItems,
 }: RegisterSectionProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const { auth } = usePage<SharedData>().props;
 
     const deadline = bundle.registration_deadline ? new Date(bundle.registration_deadline) : null;
@@ -57,15 +60,14 @@ export default function RegisterSection({
     let isDisabled = false;
 
     registrationUrl = bundle.registration_url;
-    buttonText = 'Daftar Sekarang';
+    buttonText = t('bundling.detail.register.btnRegisterNow');
     warningMessage = null;
-
 
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
-                    Daftar Paket Bundling "{bundle.title}" Sekarang!
+                    {t('bundling.detail.registerTitle', { title: bundle.title })}
                 </h2>
 
                 {/* ✅ Warning if user already owns items */}
@@ -73,7 +75,7 @@ export default function RegisterSection({
                     <Alert variant="destructive" className="mb-6">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                            <p className="mb-2 font-semibold">Anda sudah memiliki produk berikut dalam bundle ini:</p>
+                            <p className="mb-2 font-semibold">{t('bundling.detail.register.ownedWarningTitle')}</p>
                             <ul className="ml-4 list-disc space-y-1">
                                 {ownedItems.map((item) => (
                                     <li key={item.id}>
@@ -81,7 +83,7 @@ export default function RegisterSection({
                                     </li>
                                 ))}
                             </ul>
-                            <p className="mt-2 text-sm">Untuk menghindari duplikasi, Anda tidak dapat membeli bundle ini.</p>
+                            <p className="mt-2 text-sm">{t('bundling.detail.register.ownedWarningDesc')}</p>
                         </AlertDescription>
                     </Alert>
                 )}
@@ -98,20 +100,20 @@ export default function RegisterSection({
                         <div className="space-y-3">
                             <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
                                 <Sparkles className="text-primary h-5 w-5" />
-                                Keuntungan Paket Bundling
+                                {t('bundling.detail.register.benefitsHeading')}
                             </h3>
                             <ul className="space-y-2">
                                 <li className="flex items-start gap-2 text-sm">
                                     <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
-                                    <p>Hemat {discountPercentage}% dari harga normal</p>
+                                    <p>{t('bundling.detail.register.benefitSave', { percent: discountPercentage })}</p>
                                 </li>
                                 <li className="flex items-start gap-2 text-sm">
                                     <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
-                                    <p>Akses ke {bundle.bundle_items_count} program pembelajaran sekaligus</p>
+                                    <p>{t('bundling.detail.register.benefitAccess', { count: bundle.bundle_items_count })}</p>
                                 </li>
                                 <li className="flex items-start gap-2 text-sm">
                                     <Check size="16" className="mt-0.5 flex-shrink-0 text-green-600" />
-                                    <p>Sertifikat untuk semua program yang diselesaikan</p>
+                                    <p>{t('bundling.detail.register.benefitCertificate')}</p>
                                 </li>
                             </ul>
                         </div>
@@ -119,12 +121,16 @@ export default function RegisterSection({
 
                     {/* Right Column - Price & Registration */}
                     <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-800">
-                        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Detail Harga Paket</h3>
+                        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                            {t('bundling.detail.register.priceDetailHeading')}
+                        </h3>
 
                         {/* Price Comparison */}
                         <div className="mb-4 space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">Harga Normal:</span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t('bundling.detail.register.normalPrice')}
+                                </span>
                                 <span className="text-sm text-gray-500 line-through dark:text-gray-400">
                                     {rupiahFormatter.format(totalOriginalPrice)}
                                 </span>
@@ -132,7 +138,9 @@ export default function RegisterSection({
 
                             {discountAmount > 0 && (
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">Hemat:</span>
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        {t('bundling.detail.register.saveAmount')}
+                                    </span>
                                     <Badge className="bg-green-500 text-white">
                                         - {rupiahFormatter.format(discountAmount)} ({discountPercentage}%)
                                     </Badge>
@@ -144,7 +152,9 @@ export default function RegisterSection({
 
                         {/* Final Price */}
                         <div className="mb-6">
-                            <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">Harga Bundling:</p>
+                            <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                                {t('bundling.detail.register.bundlePriceLabel')}
+                            </p>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-primary text-4xl font-semibold">{rupiahFormatter.format(bundle.price)}</span>
                             </div>
@@ -158,7 +168,9 @@ export default function RegisterSection({
                                 <li className="flex items-center gap-2 text-sm">
                                     <Calendar size="16" className="text-primary dark:text-secondary flex-shrink-0" />
                                     <p>
-                                        Batch: <span className="font-medium">{bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`}</span>
+                                        {t('bundling.detail.register.batchLabel', {
+                                            batch: bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`,
+                                        })}
                                     </p>
                                 </li>
                             )}
@@ -166,7 +178,7 @@ export default function RegisterSection({
                             <li className="flex items-center gap-2 text-sm">
                                 <Package size="16" className="text-primary dark:text-secondary flex-shrink-0" />
                                 <p>
-                                    Total: <span className="font-medium">{bundle.bundle_items_count} Program Pembelajaran</span>
+                                    {t('bundling.detail.register.totalPrograms', { count: bundle.bundle_items_count })}
                                 </p>
                             </li>
 
@@ -174,9 +186,9 @@ export default function RegisterSection({
                                 <li className="flex items-start gap-2 text-sm">
                                     <Calendar size="16" className="text-primary dark:text-secondary mt-0.5 flex-shrink-0" />
                                     <div>
-                                        <p className="font-medium">Batas Pendaftaran:</p>
+                                        <p className="font-medium">{t('bundling.detail.register.deadlineLabel')}</p>
                                         <p className="text-gray-600 dark:text-gray-400">
-                                            {format(deadline, "EEEE, dd MMMM yyyy 'pukul' HH:mm", { locale: id })} WIB
+                                            {format(deadline, "EEEE, dd MMMM yyyy 'pukul' HH:mm", { locale: dateLocale })} WIB
                                         </p>
                                     </div>
                                 </li>

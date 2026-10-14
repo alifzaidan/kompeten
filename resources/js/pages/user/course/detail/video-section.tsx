@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { TransitionPanel } from '@/components/ui/transition-panel';
 import { PlayCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
     modules?: {
@@ -23,6 +24,7 @@ function getYoutubeId(url: string) {
 }
 
 export default function VideoSection({ course }: { course: Course }) {
+    const { t } = useTranslation('user');
     const [activeIndex, setActiveIndex] = useState(0);
 
     const items =
@@ -69,7 +71,7 @@ export default function VideoSection({ course }: { course: Course }) {
                     ))}
                 </TransitionPanel>
                 <div className="col-span-1 flex h-full flex-col rounded-xl bg-white p-6 shadow dark:bg-zinc-800">
-                    <h2 className="mb-4 font-semibold">{totalLessons} Materi</h2>
+                    <h2 className="mb-4 font-semibold">{t('course.detail.totalLessonsCount', { count: totalLessons, defaultValue: `${totalLessons} Materi` })}</h2>
                     {items.map((item, index) => (
                         <button
                             key={index}
@@ -88,11 +90,11 @@ export default function VideoSection({ course }: { course: Course }) {
                         className="hover:bg-primary/10 mb-2 flex justify-between rounded-lg border bg-gray-100 p-4 text-gray-800 transition hover:cursor-pointer"
                     >
                         <h5 className="flex items-center gap-2 text-sm font-medium">
-                            <PlayCircle size="18" /> {totalLessons - items.length} Materi Lainnya
+                            <PlayCircle size="18" /> {t('course.detail.otherMaterialsCount', { count: totalLessons - items.length, defaultValue: `+${totalLessons - items.length} Materi Lainnya` })}
                         </h5>
                     </a>
                     <a href="#register" className="mt-auto w-full">
-                        <Button className="w-full">Gabung Sekarang</Button>
+                        <Button className="w-full">{t('course.detail.joinNow', 'Gabung Sekarang')}</Button>
                     </a>
                 </div>
             </div>

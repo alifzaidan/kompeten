@@ -1,5 +1,6 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import BootcampSection from './bootcamp-section';
 
 type Category = {
@@ -32,9 +33,11 @@ interface BootcampProps {
 }
 
 export default function Bootcamp({ categories, bootcamps, myBootcampIds }: BootcampProps) {
+    const { t } = useTranslation('user');
+
     return (
         <UserLayout>
-            <Head title="Bootcamp" />
+            <Head title={t('bootcamp.title', 'Bootcamp')} />
 
             {/* <HeroSection /> */}
             {/* <FeatureSection /> */}

@@ -2,8 +2,9 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { Calendar, Package } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Bundle {
     title: string;
@@ -22,6 +23,8 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ bundle, discountPercentage, onRegisterClick }: HeroSectionProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const deadlineDate = bundle.registration_deadline ? new Date(bundle.registration_deadline) : null;
 
     return (
@@ -32,13 +35,13 @@ export default function HeroSection({ bundle, discountPercentage, onRegisterClic
                         <BreadcrumbList>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/">Beranda</Link>
+                                    <Link href="/">{t('breadcrumb.home', { defaultValue: 'Beranda' })}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/bundle">Paket Bundling</Link>
+                                    <Link href="/bundle">{t('bundling.detail.hero.badge')}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
@@ -51,17 +54,17 @@ export default function HeroSection({ bundle, discountPercentage, onRegisterClic
                     <div className="mt-8 mb-4 flex flex-wrap items-center gap-3">
                         <span className="border-primary-foreground bg-secondary text-primary-foreground rounded-full border px-4 py-1 text-sm font-medium">
                             <Package className="mr-1 inline-block h-4 w-4" />
-                            {bundle.bundle_items_count} Program
+                            {t('bundling.detail.hero.programsCount', { count: bundle.bundle_items_count })}
                         </span>
                         {bundle.batch && (
                             <span className="rounded-full border border-orange-300 bg-orange-100 px-4 py-1 text-sm font-medium text-orange-700 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
                                 <Calendar className="mr-1 inline-block h-4 w-4" />
-                                {bundle.batch.toLowerCase().includes('batch') ? bundle.batch : `Batch ${bundle.batch}`}
+                                {t('bundling.detail.hero.batch', { batch: bundle.batch })}
                             </span>
                         )}
                         {discountPercentage > 0 && (
                             <span className="rounded-full border border-red-300 bg-red-100 px-4 py-1 text-sm font-medium text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
-                                Hemat {discountPercentage}%
+                                {t('bundling.detail.hero.savePercent', { percent: discountPercentage })}
                             </span>
                         )}
                     </div>
@@ -72,18 +75,20 @@ export default function HeroSection({ bundle, discountPercentage, onRegisterClic
 
                     {deadlineDate && (
                         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
-                            ⏰ Daftar sebelum: {format(deadlineDate, 'dd MMMM yyyy, HH:mm', { locale: id })} WIB
+                            {t('bundling.detail.hero.registerBefore', {
+                                date: format(deadlineDate, 'dd MMMM yyyy, HH:mm', { locale: dateLocale }),
+                            })}
                         </div>
                     )}
 
                     <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Button onClick={onRegisterClick}>
                             <Package className="mr-2 h-4 w-4" />
-                            Daftar Sekarang
+                            {t('bundling.detail.hero.btnRegisterNow')}
                         </Button>
                         <Button variant="outline" asChild>
                             <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
-                                Hubungi Kami
+                                {t('bundling.detail.hero.btnContactUs')}
                             </a>
                         </Button>
                     </div>

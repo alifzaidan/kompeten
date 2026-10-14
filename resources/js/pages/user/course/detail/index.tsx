@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Head } from '@inertiajs/react';
 import { BookOpen, Info, Lightbulb, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import HeroSection from './hero-section';
 import KeyPointSection from './key-point-section';
 import MentorSection from './mentor-section';
@@ -48,6 +49,7 @@ interface ReferralInfo {
 }
 
 export default function DetailCourse({ course, referralInfo }: { course: Course; referralInfo: ReferralInfo }) {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('materi');
 
     useEffect(() => {
@@ -73,7 +75,7 @@ export default function DetailCourse({ course, referralInfo }: { course: Course;
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title={`${course.title} - Kelas Online`} />
+            <Head title={`${course.title} - ${t('course.title')}`} />
             <HeroSection course={course} onRegisterClick={handleRegisterClick} />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mx-auto w-full max-w-7xl gap-0 px-4 pb-8">
@@ -84,7 +86,7 @@ export default function DetailCourse({ course, referralInfo }: { course: Course;
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <BookOpen className="h-5 w-5" />
-                            Materi
+                            {t('course.detail.navModules')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -92,7 +94,7 @@ export default function DetailCourse({ course, referralInfo }: { course: Course;
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Lightbulb className="h-5 w-5" />
-                            Benefit
+                            {t('course.detail.navBenefits')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -100,7 +102,7 @@ export default function DetailCourse({ course, referralInfo }: { course: Course;
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <User className="h-5 w-5" />
-                            Mentor
+                            {t('common.mentor', 'Mentor')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -108,7 +110,7 @@ export default function DetailCourse({ course, referralInfo }: { course: Course;
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Info className="h-5 w-5" />
-                            Informasi Program
+                            {t('course.detail.programInfo')}
                         </TabsTrigger>
                     </TabsList>
                 </div>

@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/hooks/use-initials';
 import { User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Mentor {
     id: string;
@@ -14,6 +15,7 @@ interface CertificationProgram {
 }
 
 export default function MentorSection({ program }: { program: CertificationProgram }) {
+    const { t } = useTranslation('user');
     const getInitials = useInitials();
 
     if (!program.mentors || program.mentors.length === 0) {
@@ -27,7 +29,9 @@ export default function MentorSection({ program }: { program: CertificationProgr
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Dibimbing oleh expert</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('certificationProgram.detail.mentors.heading')}
+                </h2>
 
                 <div
                     className={`${

@@ -1,5 +1,6 @@
 import UserLayout from '@/layouts/user-layout';
 import { Head } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import CertificationProgramSection from './certification-program-section';
 
 type Category = {
@@ -29,9 +30,11 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ categories, programs, myProgramIds, approvedScholarshipProgramIds = [] }: DashboardProps) {
+    const { t } = useTranslation('user');
+
     return (
         <UserLayout>
-            <Head title="Program Sertifikasi" />
+            <Head title={t('certificationProgram.dashboard.headTitle')} />
 
             {/* <HeroSection /> */}
             {/* <FeatureSection /> */}

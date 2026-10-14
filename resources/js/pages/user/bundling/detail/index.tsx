@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Head } from '@inertiajs/react';
 import { BookOpen, Gift, Info, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AboutSection from './about-section';
 import BenefitsSection from './benefits-section';
 import BundleItemsSection from './bundle-items-section';
@@ -72,6 +73,7 @@ export default function BundleDetail({
     hasOwnedItems,
     ownedItems,
 }: BundleDetailProps) {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('paket');
 
     const handleRegisterClick = () => {
@@ -86,7 +88,7 @@ export default function BundleDetail({
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title={`${bundle.title} - Paket Bundling`} />
+            <Head title={t('bundling.detail.headTitle', { title: bundle.title })} />
 
             <HeroSection bundle={bundle} discountPercentage={discountPercentage} onRegisterClick={handleRegisterClick} />
 
@@ -98,7 +100,7 @@ export default function BundleDetail({
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <ShoppingBag className="h-5 w-5" />
-                            Isi Paket
+                            {t('bundling.detail.items.badge')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -106,7 +108,7 @@ export default function BundleDetail({
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <BookOpen className="h-5 w-5" />
-                            Tentang
+                            {t('common.about', { defaultValue: 'Tentang' })}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -114,7 +116,7 @@ export default function BundleDetail({
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Gift className="h-5 w-5" />
-                            Manfaat
+                            {t('bundling.detail.tabBenefits')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -122,7 +124,7 @@ export default function BundleDetail({
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Info className="h-5 w-5" />
-                            Informasi Paket
+                            {t('bundling.detail.tabPackageInfo')}
                         </TabsTrigger>
                     </TabsList>
                 </div>

@@ -14,6 +14,7 @@ import { Magnetic } from '@/components/ui/magnetic';
 import { Link } from '@inertiajs/react';
 import { GalleryVerticalEnd, Percent } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Category = {
     id: string;
@@ -44,6 +45,7 @@ interface CourseProps {
 }
 
 export default function CoursesSection({ categories, courses, myCourseIds }: CourseProps) {
+    const { t } = useTranslation('user');
     const [level, setLevel] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
@@ -87,19 +89,19 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
             case 'beginner':
                 return (
                     <Badge className="border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300">
-                        Beginner
+                        {t('course.catalog.beginner')}
                     </Badge>
                 );
             case 'intermediate':
                 return (
                     <Badge className="border-yellow-300 bg-yellow-100 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-                        Intermediate
+                        {t('course.catalog.intermediate')}
                     </Badge>
                 );
             case 'advanced':
                 return (
                     <Badge className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
-                        Advanced
+                        {t('course.catalog.advanced')}
                     </Badge>
                 );
             default:
@@ -118,25 +120,25 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8" id="course">
-            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">Tingkatkan Kemampuanmu Bersama Para Ahli</h2>
+            <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">{t('course.catalog.title')}</h2>
             <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">
-                Akses berbagai materi pembelajaran berkualitas yang dirancang oleh para expert dan diperbarui secara berkala setiap bulannya.
+                {t('course.catalog.subtitle')}
             </p>
 
             <div className="mb-4 flex justify-between gap-2">
-                <Input type="search" placeholder="Cari kelas..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input type="search" placeholder={t('course.catalog.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline">Filter Tingkat Kesulitan</Button>
+                        <Button variant="outline">{t('course.catalog.filterDifficulty')}</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
-                        <DropdownMenuLabel>Pilih Tingkat Kesulitan</DropdownMenuLabel>
+                        <DropdownMenuLabel>{t('course.catalog.selectDifficulty')}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuRadioGroup value={level} onValueChange={setLevel}>
-                            <DropdownMenuRadioItem value="all">Semua</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="beginner">Beginner</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="intermediate">Intermediate</DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="advanced">Advanced</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="all">{t('course.catalog.allLevels')}</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="beginner">{t('course.catalog.beginner')}</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="intermediate">{t('course.catalog.intermediate')}</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="advanced">{t('course.catalog.advanced')}</DropdownMenuRadioItem>
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -161,7 +163,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                                 : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                         } `}
                     >
-                        Semua Kategori
+                        {t('course.catalog.allCategories')}
                     </button>
                     {categories.map((category) => (
                         <button
@@ -183,8 +185,8 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
             <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleCourses.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                        <img src="/assets/images/not-found.webp" alt="Kelas Belum Tersedia" className="w-48" />
-                        <div className="text-center text-gray-500">Belum ada kelas yang tersedia saat ini.</div>
+                        <img src="/assets/images/not-found.webp" alt={t('course.catalog.emptyAlt')} className="w-48" />
+                        <div className="text-center text-gray-500">{t('course.catalog.empty')}</div>
                     </div>
                 ) : (
                     visibleCourses.map((course) => {
@@ -213,7 +215,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
 
                                                 {/* Course Badge */}
                                                 <span className="absolute top-2 left-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                                                    Kelas
+                                                    {t('course.title')}
                                                 </span>
 
                                                 {/* Discount Badge */}
@@ -221,7 +223,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                                                     <div className="absolute top-2 right-2">
                                                         <Badge className="bg-red-500 text-white shadow-lg">
                                                             <Percent size={12} className="mr-1" />
-                                                            Hemat {discount}%
+                                                            {t('course.detail.saveDiscount', { discount, defaultValue: `Hemat ${discount}%` })}
                                                         </Badge>
                                                     </div>
                                                 )}
@@ -229,7 +231,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                                                 {/* Access Badge */}
                                                 {hasAccess && (
                                                     <div className="absolute top-2 right-2">
-                                                        <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                        <Badge className="bg-green-500 text-white shadow-lg">{t('course.catalog.owned')}</Badge>
                                                     </div>
                                                 )}
                                             </div>
@@ -239,9 +241,9 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                                         <div className="mt-auto w-full p-4 text-left">
                                             <div className="flex items-end justify-between">
                                                 {hasAccess ? (
-                                                    <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                                    <p className="text-primary text-sm font-medium">{t('course.catalog.alreadyHaveAccess')}</p>
                                                 ) : course.price === 0 ? (
-                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('course.catalog.free')}</p>
                                                 ) : (
                                                     <div className="">
                                                         {course.strikethrough_price > 0 && course.strikethrough_price > course.price && (
@@ -297,7 +299,7 @@ export default function CoursesSection({ categories, courses, myCourseIds }: Cou
                 <div className="mb-8 flex justify-center">
                     <Magnetic>
                         <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
+                            {t('course.catalog.loadMore')} <GalleryVerticalEnd />
                         </Button>
                     </Magnetic>
                 </div>

@@ -1,6 +1,7 @@
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Link } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
     title: string;
@@ -16,6 +17,8 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ course, onRegisterClick }: HeroSectionProps) {
+    const { t } = useTranslation('user');
+
     return (
         <section className="relative py-12 text-gray-900">
             <div className="relative mx-auto max-w-7xl px-4">
@@ -24,13 +27,13 @@ export default function HeroSection({ course, onRegisterClick }: HeroSectionProp
                         <BreadcrumbList>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/">Beranda</Link>
+                                    <Link href="/">{t('common.home', 'Beranda')}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
                             <BreadcrumbItem>
                                 <BreadcrumbLink asChild>
-                                    <Link href="/course">Kelas Online</Link>
+                                    <Link href="/course">{t('course.title', 'Kelas Online')}</Link>
                                 </BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator>/</BreadcrumbSeparator>
@@ -45,7 +48,7 @@ export default function HeroSection({ course, onRegisterClick }: HeroSectionProp
                     <h1 className="mb-4 max-w-2xl text-4xl leading-tight font-semibold sm:text-5xl">{course.title}</h1>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Tingkatan:</span>
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('course.detail.levelHeading')}:</span>
                         <span
                             className={
                                 course.level === 'beginner'
@@ -55,18 +58,22 @@ export default function HeroSection({ course, onRegisterClick }: HeroSectionProp
                                       : 'rounded-full border border-red-300 bg-red-100 px-3 py-1 text-sm font-medium text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300'
                             }
                         >
-                            {course.level === 'beginner' ? 'Beginner' : course.level === 'intermediate' ? 'Intermediate' : 'Advanced'}
+                            {course.level === 'beginner'
+                                ? t('course.catalog.beginner')
+                                : course.level === 'intermediate'
+                                  ? t('course.catalog.intermediate')
+                                  : t('course.catalog.advanced')}
                         </span>
                     </div>
                     <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-                        <Button onClick={onRegisterClick}>Daftar Sekarang</Button>
+                        <Button onClick={onRegisterClick}>{t('common.registerNow', 'Daftar Sekarang')}</Button>
                         <Button variant="outline" asChild>
                             <a
                                 href={`https://wa.me/+6289528514480?text=${encodeURIComponent(`Halo, saya ingin mendaftar ${course.title}`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                Hubungi Kami
+                                {t('common.contactUs', 'Hubungi Kami')}
                             </a>
                         </Button>
                     </div>

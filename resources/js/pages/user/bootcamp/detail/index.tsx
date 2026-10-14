@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Head } from '@inertiajs/react';
 import { BookOpen, Calendar, Info, Lightbulb, User, Wrench } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AboutSection from './about-section';
 import HeroSection from './hero-section';
 import MentorSection from './mentor-section';
@@ -62,6 +63,7 @@ interface ReferralInfo {
 }
 
 export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcamp; referralInfo: ReferralInfo }) {
+    const { t } = useTranslation('user');
     const [activeTab, setActiveTab] = useState('tentang');
 
     useEffect(() => {
@@ -87,7 +89,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title={`${bootcamp.title} - Bootcamp`} />
+            <Head title={t('bootcamp.detail.headTitle', { title: bootcamp.title, defaultValue: `${bootcamp.title} - Bootcamp` })} />
 
             <HeroSection bootcamp={bootcamp} onRegisterClick={handleRegisterClick} />
 
@@ -99,7 +101,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <BookOpen className="h-5 w-5" />
-                            Tentang
+                            {t('bootcamp.detail.navAbout', 'Tentang')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -107,7 +109,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Calendar className="h-5 w-5" />
-                            Jadwal
+                            {t('bootcamp.detail.navTimeline', 'Jadwal')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -115,7 +117,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Lightbulb className="h-5 w-5" />
-                            Persyaratan
+                            {t('bootcamp.detail.navRequirement', 'Persyaratan')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -123,7 +125,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Wrench className="h-5 w-5" />
-                            Tools
+                            {t('bootcamp.detail.navTools', 'Tools')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -131,7 +133,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <User className="h-5 w-5" />
-                            Mentor
+                            {t('bootcamp.detail.navMentors', 'Mentor')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -139,7 +141,7 @@ export default function Bootcamp({ bootcamp, referralInfo }: { bootcamp: Bootcam
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Info className="h-5 w-5" />
-                            Informasi Program
+                            {t('bootcamp.detail.navRegister', 'Informasi Program')}
                         </TabsTrigger>
                     </TabsList>
                 </div>

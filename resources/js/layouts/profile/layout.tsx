@@ -6,59 +6,61 @@ import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Banknote, BookText, BriefcaseBusiness, CalendarClock, Gift, LayoutDashboard, MonitorPlay, Presentation, Settings } from 'lucide-react';
 import { type PropsWithChildren } from 'react';
-
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/profile/dashboard',
-        icon: LayoutDashboard,
-    },
-    {
-        title: 'Kelas Online',
-        href: '/profile/my-courses',
-        icon: BookText,
-    },
-    {
-        title: 'Bootcamp',
-        href: '/profile/my-bootcamps',
-        icon: Presentation,
-    },
-    {
-        title: 'Webinar',
-        href: '/profile/my-webinars',
-        icon: MonitorPlay,
-    },
-    {
-        title: 'Sertifikasi',
-        href: '/profile/my-certification-programs',
-        icon: BriefcaseBusiness,
-    },
-    {
-        title: 'Transaksi',
-        href: '/profile/transactions',
-        icon: Banknote,
-    },
-    {
-        title: 'Cicilan Saya',
-        href: '/profile/installments',
-        icon: CalendarClock,
-    },
-    {
-        title: 'Referral & Poin',
-        href: '/profile/referral',
-        icon: Gift,
-    },
-    {
-        title: 'Pengaturan Akun',
-        href: '/settings/profile',
-        icon: Settings,
-    },
-];
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileLayout({ children }: PropsWithChildren) {
+    const { t } = useTranslation('profile');
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const getInitials = useInitials();
+
+    const sidebarNavItems: NavItem[] = [
+        {
+            title: t('sidebar.dashboard', 'Dashboard'),
+            href: '/profile/dashboard',
+            icon: LayoutDashboard,
+        },
+        {
+            title: t('sidebar.courses', 'Kelas Online'),
+            href: '/profile/my-courses',
+            icon: BookText,
+        },
+        {
+            title: t('sidebar.bootcamps', 'Bootcamp'),
+            href: '/profile/my-bootcamps',
+            icon: Presentation,
+        },
+        {
+            title: t('sidebar.webinars', 'Webinar'),
+            href: '/profile/my-webinars',
+            icon: MonitorPlay,
+        },
+        {
+            title: t('sidebar.certifications', 'Sertifikasi'),
+            href: '/profile/my-certification-programs',
+            icon: BriefcaseBusiness,
+        },
+        {
+            title: t('sidebar.transactions', 'Transaksi'),
+            href: '/profile/transactions',
+            icon: Banknote,
+        },
+        {
+            title: t('sidebar.installments', 'Cicilan Saya'),
+            href: '/profile/installments',
+            icon: CalendarClock,
+        },
+        {
+            title: t('sidebar.referral', 'Referral & Poin'),
+            href: '/profile/referral',
+            icon: Gift,
+        },
+        {
+            title: t('sidebar.settings', 'Pengaturan Akun'),
+            href: '/settings/profile',
+            icon: Settings,
+        },
+    ];
 
     if (typeof window === 'undefined') {
         return null;

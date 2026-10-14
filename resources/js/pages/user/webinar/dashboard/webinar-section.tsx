@@ -5,6 +5,7 @@ import { Magnetic } from '@/components/ui/magnetic';
 import { Link } from '@inertiajs/react';
 import { Calendar, GalleryVerticalEnd, Percent } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Category = {
     id: string;
@@ -35,6 +36,8 @@ interface WebinarProps {
 }
 
 export default function WebinarSection({ categories, webinars, myWebinarIds }: WebinarProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? 'en-US' : 'id-ID';
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
@@ -82,14 +85,19 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8" id="webinar">
             <h2 className="mx-auto mb-4 max-w-3xl text-center text-3xl font-semibold md:text-4xl">
-                Siap upgrade skill dan jadi lebih siap di dunia kerja digital.
+                {t('webinar.catalog.title', 'Siap upgrade skill dan jadi lebih siap di dunia kerja digital.')}
             </h2>
             <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">
-                Tingkatkan wawasan dan koneksi agar lebih siap dalam dunia kerja.
+                {t('webinar.catalog.subtitle', 'Tingkatkan wawasan dan koneksi agar lebih siap dalam dunia kerja.')}
             </p>
 
             <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari webinar..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input
+                    type="search"
+                    placeholder={t('webinar.catalog.searchPlaceholder', 'Cari webinar...')}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
             </div>
 
             <div
@@ -111,7 +119,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                                 : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                         } `}
                     >
-                        Semua Kategori
+                        {t('webinar.catalog.allCategories', 'Semua Kategori')}
                     </button>
                     {categories.map((category) => (
                         <button
@@ -134,7 +142,9 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                 {visibleWebinars.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
                         <img src="/assets/images/not-found.webp" alt="Webinar Belum Tersedia" className="w-48" />
-                        <div className="text-center text-gray-500">Belum ada webinar yang tersedia saat ini.</div>
+                        <div className="text-center text-gray-500">
+                            {t('webinar.catalog.empty', 'Belum ada webinar yang tersedia saat ini.')}
+                        </div>
                     </div>
                 ) : (
                     visibleWebinars.map((webinar) => {
@@ -163,7 +173,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
 
                                                 {/* Webinar Badge */}
                                                 <span className="absolute top-2 left-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                                                    Webinar
+                                                    {t('webinar.title', 'Webinar')}
                                                 </span>
 
                                                 {/* Discount Badge */}
@@ -171,7 +181,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                                                     <div className="absolute top-2 right-2">
                                                         <Badge className="bg-red-500 text-white shadow-lg">
                                                             <Percent size={12} className="mr-1" />
-                                                            Hemat {discount}%
+                                                            {t('bootcamp.detail.savePercent', { percent: discount, defaultValue: `Hemat ${discount}%` })}
                                                         </Badge>
                                                     </div>
                                                 )}
@@ -179,7 +189,9 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                                                 {/* Access Badge */}
                                                 {hasAccess && (
                                                     <div className="absolute top-2 right-2">
-                                                        <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                        <Badge className="bg-green-500 text-white shadow-lg">
+                                                            {t('webinar.catalog.owned', 'Sudah Dimiliki')}
+                                                        </Badge>
                                                     </div>
                                                 )}
                                             </div>
@@ -189,9 +201,9 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                                         <div className="mt-auto w-full p-4 text-left">
                                             <div className="flex items-end justify-between">
                                                 {hasAccess ? (
-                                                    <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                                    <p className="text-primary text-sm font-medium">{t('webinar.catalog.owned', 'Anda sudah memiliki akses')}</p>
                                                 ) : webinar.price === 0 ? (
-                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('webinar.catalog.free', 'Gratis')}</p>
                                                 ) : (
                                                     <div className="">
                                                         {webinar.strikethrough_price > 0 && webinar.strikethrough_price > webinar.price && (
@@ -215,7 +227,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                                             <div className="mt-2 flex items-center gap-2">
                                                 <Calendar size="18" />
                                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {new Date(webinar.start_time).toLocaleDateString('id-ID', {
+                                                    {new Date(webinar.start_time).toLocaleDateString(dateLocale, {
                                                         day: 'numeric',
                                                         month: 'long',
                                                         year: 'numeric',
@@ -258,7 +270,7 @@ export default function WebinarSection({ categories, webinars, myWebinarIds }: W
                 <div className="mb-8 flex justify-center">
                     <Magnetic>
                         <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
+                            {t('webinar.catalog.loadMore', 'Lihat Lebih Banyak')} <GalleryVerticalEnd />
                         </Button>
                     </Magnetic>
                 </div>

@@ -7,9 +7,10 @@ import UserLayout from '@/layouts/user-layout';
 import { rupiahFormatter } from '@/lib/utils';
 import { Head, Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { ArrowRight, BookOpen, BookText, Calendar, CalendarDays, Clock, Eye, FileText, Mail, Phone, Star, Users, Video } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
     id: string;
@@ -98,6 +99,8 @@ interface MentorShowProps {
 }
 
 export default function MentorShow({ mentor, courses, articles, webinars, bootcamps, stats }: MentorShowProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const getInitials = useInitials();
 
     const levelColors: Record<string, string> = {
@@ -107,9 +110,9 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
     };
 
     const levelLabels: Record<string, string> = {
-        beginner: 'Pemula',
-        intermediate: 'Menengah',
-        advanced: 'Lanjutan',
+        beginner: t('mentor.levels.beginner', 'Pemula'),
+        intermediate: t('mentor.levels.intermediate', 'Menengah'),
+        advanced: t('mentor.levels.advanced', 'Lanjutan'),
     };
 
     const containerVariants = {
@@ -180,7 +183,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                 <h1 className="mb-3 text-4xl font-bold text-gray-900 md:text-5xl dark:text-white">{mentor.name}</h1>
 
                                 <p className="text-muted-foreground mb-6 text-base md:text-lg">
-                                    {mentor.bio || 'Mentor profesional di Kompeten yang siap membimbing Anda'}
+                                    {mentor.bio || t('mentor.defaultBio', 'Mentor profesional di Kompeten yang siap membimbing Anda')}
                                 </p>
 
                                 {/* Contact Info */}
@@ -207,10 +210,10 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                     className="grid grid-cols-2 gap-3 md:grid-cols-4"
                                 >
                                     {[
-                                        { value: stats.total_courses, label: 'Kelas', icon: BookText, color: 'from-blue-500 to-blue-600' },
-                                        { value: stats.total_bootcamps, label: 'Bootcamp', icon: BookOpen, color: 'from-orange-500 to-orange-600' },
-                                        { value: stats.total_webinars, label: 'Webinar', icon: Video, color: 'from-green-500 to-green-600' },
-                                        { value: stats.total_articles, label: 'Artikel', icon: FileText, color: 'from-purple-500 to-purple-600' },
+                                        { value: stats.total_courses, label: t('mentor.stats.courses', 'Kelas'), icon: BookText, color: 'from-blue-500 to-blue-600' },
+                                        { value: stats.total_bootcamps, label: t('mentor.stats.bootcamps', 'Bootcamp'), icon: BookOpen, color: 'from-orange-500 to-orange-600' },
+                                        { value: stats.total_webinars, label: t('mentor.stats.webinars', 'Webinar'), icon: Video, color: 'from-green-500 to-green-600' },
+                                        { value: stats.total_articles, label: t('mentor.stats.articles', 'Artikel'), icon: FileText, color: 'from-purple-500 to-purple-600' },
                                     ].map((stat) => {
                                         const StatIcon = stat.icon;
                                         return (
@@ -244,7 +247,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                     className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm md:text-sm dark:data-[state=active]:bg-gray-700"
                                 >
                                     <BookText className="mr-1 h-4 w-4" />
-                                    <span className="hidden sm:inline">Kelas</span>
+                                    <span className="hidden sm:inline">{t('mentor.stats.courses', 'Kelas')}</span>
                                     <span className="sm:hidden">{courses.length}</span>
                                 </TabsTrigger>
                                 <TabsTrigger
@@ -252,7 +255,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                     className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm md:text-sm dark:data-[state=active]:bg-gray-700"
                                 >
                                     <BookOpen className="mr-1 h-4 w-4" />
-                                    <span className="hidden sm:inline">Bootcamp</span>
+                                    <span className="hidden sm:inline">{t('mentor.stats.bootcamps', 'Bootcamp')}</span>
                                     <span className="sm:hidden">{bootcamps.length}</span>
                                 </TabsTrigger>
                                 <TabsTrigger
@@ -260,7 +263,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                     className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm md:text-sm dark:data-[state=active]:bg-gray-700"
                                 >
                                     <Video className="mr-1 h-4 w-4" />
-                                    <span className="hidden sm:inline">Webinar</span>
+                                    <span className="hidden sm:inline">{t('mentor.stats.webinars', 'Webinar')}</span>
                                     <span className="sm:hidden">{webinars.length}</span>
                                 </TabsTrigger>
                                 <TabsTrigger
@@ -268,7 +271,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                     className="rounded-lg text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm md:text-sm dark:data-[state=active]:bg-gray-700"
                                 >
                                     <FileText className="mr-1 h-4 w-4" />
-                                    <span className="hidden sm:inline">Artikel</span>
+                                    <span className="hidden sm:inline">{t('mentor.stats.articles', 'Artikel')}</span>
                                     <span className="sm:hidden">{articles.length}</span>
                                 </TabsTrigger>
                             </TabsList>
@@ -318,7 +321,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                             <div className="text-muted-foreground mb-4 flex items-center gap-4 text-xs">
                                                                 <div className="flex items-center gap-1">
                                                                     <Users className="h-3.5 w-3.5" />
-                                                                    {course.students_count} siswa
+                                                                    {t('mentor.students', { count: course.students_count })}
                                                                 </div>
                                                                 {course.rating > 0 && (
                                                                     <div className="flex items-center gap-1">
@@ -343,7 +346,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                                         </>
                                                                     ) : (
                                                                         <p className="text-primary text-lg font-bold">
-                                                                            {course.price === 0 ? 'Gratis' : rupiahFormatter.format(course.price)}
+                                                                            {course.price === 0 ? t('mentor.free', 'Gratis') : rupiahFormatter.format(course.price)}
                                                                         </p>
                                                                     )}
                                                                 </div>
@@ -356,7 +359,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                         ))}
                                     </motion.div>
                                 ) : (
-                                    <EmptyState title="Belum ada kelas" description="Mentor belum membuat kelas apapun." />
+                                    <EmptyState title={t('mentor.empty.courses', 'Belum Ada Kelas Online')} description={t('mentor.emptyDesc.courses', 'Belum ada kelas yang pernah dibuat.')} />
                                 )}
                             </TabsContent>
 
@@ -376,11 +379,11 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                 <motion.div key={bootcamp.id} variants={itemVariants}>
                                                     {!isDisabled ? (
                                                         <Link href={`/bootcamp/${bootcamp.slug}`} className="group h-full">
-                                                            <BootcampCard bootcamp={bootcamp} isDisabled={isDisabled} />
+                                                            <BootcampCard bootcamp={bootcamp} isDisabled={isDisabled} dateLocale={dateLocale} t={t} />
                                                         </Link>
                                                     ) : (
                                                         <div className="group h-full">
-                                                            <BootcampCard bootcamp={bootcamp} isDisabled={isDisabled} />
+                                                            <BootcampCard bootcamp={bootcamp} isDisabled={isDisabled} dateLocale={dateLocale} t={t} />
                                                         </div>
                                                     )}
                                                 </motion.div>
@@ -388,7 +391,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                         })}
                                     </motion.div>
                                 ) : (
-                                    <EmptyState title="Belum ada bootcamp" description="Mentor belum mengajar bootcamp apapun." />
+                                    <EmptyState title={t('mentor.empty.bootcamps', 'Belum Ada Bootcamp')} description={t('mentor.emptyDesc.bootcamps', 'Belum ada bootcamp yang pernah diajar.')} />
                                 )}
                             </TabsContent>
 
@@ -408,11 +411,11 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                 <motion.div key={webinar.id} variants={itemVariants}>
                                                     {!isDisabled ? (
                                                         <Link href={`/webinar/${webinar.slug}`} className="group h-full">
-                                                            <WebinarCard webinar={webinar} isDisabled={isDisabled} />
+                                                            <WebinarCard webinar={webinar} isDisabled={isDisabled} dateLocale={dateLocale} t={t} />
                                                         </Link>
                                                     ) : (
                                                         <div className="group h-full">
-                                                            <WebinarCard webinar={webinar} isDisabled={isDisabled} />
+                                                            <WebinarCard webinar={webinar} isDisabled={isDisabled} dateLocale={dateLocale} t={t} />
                                                         </div>
                                                     )}
                                                 </motion.div>
@@ -420,7 +423,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                         })}
                                     </motion.div>
                                 ) : (
-                                    <EmptyState title="Belum ada webinar" description="Mentor belum mengadakan webinar apapun." />
+                                    <EmptyState title={t('mentor.empty.webinars', 'Belum Ada Webinar')} description={t('mentor.emptyDesc.webinars', 'Belum ada webinar yang pernah diajar.')} />
                                 )}
                             </TabsContent>
 
@@ -478,7 +481,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     <Calendar className="h-3.5 w-3.5" />
-                                                                    {format(new Date(article.published_at), 'dd MMM', { locale: id })}
+                                                                    {format(new Date(article.published_at), 'dd MMM', { locale: dateLocale })}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -488,7 +491,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
                                         ))}
                                     </motion.div>
                                 ) : (
-                                    <EmptyState title="Belum ada artikel" description="Mentor belum membuat artikel apapun." />
+                                    <EmptyState title={t('mentor.empty.articles', 'Belum Ada Artikel')} description={t('mentor.emptyDesc.articles', 'Belum ada artikel yang pernah dibuat.')} />
                                 )}
                             </TabsContent>
                         </Tabs>
@@ -500,7 +503,7 @@ export default function MentorShow({ mentor, courses, articles, webinars, bootca
 }
 
 // Helper Components
-function BootcampCard({ bootcamp, isDisabled }: { bootcamp: Bootcamp; isDisabled: boolean }) {
+function BootcampCard({ bootcamp, isDisabled, dateLocale, t }: { bootcamp: Bootcamp; isDisabled: boolean; dateLocale: any; t: any }) {
     return (
         <div
             className={`relative h-full overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 ${
@@ -520,7 +523,7 @@ function BootcampCard({ bootcamp, isDisabled }: { bootcamp: Bootcamp; isDisabled
                 {isDisabled && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60">
                         <Badge variant="destructive" className="px-4 py-2 text-sm font-semibold">
-                            Pendaftaran Ditutup
+                            {t('mentor.registrationClosed', 'Pendaftaran Ditutup')}
                         </Badge>
                     </div>
                 )}
@@ -532,7 +535,7 @@ function BootcampCard({ bootcamp, isDisabled }: { bootcamp: Bootcamp; isDisabled
                     </Badge>
                     {bootcamp.batch && (
                         <Badge variant="outline" className="text-xs">
-                            Batch {bootcamp.batch}
+                            {t('mentor.batch', { batch: bootcamp.batch })}
                         </Badge>
                     )}
                 </div>
@@ -542,12 +545,12 @@ function BootcampCard({ bootcamp, isDisabled }: { bootcamp: Bootcamp; isDisabled
                 <div className="text-muted-foreground mb-4 space-y-1.5 text-xs">
                     <div className="flex items-center gap-1">
                         <CalendarDays className="h-3.5 w-3.5" />
-                        {format(new Date(bootcamp.start_date), 'dd MMM', { locale: id })} -{' '}
-                        {format(new Date(bootcamp.end_date), 'dd MMM yyyy', { locale: id })}
+                        {format(new Date(bootcamp.start_date), 'dd MMM', { locale: dateLocale })} -{' '}
+                        {format(new Date(bootcamp.end_date), 'dd MMM yyyy', { locale: dateLocale })}
                     </div>
                     <div className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
-                        Durasi: {bootcamp.duration_weeks} minggu
+                        {t('mentor.duration', { weeks: bootcamp.duration_weeks })}
                     </div>
                 </div>
 
@@ -559,7 +562,7 @@ function BootcampCard({ bootcamp, isDisabled }: { bootcamp: Bootcamp; isDisabled
                             <p className="text-muted-foreground text-xs line-through">{rupiahFormatter.format(bootcamp.strikethrough_price)}</p>
                         )}
                         <p className={`text-lg font-bold ${isDisabled ? 'text-gray-500' : 'text-primary'}`}>
-                            {bootcamp.price === 0 ? 'Gratis' : rupiahFormatter.format(bootcamp.price)}
+                            {bootcamp.price === 0 ? t('mentor.free', 'Gratis') : rupiahFormatter.format(bootcamp.price)}
                         </p>
                     </div>
                     {!isDisabled && (
@@ -571,7 +574,7 @@ function BootcampCard({ bootcamp, isDisabled }: { bootcamp: Bootcamp; isDisabled
     );
 }
 
-function WebinarCard({ webinar, isDisabled }: { webinar: Webinar; isDisabled: boolean }) {
+function WebinarCard({ webinar, isDisabled, dateLocale, t }: { webinar: Webinar; isDisabled: boolean; dateLocale: any; t: any }) {
     return (
         <div
             className={`relative h-full overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 ${
@@ -591,7 +594,7 @@ function WebinarCard({ webinar, isDisabled }: { webinar: Webinar; isDisabled: bo
                 {isDisabled && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/60">
                         <Badge variant="destructive" className="px-4 py-2 text-sm font-semibold">
-                            Pendaftaran Ditutup
+                            {t('mentor.registrationClosed', 'Pendaftaran Ditutup')}
                         </Badge>
                     </div>
                 )}
@@ -603,7 +606,7 @@ function WebinarCard({ webinar, isDisabled }: { webinar: Webinar; isDisabled: bo
                     </Badge>
                     {webinar.batch && (
                         <Badge variant="outline" className="text-xs">
-                            Batch {webinar.batch}
+                            {t('mentor.batch', { batch: webinar.batch })}
                         </Badge>
                     )}
                 </div>
@@ -613,12 +616,12 @@ function WebinarCard({ webinar, isDisabled }: { webinar: Webinar; isDisabled: bo
                 <div className="text-muted-foreground mb-4 space-y-1.5 text-xs">
                     <div className="flex items-center gap-1">
                         <CalendarDays className="h-3.5 w-3.5" />
-                        {format(new Date(webinar.start_time), 'dd MMM yyyy', { locale: id })}
+                        {format(new Date(webinar.start_time), 'dd MMM yyyy', { locale: dateLocale })}
                     </div>
                     <div className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
-                        {format(new Date(webinar.start_time), 'HH:mm', { locale: id })} -{' '}
-                        {format(new Date(webinar.end_time), 'HH:mm', { locale: id })} WIB
+                        {format(new Date(webinar.start_time), 'HH:mm', { locale: dateLocale })} -{' '}
+                        {format(new Date(webinar.end_time), 'HH:mm', { locale: dateLocale })} WIB
                     </div>
                 </div>
 
@@ -630,7 +633,7 @@ function WebinarCard({ webinar, isDisabled }: { webinar: Webinar; isDisabled: bo
                             <p className="text-muted-foreground text-xs line-through">{rupiahFormatter.format(webinar.strikethrough_price)}</p>
                         )}
                         <p className={`text-lg font-bold ${isDisabled ? 'text-gray-500' : 'text-primary'}`}>
-                            {webinar.price === 0 ? 'Gratis' : rupiahFormatter.format(webinar.price)}
+                            {webinar.price === 0 ? t('mentor.free', 'Gratis') : rupiahFormatter.format(webinar.price)}
                         </p>
                     </div>
                     {!isDisabled && (

@@ -5,9 +5,11 @@ import { Magnetic } from '@/components/ui/magnetic';
 import { Spotlight } from '@/components/ui/spotlight';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { id, enUS } from 'date-fns/locale';
 import { Calendar, GalleryVerticalEnd, GraduationCap, Percent } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { rupiahFormatter } from '@/lib/utils';
 
 type Category = {
     id: string;
@@ -49,6 +51,8 @@ interface CertificationProgramSectionProps {
 }
 
 export default function CertificationProgramSection({ categories, programs, myProgramIds, approvedScholarshipProgramIds = [] }: CertificationProgramSectionProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [visibleCount, setVisibleCount] = useState(6);
@@ -91,22 +95,18 @@ export default function CertificationProgramSection({ categories, programs, myPr
     const hasProgramAccess = (programId: string) => safeMyProgramIds.includes(programId);
 
     const formatRupiah = (amount: number) => {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0,
-        }).format(amount);
+        return rupiahFormatter.format(amount);
     };
 
     return (
         <section className="mx-auto w-full max-w-7xl px-4 py-8" id="bootcamp">
             <h2 className="mx-auto mb-4 max-w-4xl text-center text-3xl font-semibold md:text-4xl">
-                Raih Sertifikasi Profesional dan Tingkatkan Karirmu
+                {t('certificationProgram.dashboard.catalog.title')}
             </h2>
-            <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">Pilih program sertifikasi yang sesuai dengan tujuan karirmu.</p>
+            <p className="text-muted-foreground mx-auto mb-12 max-w-4xl text-center">{t('certificationProgram.dashboard.catalog.subtitle')}</p>
 
             <div className="mb-4 flex">
-                <Input type="search" placeholder="Cari program sertifikasi..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input type="search" placeholder={t('certificationProgram.dashboard.catalog.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div
                 className="mb-4 overflow-x-auto"
@@ -127,7 +127,7 @@ export default function CertificationProgramSection({ categories, programs, myPr
                                 : 'hover:bg-accent dark:hover:bg-primary/10 bg-background border-gray-300 text-gray-800 dark:border-zinc-100/20 dark:bg-zinc-800 dark:text-zinc-100'
                         } `}
                     >
-                        Semua Kategori
+                        {t('certificationProgram.dashboard.catalog.allCategories')}
                     </button>
                     {categories.map((category) => (
                         <button
@@ -150,7 +150,7 @@ export default function CertificationProgramSection({ categories, programs, myPr
                 {visiblePrograms.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
                         <img src="/assets/images/not-found.webp" alt="Program Belum Tersedia" className="w-48" />
-                        <div className="text-center text-gray-500">Belum ada program sertifikasi yang tersedia saat ini.</div>
+                        <div className="text-center text-gray-500">{t('certificationProgram.dashboard.catalog.emptyPrograms')}</div>
                     </div>
                 ) : (
                     visiblePrograms.map((program) => {
@@ -187,21 +187,21 @@ export default function CertificationProgramSection({ categories, programs, myPr
                                                 />
                                                 <span className="absolute top-2 left-2 rounded-full bg-cyan-100 px-2 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300">
                                                     <GraduationCap size={12} className="mr-1 inline-block align-[-2px]" />
-                                                    {program.type === 'scholarship' ? 'Beasiswa' : 'Reguler'}
+                                                    {program.type === 'scholarship' ? t('certificationProgram.dashboard.catalog.badgeScholarship') : t('certificationProgram.dashboard.catalog.badgeRegular')}
                                                 </span>
 
                                                 {!hasAccess && discount > 0 && (
                                                     <div className="absolute top-2 right-2">
                                                         <Badge className="bg-red-500 text-white shadow-lg">
                                                             <Percent size={12} className="mr-1" />
-                                                            Hemat {discount}%
+                                                            {i18n.language === 'en' ? `Save ${discount}%` : `Hemat ${discount}%`}
                                                         </Badge>
                                                     </div>
                                                 )}
 
                                                 {hasAccess && (
                                                     <div className="absolute top-2 right-2">
-                                                        <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                        <Badge className="bg-green-500 text-white shadow-lg">{t('certificationProgram.dashboard.catalog.badgeOwned')}</Badge>
                                                     </div>
                                                 )}
                                             </div>
@@ -211,9 +211,9 @@ export default function CertificationProgramSection({ categories, programs, myPr
                                         <div className="mt-auto w-full p-4 text-left">
                                             <div className="flex items-end justify-between">
                                                 {hasAccess ? (
-                                                    <p className="text-primary text-sm font-medium">Anda sudah memiliki akses</p>
+                                                    <p className="text-primary text-sm font-medium">{t('certificationProgram.dashboard.catalog.ownedNotice')}</p>
                                                 ) : displayPrice === 0 ? (
-                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('certificationProgram.dashboard.catalog.free')}</p>
                                                 ) : (
                                                     <div>
                                                         {!isScholarshipNotApproved && program.strikethrough_price && program.strikethrough_price > 0 && (
@@ -236,8 +236,8 @@ export default function CertificationProgramSection({ categories, programs, myPr
                                                 <div className="mt-2 flex items-center gap-2">
                                                     <Calendar size="18" />
                                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                        Daftar sebelum:{' '}
-                                                        <span className="font-medium">{format(deadlineDate, 'dd MMM yyyy', { locale: id })}</span>
+                                                        {t('certificationProgram.dashboard.catalog.registerBefore')}{' '}
+                                                        <span className="font-medium">{format(deadlineDate, 'dd MMM yyyy', { locale: dateLocale })}</span>
                                                     </p>
                                                 </div>
                                             )}
@@ -274,7 +274,7 @@ export default function CertificationProgramSection({ categories, programs, myPr
                                                                 : `${mentors
                                                                       .slice(0, 2)
                                                                       .map((mentor) => mentor.name)
-                                                                      .join(', ')}${mentors.length > 2 ? ` +${mentors.length - 2} lainnya` : ''}`}
+                                                                      .join(', ')}${mentors.length > 2 ? ` +${mentors.length - 2} ${i18n.language === 'en' ? 'others' : 'lainnya'}` : ''}`}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -291,7 +291,7 @@ export default function CertificationProgramSection({ categories, programs, myPr
                 <div className="mb-8 flex justify-center">
                     <Magnetic>
                         <Button type="button" className="mt-8 hover:cursor-pointer" onClick={() => setVisibleCount((prev) => prev + 6)}>
-                            Lihat Lebih Banyak <GalleryVerticalEnd />
+                            {t('certificationProgram.dashboard.catalog.loadMore')} <GalleryVerticalEnd />
                         </Button>
                     </Magnetic>
                 </div>

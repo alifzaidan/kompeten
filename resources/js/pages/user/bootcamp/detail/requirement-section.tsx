@@ -1,4 +1,5 @@
 import { BadgeCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Bootcamp {
     benefits?: string | null;
@@ -67,6 +68,7 @@ function parseList(items?: string | null): ParsedRichText {
 }
 
 export default function RequirementSection({ bootcamp }: { bootcamp: Bootcamp }) {
+    const { t } = useTranslation('user');
     const { heading: requirementHeading, items: requirementList } = parseList(bootcamp.requirements);
     const { heading: benefitHeading, items: benefitList } = parseList(bootcamp.benefits);
 
@@ -74,7 +76,7 @@ export default function RequirementSection({ bootcamp }: { bootcamp: Bootcamp })
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
-                    {requirementHeading ?? 'Persyaratan Peserta'}
+                    {requirementHeading ?? t('bootcamp.detail.participantRequirements', 'Persyaratan Peserta')}
                 </h2>
 
                 <ul className="space-y-2">
@@ -91,7 +93,7 @@ export default function RequirementSection({ bootcamp }: { bootcamp: Bootcamp })
 
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
-                    {benefitHeading ?? 'Manfaat yang Didapatkan'}
+                    {benefitHeading ?? t('bootcamp.detail.benefitsGained', 'Manfaat yang Didapatkan')}
                 </h2>
 
                 <ul className="space-y-2">

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Head, Link } from '@inertiajs/react';
 import { CheckCircle2, Crown, FileText, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CourseItem {
     course: { title: string; slug: string; thumbnail: string };
@@ -29,6 +30,7 @@ interface InvoiceProps {
 }
 
 export default function CheckoutSuccess({ invoice }: InvoiceProps) {
+    const { t } = useTranslation('user');
     const courseItems = invoice.course_items ?? [];
     const bootcampItems = invoice.bootcamp_items ?? [];
     const webinarItems = invoice.webinar_items ?? [];
@@ -42,33 +44,36 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
     if (courseItems.length > 0) {
         title = courseItems[0].course.title;
         link = `/profile/my-courses/${courseItems[0].course.slug}`;
-        label = 'Akses Kelas';
-        badgeText = 'Kelas Online';
+        label = t('checkoutSuccess.accessCourse', 'Akses Kelas');
+        badgeText = t('checkoutSuccess.onlineCourse', 'Kelas Online');
     } else if (bootcampItems.length > 0) {
         title = bootcampItems[0].bootcamp.title;
         link = `/profile/my-bootcamps/${bootcampItems[0].bootcamp.slug}`;
-        label = 'Akses Bootcamp';
-        badgeText = 'Bootcamp';
+        label = t('checkoutSuccess.accessBootcamp', 'Akses Bootcamp');
+        badgeText = t('checkoutSuccess.bootcamp', 'Bootcamp');
     } else if (webinarItems.length > 0) {
         title = webinarItems[0].webinar.title;
         link = `/profile/my-webinars/${webinarItems[0].webinar.slug}`;
-        label = 'Akses Webinar';
-        badgeText = 'Webinar';
+        label = t('checkoutSuccess.accessWebinar', 'Akses Webinar');
+        badgeText = t('checkoutSuccess.webinar', 'Webinar');
     } else if (certificationProgramItems.length > 0) {
-        title = `Checkout Sertifikasi Program "${certificationProgramItems[0].certification_program.title}" Berhasil!`;
+        title = t('checkoutSuccess.certificationTitle', {
+            title: certificationProgramItems[0].certification_program.title,
+            defaultValue: `Checkout Sertifikasi Program "${certificationProgramItems[0].certification_program.title}" Berhasil!`,
+        });
         link = `/profile/my-certification-programs/${certificationProgramItems[0].certification_program.slug}`;
-        label = 'Akses Sertifikasi';
-        badgeText = 'Sertifikasi';
+        label = t('checkoutSuccess.accessCertification', 'Akses Sertifikasi');
+        badgeText = t('common:services.certification', 'Sertifikasi');
     } else {
-        title = 'Pembelian Anda';
+        title = t('checkoutSuccess.purchaseSuccessful', 'Pembelian Anda');
         link = '/profile';
-        label = 'Lihat Dashboard';
-        badgeText = 'Produk';
+        label = t('checkoutSuccess.viewProfile', 'Lihat Dashboard');
+        badgeText = t('common:products', 'Produk');
     }
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title="Pembayaran Berhasil" />
+            <Head title={t('checkoutSuccess.paymentSuccess', 'Pembayaran Berhasil')} />
 
             <section className="flex min-h-screen items-center justify-center px-4 py-12">
                 <div className="w-full max-w-2xl">
@@ -78,8 +83,8 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
                             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
                                 <CheckCircle2 size={48} className="text-green-600" />
                             </div>
-                            <h1 className="mb-2 text-3xl font-bold text-white">Pembayaran Berhasil!</h1>
-                            <p className="text-green-50">Transaksi Anda telah berhasil diproses</p>
+                            <h1 className="mb-2 text-3xl font-bold text-white">{t('checkoutSuccess.paymentSuccess', 'Pembayaran Berhasil!')}</h1>
+                            <p className="text-green-50">{t('checkoutSuccess.transactionProcessed', 'Transaksi Anda telah berhasil diproses')}</p>
                         </div>
 
                         {/* Content */}
@@ -96,29 +101,20 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
 
                                 <div className="space-y-2 border-t pt-4">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600 dark:text-gray-400">Total Pembayaran</span>
+                                        <span className="text-gray-600 dark:text-gray-400">{t('checkoutSuccess.totalPayment', 'Total Pembayaran')}</span>
                                         <span className="text-lg font-bold text-gray-900 dark:text-white">
                                             Rp {invoice.amount.toLocaleString('id-ID')}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="text-gray-600 dark:text-gray-400">Status</span>
+                                        <span className="text-gray-600 dark:text-gray-400">{t('checkoutSuccess.status', 'Status')}</span>
                                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
                                             <CheckCircle2 size={14} />
-                                            Berhasil
+                                            {t('common:status.success', 'Berhasil')}
                                         </span>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-                                <p className="text-sm text-blue-800 dark:text-blue-200">
-                                    ✅ Invoice pembayaran telah dikirimkan ke nomor WhatsApp Anda
-                                </p>
-                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-300">
-                                    Anda dapat mengakses materi pembelajaran sekarang juga!
-                                </p>
-                            </div> */}
 
                             {/* Action Buttons */}
                             <div className="space-y-3">
@@ -132,14 +128,14 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
                                 <Button asChild variant="outline" className="w-full" size="lg">
                                     <a href={route('invoice.pdf', { id: invoice.id })} target="_blank" rel="noopener noreferrer">
                                         <FileText className="mr-2 h-5 w-5" />
-                                        Unduh Invoice (PDF)
+                                        {t('checkoutSuccess.downloadInvoice', 'Unduh Invoice (PDF)')}
                                     </a>
                                 </Button>
 
                                 <Button asChild variant="ghost" className="w-full" size="lg">
                                     <Link href="/">
                                         <Home className="mr-2 h-5 w-5" />
-                                        Kembali ke Beranda
+                                        {t('common:nav.home', 'Kembali ke Beranda')}
                                     </Link>
                                 </Button>
                             </div>
@@ -148,14 +144,14 @@ export default function CheckoutSuccess({ invoice }: InvoiceProps) {
                         {/* Footer */}
                         <div className="border-t bg-gray-50 p-6 text-center dark:bg-gray-900/50">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Butuh bantuan?{' '}
+                                {t('common:needHelp', 'Butuh bantuan?')}{' '}
                                 <a
                                     href="https://wa.me/+6289528514480"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="font-medium text-orange-600 hover:underline"
                                 >
-                                    Hubungi Customer Service
+                                    {t('common:contactAdmin', 'Hubungi Customer Service')}
                                 </a>
                             </p>
                         </div>

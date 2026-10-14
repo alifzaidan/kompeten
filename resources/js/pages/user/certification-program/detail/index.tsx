@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Head } from '@inertiajs/react';
 import { BookOpen, Calendar, Info, Lightbulb, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import HeroSection from './hero-section';
 import KeyPointsSection from './key-points-section';
 import MentorSection from './mentor-section';
@@ -75,6 +76,7 @@ interface DetailProps {
 }
 
 export default function Detail({ program, relatedPrograms, myProgramIds, scholarshipApplication, approvedScholarshipProgramIds = [] }: DetailProps) {
+    const { t } = useTranslation('user');
     const isEnrolled = myProgramIds.includes(program.id);
     const [activeTab, setActiveTab] = useState('tentang');
 
@@ -99,7 +101,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
 
     return (
         <div className="min-h-screen bg-[url('/assets/images/bg-product.png')] bg-cover bg-center bg-no-repeat">
-            <Head title={`${program.title} - Program Sertifikasi`} />
+            <Head title={t('certificationProgram.detail.headTitle', { title: program.title })} />
 
             <HeroSection program={program} onRegisterClick={handleRegisterClick} />
 
@@ -111,7 +113,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <BookOpen className="h-5 w-5" />
-                            Tentang
+                            {t('certificationProgram.detail.tabs.about')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -119,7 +121,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Calendar className="h-5 w-5" />
-                            Jadwal
+                            {t('certificationProgram.detail.tabs.schedule')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -127,7 +129,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Lightbulb className="h-5 w-5" />
-                            Persyaratan
+                            {t('certificationProgram.detail.tabs.requirements')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -135,7 +137,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <User className="h-5 w-5" />
-                            Mentor
+                            {t('certificationProgram.detail.tabs.mentors')}
                         </TabsTrigger>
 
                         <TabsTrigger
@@ -143,7 +145,7 @@ export default function Detail({ program, relatedPrograms, myProgramIds, scholar
                             className="data-[state=inactive]:bg-primary hover:data-[state=inactive]:bg-primary/90 relative flex items-center gap-2 rounded-none rounded-t-3xl border-0 px-6 py-4 text-base font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=inactive]:text-white"
                         >
                             <Info className="h-5 w-5" />
-                            Informasi Program
+                            {t('certificationProgram.detail.tabs.programInfo')}
                         </TabsTrigger>
                     </TabsList>
                 </div>

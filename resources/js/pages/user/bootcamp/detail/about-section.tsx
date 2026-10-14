@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface Bootcamp {
     description?: string | null;
     curriculum?: string | null;
@@ -35,6 +37,7 @@ function parseCurriculumItems(curriculum?: string | null): string[] {
 }
 
 export default function AboutSection({ bootcamp }: { bootcamp: Bootcamp }) {
+    const { t } = useTranslation('user');
     const hasHtmlList = /<(ol|ul)\b/i.test(bootcamp.curriculum || '');
     const curriculumItems = hasHtmlList ? [] : parseCurriculumItems(bootcamp.curriculum);
 
@@ -43,16 +46,18 @@ export default function AboutSection({ bootcamp }: { bootcamp: Bootcamp }) {
             <div className="rounded-2xl bg-neutral-100 p-6">
                 <div
                     className="prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300"
-                    dangerouslySetInnerHTML={{ __html: bootcamp.description || '<p>Deskripsi tidak tersedia.</p>' }}
+                    dangerouslySetInnerHTML={{ __html: bootcamp.description || `<p>${t('bootcamp.detail.heroDefaultDesc', 'Deskripsi tidak tersedia.')}</p>` }}
                 ></div>
             </div>
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Materi yang akan kamu pelajari</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('bootcamp.detail.learningCurriculumTitle', 'Materi yang akan kamu pelajari')}
+                </h2>
 
                 {hasHtmlList ? (
                     <div
                         className="prose md:prose-lg max-w-none text-neutral-700 dark:text-neutral-300"
-                        dangerouslySetInnerHTML={{ __html: bootcamp.curriculum || '<p>Materi belum tersedia.</p>' }}
+                        dangerouslySetInnerHTML={{ __html: bootcamp.curriculum || `<p>${t('bootcamp.detail.curriculumEmpty', 'Materi belum tersedia.')}</p>` }}
                     />
                 ) : curriculumItems.length ? (
                     <ol className="list-decimal space-y-2 pl-5 text-neutral-800 md:columns-2 dark:text-neutral-200">
@@ -63,7 +68,9 @@ export default function AboutSection({ bootcamp }: { bootcamp: Bootcamp }) {
                         ))}
                     </ol>
                 ) : (
-                    <p className="text-center text-neutral-700 dark:text-neutral-300">Materi belum tersedia.</p>
+                    <p className="text-center text-neutral-700 dark:text-neutral-300">
+                        {t('bootcamp.detail.curriculumEmpty', 'Materi belum tersedia.')}
+                    </p>
                 )}
             </div>
         </section>

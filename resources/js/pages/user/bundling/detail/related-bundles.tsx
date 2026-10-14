@@ -3,8 +3,9 @@ import { Spotlight } from '@/components/ui/spotlight';
 import { rupiahFormatter } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { Calendar, Package, Percent } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Bundle {
     id: string;
@@ -23,6 +24,9 @@ interface RelatedBundlesProps {
 }
 
 export default function RelatedBundles({ relatedBundles }: RelatedBundlesProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
+
     if (!relatedBundles || relatedBundles.length === 0) {
         return null;
     }
@@ -35,9 +39,11 @@ export default function RelatedBundles({ relatedBundles }: RelatedBundlesProps) 
     return (
         <section className="mx-auto mt-16 w-full max-w-7xl px-4 pb-12" id="related">
             <h2 className="dark:text-primary-foreground mb-4 text-center text-3xl font-bold text-gray-900 italic md:text-4xl">
-                Paket Bundling Lainnya
+                {t('bundling.detail.related.title')}
             </h2>
-            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">Paket bundling lain yang mungkin menarik untuk Anda</p>
+            <p className="mb-8 text-center text-gray-600 dark:text-gray-400">
+                {t('bundling.detail.related.subtitle')}
+            </p>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {relatedBundles.map((bundle) => {
@@ -66,7 +72,7 @@ export default function RelatedBundles({ relatedBundles }: RelatedBundlesProps) 
                                         <div className="absolute top-3 right-3">
                                             <Badge className="bg-red-500 text-white shadow-lg">
                                                 <Percent size={12} className="mr-1" />
-                                                Hemat {discount}%
+                                                {t('bundling.dashboard.catalog.savePercent', { percent: discount })}
                                             </Badge>
                                         </div>
                                     )}
@@ -78,11 +84,11 @@ export default function RelatedBundles({ relatedBundles }: RelatedBundlesProps) 
                                             className="bg-white/90 text-gray-900 backdrop-blur-sm dark:bg-gray-900/90 dark:text-white"
                                         >
                                             <Package size={12} className="mr-1" />
-                                            {bundle.bundle_items_count} Program
+                                            {t('bundling.dashboard.catalog.programsCount', { count: bundle.bundle_items_count })}
                                         </Badge>
                                         {bundle.batch && (
                                             <Badge className="border-orange-300 bg-orange-100 text-orange-700 dark:border-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
-                                                Batch {bundle.batch}
+                                                {t('bundling.dashboard.catalog.batch', { batch: bundle.batch })}
                                             </Badge>
                                         )}
                                     </div>
@@ -92,7 +98,7 @@ export default function RelatedBundles({ relatedBundles }: RelatedBundlesProps) 
                                 <div className="flex flex-1 flex-col p-4">
                                     {bundle.batch && (
                                         <span className="mb-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
-                                            Batch {bundle.batch}
+                                            {t('bundling.dashboard.catalog.batch', { batch: bundle.batch })}
                                         </span>
                                     )}
                                     <h3 className="mb-3 line-clamp-2 text-lg font-semibold text-gray-900 dark:text-white">{bundle.title}</h3>
@@ -114,10 +120,9 @@ export default function RelatedBundles({ relatedBundles }: RelatedBundlesProps) 
                                                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                                     <Calendar size={14} className="text-red-500" />
                                                     <span>
-                                                        Daftar sebelum:{' '}
-                                                        <span className="font-medium text-gray-900 dark:text-white">
-                                                            {format(deadlineDate, 'dd MMM yyyy', { locale: id })}
-                                                        </span>
+                                                        {t('bundling.dashboard.catalog.registerBefore', {
+                                                            date: format(deadlineDate, 'dd MMM yyyy', { locale: dateLocale }),
+                                                        })}
                                                     </span>
                                                 </div>
                                             </div>

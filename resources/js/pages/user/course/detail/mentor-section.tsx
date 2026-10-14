@@ -1,15 +1,20 @@
 import { Link } from '@inertiajs/react';
 import { Star, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Course {
     user?: { id: string; name: string; bio: string | null };
 }
 
 export default function MentorSection({ course }: { course: Course }) {
+    const { t } = useTranslation('user');
+
     return (
         <section className="mx-auto w-full space-y-4 md:p-4">
             <div className="rounded-2xl bg-neutral-100 p-6">
-                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">Dibimbing oleh expert</h2>
+                <h2 className="mb-6 text-center text-2xl font-semibold text-gray-900 md:text-3xl dark:text-white">
+                    {t('course.detail.guidedByExpert', 'Dibimbing oleh expert')}
+                </h2>
                 <div className="flex flex-col items-center justify-center gap-2">
                     <div className="rounded-full bg-gray-200 p-4">
                         <User className="h-10 w-10 text-gray-500" />

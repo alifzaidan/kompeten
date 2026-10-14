@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Link } from '@inertiajs/react';
 import { Calendar, Clock, Percent } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Category {
     id: string;
@@ -48,6 +49,10 @@ interface LatestProductsProps {
 }
 
 export default function LatestProductsSection({ latestProducts, myProductIds }: LatestProductsProps) {
+    const { t, i18n } = useTranslation('home');
+    const numLocale = i18n.language === 'en' ? 'en-US' : 'id-ID';
+    const dateLocaleStr = i18n.language === 'en' ? 'en-US' : 'id-ID';
+
     const safeMyProductIds = {
         courses: myProductIds?.courses || [],
         bootcamps: myProductIds?.bootcamps || [],
@@ -61,31 +66,31 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
             case 'course':
                 return (
                     <span className="absolute top-2 left-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                        Kelas
+                        {t('latest.badges.course')}
                     </span>
                 );
             case 'bootcamp':
                 return (
                     <span className="absolute top-2 left-2 rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700 dark:bg-purple-900 dark:text-purple-300">
-                        Bootcamp
+                        {t('latest.badges.bootcamp')}
                     </span>
                 );
             case 'webinar':
                 return (
                     <span className="absolute top-2 left-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                        Webinar
+                        {t('latest.badges.webinar')}
                     </span>
                 );
             case 'bundle':
                 return (
                     <span className="absolute top-2 left-2 rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-300">
-                        Bundle
+                        {t('latest.badges.bundle')}
                     </span>
                 );
             case 'certification-program':
                 return (
                     <span className="absolute top-2 left-2 rounded-full bg-cyan-100 px-2 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300">
-                        Sertifikasi
+                        {t('latest.badges.certification')}
                     </span>
                 );
             default:
@@ -101,19 +106,19 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
             case 'beginner':
                 return (
                     <Badge className="border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300">
-                        Beginner
+                        {t('latest.levels.beginner')}
                     </Badge>
                 );
             case 'intermediate':
                 return (
                     <Badge className="border-yellow-300 bg-yellow-100 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
-                        Intermediate
+                        {t('latest.levels.intermediate')}
                     </Badge>
                 );
             case 'advanced':
                 return (
                     <Badge className="border-red-300 bg-red-100 text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300">
-                        Advanced
+                        {t('latest.levels.advanced')}
                     </Badge>
                 );
             default:
@@ -168,13 +173,13 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                 <div className="mt-2 flex items-center gap-2">
                     <Calendar size="18" />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(product.start_date!).toLocaleDateString('id-ID', {
+                        {new Date(product.start_date!).toLocaleDateString(dateLocaleStr, {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
                         })}{' '}
                         -{' '}
-                        {new Date(product.end_date!).toLocaleDateString('id-ID', {
+                        {new Date(product.end_date!).toLocaleDateString(dateLocaleStr, {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
@@ -189,7 +194,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                 <div className="mt-2 flex items-center gap-2">
                     <Calendar size="18" />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(product.start_time!).toLocaleDateString('id-ID', {
+                        {new Date(product.start_time!).toLocaleDateString(dateLocaleStr, {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
@@ -208,7 +213,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                 <div className="mt-2 flex items-center gap-2">
                     <Clock size="18" className={daysLeft <= 3 ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'} />
                     <p className={`text-sm ${daysLeft <= 3 ? 'font-semibold text-red-500' : 'text-gray-600 dark:text-gray-400'}`}>
-                        {daysLeft > 0 ? `Daftar sebelum ${daysLeft} hari lagi` : 'Pendaftaran ditutup'}
+                        {daysLeft > 0 ? t('latest.registerBefore', { days: daysLeft }) : t('latest.registrationClosed')}
                     </p>
                 </div>
             );
@@ -236,15 +241,15 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
         <section className="mx-auto w-full max-w-7xl px-4 py-8" id="products">
             <div className="mx-auto text-center">
                 <h2 className="mx-auto mb-12 max-w-2xl text-center text-3xl leading-snug font-semibold md:text-4xl">
-                    Temukan program terbaru Kompeten yang siap leveling up skill-mu
+                    {t('latest.title')}
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {(() => {
                         if (safeLatestProducts.length === 0) {
                             return (
                                 <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                                    <img src="/assets/images/not-found.webp" alt="Produk Belum Tersedia" className="w-48" />
-                                    <div className="text-center text-gray-500">Belum ada produk yang tersedia saat ini.</div>
+                                    <img src="/assets/images/not-found.webp" alt={t('latest.empty')} className="w-48" />
+                                    <div className="text-center text-gray-500">{t('latest.empty')}</div>
                                 </div>
                             );
                         }
@@ -252,8 +257,8 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                         if (availableProducts.length === 0) {
                             return (
                                 <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12">
-                                    <div className="text-center text-lg font-semibold">Anda sudah memiliki akses semua produk terbaru kami. 😁🙏</div>
-                                    <p className="text-center text-gray-500">Terima kasih telah menjadi bagian dari Kompeten!</p>
+                                    <div className="text-center text-lg font-semibold">{t('latest.allOwned')}</div>
+                                    <p className="text-center text-gray-500">{t('latest.thankYou')}</p>
                                 </div>
                             );
                         }
@@ -265,7 +270,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                             const hasProductAccess = hasAccess(product);
                             const certDeadline =
                                 product.type === 'certification-program'
-                                    ? product.program_type === 'scholarship'
+                                     ? product.program_type === 'scholarship'
                                         ? product.socialization_registration_deadline
                                         : product.registration_deadline
                                     : undefined;
@@ -287,7 +292,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
 
                                                     {hasProductAccess && (
                                                         <div className="absolute top-2 right-2">
-                                                            <Badge className="bg-green-500 text-white shadow-lg">Sudah Dimiliki</Badge>
+                                                            <Badge className="bg-green-500 text-white shadow-lg">{t('latest.alreadyOwned')}</Badge>
                                                         </div>
                                                     )}
 
@@ -295,7 +300,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                         <div className="absolute top-2 right-2">
                                                             <Badge className="bg-red-500 text-white shadow-lg">
                                                                 <Percent size={12} className="mr-1" />
-                                                                Hemat {discount}%
+                                                                {t('latest.save', { discount })}
                                                             </Badge>
                                                         </div>
                                                     )}
@@ -305,16 +310,16 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                             <div className="mt-auto w-full p-4 text-left">
                                                 <div className="flex items-end justify-between">
                                                     {product.price === 0 ? (
-                                                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                                                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">{t('latest.free')}</p>
                                                     ) : (
                                                         <div className="">
                                                             {product.strikethrough_price > 0 && product.strikethrough_price > product.price && (
                                                                 <p className="text-sm text-red-500 line-through">
-                                                                    Rp {product.strikethrough_price.toLocaleString('id-ID')}
+                                                                    Rp {product.strikethrough_price.toLocaleString(numLocale)}
                                                                 </p>
                                                             )}
                                                             <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                                                                Rp {product.price.toLocaleString('id-ID')}
+                                                                Rp {product.price.toLocaleString(numLocale)}
                                                             </p>
                                                         </div>
                                                     )}
@@ -330,7 +335,7 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                 {product.type === 'certification-program' && certDeadline && (
                                                     <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                                                         <Calendar className="h-3 w-3" />
-                                                        <span>Daftar s/d {new Date(certDeadline).toLocaleDateString('id-ID')}</span>
+                                                        <span>{t('latest.registerUntil', { date: new Date(certDeadline).toLocaleDateString(dateLocaleStr) })}</span>
                                                     </div>
                                                 )}
 
@@ -358,15 +363,15 @@ export default function LatestProductsSection({ latestProducts, myProductIds }: 
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                                {mentors.length === 1 ? mentors[0].name : `${mentors.length} Mentor`}
+                                                                {mentors.length === 1 ? mentors[0].name : t('latest.mentorsCount', { count: mentors.length })}
                                                             </p>
                                                             <p className="text-primary text-xs">
                                                                 {mentors.length === 1
-                                                                    ? 'Mentor'
+                                                                    ? t('latest.mentorSingular')
                                                                     : `${mentors
                                                                           .slice(0, 2)
                                                                           .map((mentor) => mentor.name)
-                                                                          .join(', ')}${mentors.length > 2 ? ` +${mentors.length - 2} lainnya` : ''}`}
+                                                                          .join(', ')}${mentors.length > 2 ? ` ${t('latest.moreMentors', { count: mentors.length - 2 })}` : ''}`}
                                                             </p>
                                                         </div>
                                                     </div>
