@@ -372,7 +372,7 @@ export default function PrivacyPolicy() {
                                 {isEn ? 'Also read our ' : 'Baca juga '}
                                 <Link href={route('terms-and-conditions')} className="text-blue-600 underline hover:text-blue-800">
                                     {isEn ? 'Terms and Conditions' : 'Syarat dan Ketentuan'}
-                                </Link>{'}
+                                </Link>
                                 {isEn ? '.' : ' kami.'}
                             </p>
                         </div>

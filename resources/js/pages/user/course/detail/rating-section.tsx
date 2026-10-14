@@ -107,7 +107,7 @@ export default function RatingSection({ course }: { course: Course }) {
                                 <h3 className="font-semibold">{item.name}</h3>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Array.from({ length: 5 }).map((_, i) => (
+                                {Array.from({ length: 5 }).map((_, i) => (
                                     <Star
                                         key={i}
                                         size={16}

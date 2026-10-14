@@ -439,7 +439,7 @@ export default function InstallmentOptions({
                 id="btn-pay-installment"
             >
                 <CreditCard className="h-4 w-4" />
-                {isAnyTermOverdue ? 'Opsi Cicilan Ditutup (Batas Waktu Terlewat)' : {isLoading ? 'Memproses...' : `Bayar DP ${rupiahFormatter.format(dpAmount)} (Termasuk Biaya Admin)`}}
+                {isAnyTermOverdue ? 'Opsi Cicilan Ditutup (Batas Waktu Terlewat)' : isLoading ? 'Memproses...' : `Bayar DP ${rupiahFormatter.format(dpAmount)} (Termasuk Biaya Admin)`}
             </Button>
         </div>
     );
