@@ -29,7 +29,10 @@
     "transactions": "Riwayat Transaksi",
     "settings": "Pengaturan",
     "logout": "Keluar",
-    "userPage": "Halaman Utama"
+    "userPage": "Halaman Utama",
+    "publications": "Publikasi",
+    "about": "Tentang Kami",
+    "certificate": "Sertifikat"
   },
   "actions": {
     "save": "Simpan",
@@ -44,7 +47,8 @@
     "viewDetails": "Lihat Detail",
     "searchProducts": "Cari Produk...",
     "search": "Cari...",
-    "learnMore": "Pelajari Sekarang"
+    "learnMore": "Pelajari Sekarang",
+    "startLearning": "Mulai Belajar Sekarang"
   },
   "status": {
     "paid": "Lunas",
@@ -81,13 +85,22 @@
       "terms": "Syarat & Ketentuan",
       "privacy": "Kebijakan Privasi"
     },
-    "copyright": "© 2025 Kompeten. All rights reserved."
+    "copyright": "© 2025 Kompeten. All rights reserved.",
+    "menu": "Menu",
+    "mainMenu": "Menu Utama",
+    "contact": "Kontak",
+    "contactUs": "Hubungi Kami",
+    "allRightsReserved": "All rights reserved.",
+    "cta": {
+      "title": "Wujudkan Karir Impian, Mulai dari Sini! ✨",
+      "desc": "Bergabunglah dengan ribuan profesional yang telah mengakselerasi karir mereka bersama Kompeten"
+    }
   },
   "search": {
-    "placeholder": "Cari kelas, bootcamp, atau webinar...",
+    "placeholder": "Cari kelas, bootcamp, webinar, atau bundle...",
     "searching": "Mencari...",
     "noResults": "Tidak ada hasil ditemukan.",
-    "typeToSearch": "Ketik untuk mencari kelas, bootcamp, atau webinar...",
+    "typeToSearch": "Ketik untuk mencari kelas, bootcamp, webinar, atau bundle...",
     "error": "Terjadi kesalahan saat mencari. Silakan coba lagi.",
     "owned": "Sudah memiliki",
     "by": "Oleh {{name}}",

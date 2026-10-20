@@ -78,7 +78,7 @@ export default function CheckCertificate({ participants, searched, error, filter
     const handleCopyCode = (code: string, id: string) => {
         navigator.clipboard.writeText(code);
         setCopiedId(id);
-        toast.success(t('article.linkCopied', 'Kode sertifikat berhasil disalin!'));
+        toast.success(t('certificate.codeCopied', 'Kode sertifikat berhasil disalin!'));
         setTimeout(() => setCopiedId(null), 2000);
     };
 
@@ -174,7 +174,7 @@ export default function CheckCertificate({ participants, searched, error, filter
                                                 <Input
                                                     id="email"
                                                     type="email"
-                                                    placeholder="contoh@email.com"
+                                                    placeholder={t('certificate.emailPlaceholder', 'contoh@email.com')}
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     required
@@ -188,7 +188,7 @@ export default function CheckCertificate({ participants, searched, error, filter
                                                 <Input
                                                     id="phone"
                                                     type="text"
-                                                    placeholder="0812xxxxxxxx"
+                                                    placeholder={t('certificate.phonePlaceholder', '0812xxxxxxxx')}
                                                     value={phone}
                                                     onChange={(e) => setPhone(e.target.value)}
                                                     required
@@ -260,7 +260,7 @@ export default function CheckCertificate({ participants, searched, error, filter
                                                                     <button
                                                                         onClick={() => handleCopyCode(p.certificate_code, p.id)}
                                                                         className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-sm"
-                                                                        title={t('article.share', 'Salin')}
+                                                                        title={t('certificate.copyCode', 'Salin')}
                                                                     >
                                                                         {copiedId === p.id ? (
                                                                             <Check className="h-3 w-3 text-green-600 dark:text-green-400" />

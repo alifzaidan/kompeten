@@ -267,10 +267,7 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/admin/dashboard" prefetch>
-                                {/* Logo untuk light mode */}
-                                <img src="/assets/images/logo-primary.png" alt="Kompeten" className="block w-10 fill-current dark:hidden" />
-                                {/* Logo untuk dark mode */}
-                                <img src="/assets/images/logo-secondary.png" alt="Kompeten" className="hidden w-10 fill-current dark:block" />
+                                <img src="/assets/images/logo-primary.png" alt="Kompeten" className="block w-10 fill-current" />
                             </Link>
                         </SidebarMenuButton>    
                     </SidebarMenuItem>

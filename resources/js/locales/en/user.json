@@ -42,11 +42,15 @@
   "certificate": {
     "headTitle": "Check Certificate",
     "title": "Check Your Certificate",
+    "officialVerification": "Official Verification",
+    "officialVerified": "Official & Verified",
     "subtitle": "Enter your registered email and WhatsApp number to search and view your program graduation certificates.",
     "searchFormTitle": "Search Form",
     "searchFormDesc": "Enter your credentials to view your graduation certificate.",
     "registeredEmail": "Registered Email",
     "waNumber": "WhatsApp Number",
+    "emailPlaceholder": "name@example.com",
+    "phonePlaceholder": "e.g. 0812xxxxxxxx",
     "searchButton": "Search Certificate",
     "searching": "Searching...",
     "searchResults": "Search Results",
@@ -54,7 +58,10 @@
     "searchFailed": "Search Failed",
     "notAvailable": "No Certificates Available",
     "notAvailableDesc": "Email and WhatsApp are registered, but no certificates have been issued for this account yet.",
-    "issuedDate": "Issued: ",
+    "issuedDate": "Issued:",
+    "certNumber": "Certificate No.:",
+    "codeCopied": "Certificate code copied!",
+    "copyCode": "Copy",
     "viewCertificate": "View Certificate",
     "downloadPdf": "Download PDF",
     "view": "View",
@@ -66,6 +73,20 @@
       "bootcamp": "Bootcamp",
       "webinar": "Webinar",
       "certificate": "Certificate"
+    },
+    "detail": {
+      "title": "Certificate Details",
+      "certCodePrefix": "Certificate Code:",
+      "holderInfo": "Certificate Holder Information",
+      "certInfo": "Certificate Information",
+      "certNumber": "Certificate Number",
+      "certCode": "Certificate Code",
+      "certTitle": "Certificate Title",
+      "programType": "Program Type",
+      "program": "Program",
+      "description": "Description",
+      "issuedDate": "Issue Date",
+      "headPrefix": "Certificate"
     }
   },
   "certificateCard": {

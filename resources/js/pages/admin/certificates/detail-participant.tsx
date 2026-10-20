@@ -6,8 +6,9 @@ import UserLayout from '@/layouts/user-layout';
 import { BreadcrumbItem, SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { enUS, id } from 'date-fns/locale';
 import { ArrowLeft, Award, Calendar, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface User {
     id: string;
@@ -59,6 +60,8 @@ interface DetailParticipantProps {
 }
 
 export default function DetailParticipant({ participant }: DetailParticipantProps) {
+    const { t, i18n } = useTranslation('user');
+    const dateLocale = i18n.language === 'en' ? enUS : id;
     const { auth } = usePage<SharedData>().props;
     const role = auth.role[0];
     const isAdmin = role === 'admin' || role === 'mentor';
@@ -71,7 +74,7 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Sertifikat',
+            title: t('common:nav.certifications', 'Sertifikat'),
             href: route('certificates.index'),
         },
         {
@@ -79,7 +82,7 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
             href: route('certificates.show', { certificate: participant.certificate.id }),
         },
         {
-            title: 'Detail Participant',
+            title: t('certificate.detail.title', 'Detail Participant'),
             href: route('certificate.participant.detail', { code: participant.certificate_code }),
         },
     ];
@@ -88,11 +91,11 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
         <div className="px-4 py-4 md:px-6">
             <div className={`${isAdmin ? '' : 'mx-auto max-w-7xl lg:px-4'} mb-6 flex items-center justify-between`}>
                 <div>
-                    <h1 className="text-2xl font-semibold">Detail Sertifikat</h1>
+                    <h1 className="text-2xl font-semibold">{t('certificate.detail.title', 'Detail Sertifikat')}</h1>
                     <p className="text-muted-foreground">
                         {isAdmin ? `Informasi lengkap participant ${participant.certificate.title}` : `${participant.certificate.title}`}
                     </p>
-                    <p className="font-mono text-sm text-blue-600 dark:text-blue-400">Kode Sertifikat: {participant.certificate_code}</p>
+                    <p className="font-mono text-sm text-blue-600 dark:text-blue-400">{t('certificate.detail.certCodePrefix', 'Kode Sertifikat:')} {participant.certificate_code}</p>
                 </div>
 
                 {isAdmin && (
@@ -112,7 +115,7 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User className="h-5 w-5" />
-                                {isAdmin ? 'Informasi Participant' : 'Informasi Pemegang Sertifikat'}
+                                {isAdmin ? 'Informasi Participant' : t('certificate.detail.holderInfo', 'Informasi Pemegang Sertifikat')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -163,25 +166,25 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Award className="h-5 w-5" />
-                                Informasi Sertifikat
+                                {t('certificate.detail.certInfo', 'Informasi Sertifikat')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div>
-                                    <label className="text-muted-foreground text-sm font-medium">Nomor Sertifikat</label>
+                                    <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.certNumber', 'Nomor Sertifikat')}</label>
                                     <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{fullCertificateNumber}</p>
                                 </div>
                                 <div>
-                                    <label className="text-muted-foreground text-sm font-medium">Kode Sertifikat</label>
+                                    <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.certCode', 'Kode Sertifikat')}</label>
                                     <p className="rounded bg-gray-100 px-2 py-1 font-mono text-sm dark:bg-gray-800">{participant.certificate_code}</p>
                                 </div>
                                 <div>
-                                    <label className="text-muted-foreground text-sm font-medium">Judul Sertifikat</label>
+                                    <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.certTitle', 'Judul Sertifikat')}</label>
                                     <p className="text-sm font-semibold">{participant.certificate.title}</p>
                                 </div>
                                 <div>
-                                    <label className="text-muted-foreground text-sm font-medium">Jenis Program</label>
+                                    <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.programType', 'Jenis Program')}</label>
                                     <div
                                         className={`w-fit items-center rounded-full px-2 py-1 text-xs font-medium ${
                                             programType === 'Course'
@@ -191,24 +194,28 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
                                                   : 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300'
                                         }`}
                                     >
-                                        {programType === 'Course' ? 'Kelas Online' : programType}
+                                        {programType === 'Course'
+                                            ? t('certificate.types.course', 'Kelas Online')
+                                            : programType === 'Bootcamp'
+                                              ? t('certificate.types.bootcamp', 'Bootcamp')
+                                              : t('certificate.types.webinar', 'Webinar')}
                                     </div>
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="text-muted-foreground text-sm font-medium">Program</label>
+                                    <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.program', 'Program')}</label>
                                     <p className="text-sm">{programData?.title}</p>
                                 </div>
                                 {participant.certificate.description && (
                                     <div className="md:col-span-2">
-                                        <label className="text-muted-foreground text-sm font-medium">Keterangan</label>
+                                        <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.description', 'Keterangan')}</label>
                                         <p className="text-sm leading-relaxed">{participant.certificate.description}</p>
                                     </div>
                                 )}
                                 <div>
-                                    <label className="text-muted-foreground text-sm font-medium">Tanggal Terbit</label>
+                                    <label className="text-muted-foreground text-sm font-medium">{t('certificate.detail.issuedDate', 'Tanggal Terbit')}</label>
                                     <p className="flex items-center gap-1 text-sm">
                                         <Calendar className="h-3 w-3" />
-                                        {format(new Date(participant.created_at), 'dd MMMM yyyy', { locale: id })}
+                                        {format(new Date(participant.created_at), 'dd MMMM yyyy', { locale: dateLocale })}
                                     </p>
                                 </div>
                             </div>
@@ -230,7 +237,7 @@ export default function DetailParticipant({ participant }: DetailParticipantProp
 
     return (
         <UserLayout>
-            <Head title={`Sertifikat - ${participant.certificate.title}`} />
+            <Head title={`${t('certificate.detail.headPrefix', 'Sertifikat')} - ${participant.certificate.title}`} />
             {content}
         </UserLayout>
     );

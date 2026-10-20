@@ -42,11 +42,15 @@
   "certificate": {
     "headTitle": "Cek Sertifikat",
     "title": "Cek Sertifikat Anda",
+    "officialVerification": "Verifikasi Resmi",
+    "officialVerified": "Resmi & Terverifikasi",
     "subtitle": "Masukkan email dan nomor WhatsApp Anda yang terdaftar untuk mencari dan melihat sertifikat kelulusan program.",
     "searchFormTitle": "Form Pencarian",
     "searchFormDesc": "Masukkan data Anda untuk melihat sertifikat kelulusan.",
     "registeredEmail": "Email Terdaftar",
     "waNumber": "Nomor WhatsApp",
+    "emailPlaceholder": "contoh@email.com",
+    "phonePlaceholder": "0812xxxxxxxx",
     "searchButton": "Cari Sertifikat",
     "searching": "Mencari...",
     "searchResults": "Hasil Pencarian",
@@ -54,7 +58,10 @@
     "searchFailed": "Pencarian Gagal",
     "notAvailable": "Sertifikat Belum Tersedia",
     "notAvailableDesc": "Email dan nomor WhatsApp terdaftar, tetapi tidak ada sertifikat yang terbit atas akun tersebut saat ini.",
-    "issuedDate": "Diterbitkan: ",
+    "issuedDate": "Diterbitkan:",
+    "certNumber": "No. Sertifikat:",
+    "codeCopied": "Kode sertifikat berhasil disalin!",
+    "copyCode": "Salin",
     "viewCertificate": "Lihat Sertifikat",
     "downloadPdf": "Unduh PDF",
     "view": "Lihat",
@@ -66,6 +73,20 @@
       "bootcamp": "Bootcamp",
       "webinar": "Webinar",
       "certificate": "Sertifikat"
+    },
+    "detail": {
+      "title": "Detail Sertifikat",
+      "certCodePrefix": "Kode Sertifikat:",
+      "holderInfo": "Informasi Pemegang Sertifikat",
+      "certInfo": "Informasi Sertifikat",
+      "certNumber": "Nomor Sertifikat",
+      "certCode": "Kode Sertifikat",
+      "certTitle": "Judul Sertifikat",
+      "programType": "Jenis Program",
+      "program": "Program",
+      "description": "Keterangan",
+      "issuedDate": "Tanggal Terbit",
+      "headPrefix": "Sertifikat"
     }
   },
   "certificateCard": {

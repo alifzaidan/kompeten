@@ -62,6 +62,7 @@ export default function ProfileLayout({ children }: PropsWithChildren) {
         },
     ];
 
+
     if (typeof window === 'undefined') {
         return null;
     }
@@ -81,6 +82,7 @@ export default function ProfileLayout({ children }: PropsWithChildren) {
                                 </AvatarFallback>
                             </Avatar>
                             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{auth.user.name}</h1>
+                            <p className="text-muted-foreground text-sm">{t('sidebar.tagline', 'Lifetime Learner')}</p>
                         </div>
                         <nav className="flex flex-col space-y-1">
                             {sidebarNavItems.map((item, index) => (

@@ -1,58 +1,60 @@
 import { OtherItem, ProductItem, ServiceItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Instagram } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 
-const productItems: ProductItem[] = [
-    {
-        title: 'Kelas Online',
-        href: '/course',
-    },
-    {
-        title: 'Bootcamp',
-        href: '/bootcamp',
-    },
-    {
-        title: 'Webinar',
-        href: '/webinar',
-    },
-    {
-        title: 'Bundling',
-        href: '/bundle',
-    },
-    {
-        title: 'Sertifikasi',
-        href: '/certification-programs',
-    },
-];
-
-const serviceItems: ServiceItem[] = [
-    {
-        title: 'Pusat Bantuan',
-        href: 'https://wa.me/+6289528514480',
-    },
-    {
-        title: 'Email Support',
-        href: 'mailto:kompetenidn@gmail.com',
-    },
-];
-
-const otherItems: OtherItem[] = [
-    {
-        title: 'Artikel & Blog',
-        href: '/article',
-    },
-    {
-        title: 'Syarat & Ketentuan',
-        href: '/terms-and-conditions',
-    },
-    {
-        title: 'Kebijakan Privasi',
-        href: '/privacy-policy',
-    },
-];
-
 export default function AppFooter() {
+    const { t } = useTranslation('common');
+
+    const productItems: ProductItem[] = [
+        {
+            title: t('footer.links.course', 'Kelas Online'),
+            href: '/course',
+        },
+        {
+            title: t('footer.links.bootcamp', 'Bootcamp'),
+            href: '/bootcamp',
+        },
+        {
+            title: t('footer.links.webinar', 'Webinar'),
+            href: '/webinar',
+        },
+        {
+            title: t('footer.links.bundle', 'Bundling'),
+            href: '/bundle',
+        },
+        {
+            title: t('footer.links.certification', 'Sertifikasi'),
+            href: '/certification-programs',
+        },
+    ];
+
+    const serviceItems: ServiceItem[] = [
+        {
+            title: t('footer.links.helpCenter', 'Pusat Bantuan'),
+            href: 'https://wa.me/+6289528514480',
+        },
+        {
+            title: 'Email Support',
+            href: 'mailto:kompetenidn@gmail.com',
+        },
+    ];
+
+    const otherItems: OtherItem[] = [
+        {
+            title: t('footer.links.article', 'Artikel & Blog'),
+            href: '/article',
+        },
+        {
+            title: t('footer.links.terms', 'Syarat & Ketentuan'),
+            href: '/terms-and-conditions',
+        },
+        {
+            title: t('footer.links.privacy', 'Kebijakan Privasi'),
+            href: '/privacy-policy',
+        },
+    ];
     return (
         <footer className="from-primary to-background relative overflow-hidden bg-gradient-to-t pt-12 pb-32 md:pt-16 lg:pb-12">
             <div className="absolute top-10 -left-20 h-40 w-40 rounded-full bg-gray-700/20 blur-3xl" />
@@ -63,19 +65,19 @@ export default function AppFooter() {
                     <div className="bg-primary/30 border-primary/10 rounded-3xl border p-8 shadow-xl backdrop-blur-md">
                         <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
                             <div className="max-w-2xl text-center lg:text-left">
-                                <h2 className="mb-2 text-2xl font-semibold text-gray-900 lg:text-3xl">Wujudkan Karir Impian, Mulai dari Sini! ✨</h2>
+                                <h2 className="mb-2 text-2xl font-semibold text-gray-900 lg:text-3xl">
+                                    {t('footer.cta.title', 'Wujudkan Karir Impian, Mulai dari Sini! ✨')}
+                                </h2>
                                 <p className="text-sm text-gray-800 md:text-base">
-                                    Bergabunglah dengan ribuan profesional yang telah mengakselerasi karir mereka bersama Kompeten
+                                    {t('footer.cta.desc', 'Bergabunglah dengan ribuan profesional yang telah mengakselerasi karir mereka bersama Kompeten')}
                                 </p>
                             </div>
                             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                                 <Button size="lg">
-                                    <Link href="/course">Mulai Belajar Sekarang</Link>
+                                    <Link href="/course">{t('actions.startLearning', 'Mulai Belajar Sekarang')}</Link>
                                 </Button>
                                 <Button size="lg" variant="outline" asChild>
-                                    <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">
-                                        Hubungi Kami
-                                    </a>
+                                    <a href="https://wa.me/+6289528514480" target="_blank" rel="noopener noreferrer">{t('footer.contactUs', 'Hubungi Kami')}</a>
                                 </Button>
                             </div>
                         </div>
@@ -84,7 +86,7 @@ export default function AppFooter() {
 
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
-                        <h4 className="mb-4 text-lg font-semibold text-gray-900">Produk</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">{t('footer.products', 'Produk')}</h4>
                         <ul className="space-y-2">
                             {productItems.map((item) => (
                                 <li key={item.title}>
@@ -97,7 +99,7 @@ export default function AppFooter() {
                     </div>
 
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
-                        <h4 className="mb-4 text-lg font-semibold text-gray-900">Layanan</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">{t('footer.services', 'Layanan')}</h4>
                         <ul className="space-y-2">
                             {serviceItems.map((item) => (
                                 <li key={item.title}>
@@ -115,7 +117,7 @@ export default function AppFooter() {
                     </div>
 
                     <div className="group rounded-3xl border border-white/20 bg-white/10 p-6 shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-white/15 hover:shadow-2xl">
-                        <h4 className="mb-4 text-lg font-semibold text-gray-900">Lainnya</h4>
+                        <h4 className="mb-4 text-lg font-semibold text-gray-900">{t('footer.others', 'Lainnya')}</h4>
                         <ul className="space-y-2">
                             {otherItems.map((item) => (
                                 <li key={item.title}>
@@ -136,15 +138,16 @@ export default function AppFooter() {
                     </div>
                 </div>
 
-                <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-                    <div className="text-xl font-semibold text-gray-900">Kompeten</div>
-                    <div className="text-sm text-gray-800">© 2025 Kompeten. All rights reserved.</div>
-                    <div className="flex items-center gap-3">
+                <div className="mt-8 grid grid-cols-1 items-center gap-4 sm:grid-cols-3">
+                    <div className="text-center text-xl font-semibold text-gray-900 sm:text-left">Kompeten</div>
+                    <div className="text-center text-sm text-gray-800">© 2025 Kompeten. All rights reserved.</div>
+                    <div className="flex items-center justify-center gap-3 sm:justify-end">
                         <a
                             href="https://www.tiktok.com/@kompetenidn"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-900 transition-colors hover:text-gray-700"
+                            aria-label="TikTok Kompeten"
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -158,6 +161,7 @@ export default function AppFooter() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-900 transition-colors hover:text-gray-700"
+                            aria-label="Instagram Kompeten"
                         >
                             <Instagram size={24} />
                         </a>
